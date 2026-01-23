@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BELLE CAKE - Bolos Premium</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo-container">
+            <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="nav-logo">
+        </div>
+        <!-- Nav links removed as requested -->
+        <button class="btn-primary small" onclick="location.href='#tabela-de-precos'">
+            <i data-lucide="table" class="icon-small"></i> GARANTIR PLANILHA
+        </button>
+        
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar Tema" style="margin-left: 0.5rem; color: white;">
+            <span id="sun-wrapper"><i data-lucide="sun"></i></span>
+            <span id="moon-wrapper" style="display: none;"><i data-lucide="moon"></i></span>
+        </button>
+
+        <div class="mobile-menu-btn">
+            <i data-lucide="menu"></i>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="hero-section" id="inicio">
+        <div class="hero-content">
+            
+            <div class="hero-text-side">
+                <h1 class="main-title">
+                    Planilha de precificação<br>
+                    <span>de confeitaria automática</span>
+                </h1>
+                
+                <p class="subtitle">
+                    Pare de perder dinheiro! Calcule o preço exato dos seus bolos e doces em segundos.
+                </p>
+
+                <div class="pricing-card">
+                    <div class="card-headline">OFERTA EXCLUSIVA</div>
+                    <div class="price-header">
+                        <span class="old-price">R$ 49,90</span>
+                        <span class="savings">Economize R$ 30,00</span>
+                    </div>
+                    <div class="main-price">
+                        <span class="starting-at">a partir de</span>
+                        R$ 19,90
+                    </div>
+                    
+                    <button class="btn-cta" onclick="location.href='#tabela-de-precos'">
+                        GARANTIR PLANILHA
+                        <i data-lucide="table" class="icon-btn"></i>
+                    </button>
+                    <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
+                </div>
+            </div>
+
+            <div class="hero-image-side">
+                <div class="annotation left">Profissional em Análise de Dados</div>
+                <div class="annotation right">26 anos</div>
+                <img src="/images/isa.png" alt="Isa Belle Cake" class="isa-image" onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- Hero visual removed, image will be background -->
+    </main>
+
+    <!-- Video Section -->
+    <section id="video-explicativo" class="video-section">
+        <div class="section-badge">Vídeo explicativo</div>
+        <h2 class="video-title">Entenda como funciona a planilha</h2>
+        <div class="video-container">
+            <div class="video-placeholder">
+                <i data-lucide="play-circle" style="width: 64px; height: 64px;"></i>
+                <p>Vídeo Explicativo em Breve</p>
+            </div>
+            <!-- To embed a real video, replace the placeholder div above with: -->
+            <!-- <iframe width="100%" height="100%" src="YOUR_VIDEO_URL" frameborder="0" allowfullscreen></iframe> -->
+        </div>
+    </section>
+
+    <!-- Audience Section -->
+    <section class="audience-section" id="quem-e">
+        <div class="section-badge">Para quem é indicado</div>
+        <h2 class="audience-title">Para quem é esse material?</h2>
+        <div class="why-us-slider-container">
+            <div class="why-us-track" id="whyUsTrack">
+                <!-- Card 1 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                    <h3>Prejuízo Zero</h3>
+                    <p>Para quem quer parar de ter prejuízo e começar a lucrar de verdade.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <h3>Sem Tempo</h3>
+                    <p>Ideal para quem não tem tempo a perder com cálculos manuais e complicados.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="calculator"></i>
+                    </div>
+                    <h3>Iniciantes</h3>
+                    <p>Perfeito para quem está começando agora e não sabe como precificar.</p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <h3>Profissionais</h3>
+                    <p>Para confeiteiras experientes que querem otimizar seu tempo e gestão.</p>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="bar-chart-2"></i>
+                    </div>
+                    <h3>Organização</h3>
+                    <p>Para quem busca organizar o financeiro e ver a cor do dinheiro.</p>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="dollar-sign"></i>
+                    </div>
+                    <h3>Salário Real</h3>
+                    <p>Pra quem quer saber o valor exato de salário em cima de cada venda realizada.</p>
+                </div>
+
+                <!-- Card 7 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="help-circle"></i>
+                    </div>
+                    <h3>Insegurança</h3>
+                    <p>Quem não tem certeza se está colocando o preço certo em cada encomenda.</p>
+                </div>
+            </div>
+            
+            <!-- Pagination Dots -->
+            <div class="why-us-dots" id="whyUsDots">
+                <!-- Dots generated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="tabela-de-precos">
+        <div class="section-badge" style="margin-bottom: 1rem;">Nossos planos</div>
+        <h2 class="audience-title">
+            Escolha o melhor plano para <span class="highlight">VOCÊ</span>
+        </h2>
+        
+        <div class="pricing-tables-container">
+            <!-- Basic Plan -->
+            <div class="pricing-table">
+                <div class="table-title">Acesso Básico</div>
+                <div class="table-price">
+                    R$ 19,90 <span>/único</span>
+                </div>
+                <ul class="table-features">
+                    <li><i data-lucide="check"></i> Acesso Imediato à Planilha</li>
+                    <li><i data-lucide="check"></i> Acesso Vitalício</li>
+                </ul>
+                <button class="btn-cta" onclick="openOrderModal('Básico - R$ 19,90')">
+                    QUERO ESTE
+                </button>
+            </div>
+
+            <!-- Premium Plan -->
+            <div class="pricing-table featured">
+                <div class="card-headline" style="margin-bottom: 1rem;">MAIS VENDIDO</div>
+                <div class="table-title">Acesso Completo</div>
+                <div class="table-price">
+                    R$ 39,90 <span>/único</span>
+                </div>
+                <ul class="table-features">
+                    <li><i data-lucide="check"></i> Acesso Imediato à Planilha</li>
+                    <li><i data-lucide="check"></i> Aulas de Explicação</li>
+                    <li><i data-lucide="check"></i> Suporte via WhatsApp</li>
+                    <li><i data-lucide="check"></i> Acesso Vitalício</li>
+                    <li class="highlight-feature">
+                        <span class="bonus-label">Bônus exclusivo</span>
+                        <div class="bonus-content">
+                            <i data-lucide="gift" class="icon-large"></i>
+                            - Ferramenta para cálculo de ponto de equilíbrio com IA integrada
+                        </div>
+                    </li>
+                </ul>
+                <button class="btn-cta" onclick="window.open('https://wa.me/5511999999999?text=Gostaria%20de%20garantir%20a%20planilha%20(Plano%20Completo)', '_blank')">
+                    QUERO ESTE
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Who Am I Section -->
+    <section class="who-am-i-section">
+        <div class="who-content">
+            <div class="who-text">
+                <h2 class="who-title">Quem é Isabelle Santos?</h2>
+                <p class="who-description">
+                    Especialista em precificação e gestão para confeiteiras. 
+                    Com vasta experiência no mercado, ajudo você a transformar sua paixão em um negócio lucrativo e organizado.
+                    Minha missão é garantir que você nunca mais tenha prejuízo e saiba exatamente quanto ganha em cada doce vendido.
+                </p>
+            </div>
+            <div class="who-image-container">
+                <img src="/images/eu.png" alt="Isabelle Santos" class="who-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Modal (Hidden by default) -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Finalizar Pedido</h2>
+            <p>Preencha seus dados para ser redirecionado ao WhatsApp.</p>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="name">Nome Completo</label>
+                    <input type="text" id="name" name="name" required placeholder="Seu nome">
+                </div>
+                <div class="form-group">
+                    <label for="phone">WhatsApp</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="(11) 99999-9999">
+                </div>
+                <div class="form-group">
+                    <label for="flavor">Sabor de Preferência</label>
+                    <select id="flavor" name="flavor">
+                        <option value="Morango com Chocolate Branco">Morango com Chocolate Branco</option>
+                        <option value="Chocolate Belga">Chocolate Belga</option>
+                        <option value="Ninho com Nutella">Ninho com Nutella</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Ir para WhatsApp</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

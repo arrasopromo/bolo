@@ -1,0 +1,252 @@
+// Slider Logic (Why Us - Hybrid CSS-First)
+const track = document.getElementById('whyUsTrack');
+const dotsContainer = document.getElementById('whyUsDots');
+const cards = document.querySelectorAll('.why-us-card');
+
+if (track && cards.length > 0) {
+    const cardCount = cards.length;
+    let autoPlayInterval;
+    
+    // Create Dots
+    dotsContainer.innerHTML = '';
+    for (let i = 0; i < cardCount; i++) {
+        const dot = document.createElement('div');
+        dot.classList.add('why-us-dot');
+        if (i === 0) dot.classList.add('active');
+        
+        dot.addEventListener('click', () => {
+            const cardWidth = cards[0].offsetWidth;
+            const style = window.getComputedStyle(track);
+            const gap = parseFloat(style.gap) || 24; // Default to 24px if parsing fails
+            
+            track.scrollTo({
+                left: i * (cardWidth + gap),
+                behavior: 'smooth'
+            });
+        });
+        dotsContainer.appendChild(dot);
+    }
+
+    // Update active dot on scroll
+    const updateActiveDot = () => {
+        const cardWidth = cards[0].offsetWidth;
+        const style = window.getComputedStyle(track);
+        const gap = parseFloat(style.gap) || 24;
+        const itemWidth = cardWidth + gap;
+        
+        // Calculate index based on scroll position
+        let index = Math.round(track.scrollLeft / itemWidth);
+        
+        // Clamp index
+        if (index < 0) index = 0;
+        if (index >= cardCount) index = cardCount - 1;
+
+        document.querySelectorAll('.why-us-dot').forEach((dot, i) => {
+            if (i === index) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    };
+
+    track.addEventListener('scroll', () => {
+        window.requestAnimationFrame(updateActiveDot);
+    });
+
+    // Auto Play
+    const startAutoPlay = () => {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = setInterval(() => {
+            const cardWidth = cards[0].offsetWidth;
+            const style = window.getComputedStyle(track);
+            const gap = parseFloat(style.gap) || 24;
+            const itemWidth = cardWidth + gap;
+            
+            let nextScroll = track.scrollLeft + itemWidth;
+            const maxScroll = track.scrollWidth - track.clientWidth;
+            
+            // Loop back to start if at end
+            if (track.scrollLeft >= maxScroll - 10) {
+                nextScroll = 0;
+            }
+            
+            track.scrollTo({
+                left: nextScroll,
+                behavior: 'smooth'
+            });
+        }, 15000);
+    };
+
+    // Start Autoplay
+    startAutoPlay();
+
+    // Pause on Interaction
+    track.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
+    track.addEventListener('touchstart', () => clearInterval(autoPlayInterval), { passive: true });
+    
+    // Resume on mouse leave
+    track.addEventListener('mouseleave', () => {
+        isDown = false;
+        track.classList.remove('active');
+        startAutoPlay();
+    });
+
+    // Mouse Drag Implementation
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    track.addEventListener('mousedown', (e) => {
+        isDown = true;
+        track.classList.add('active');
+        startX = e.pageX - track.offsetLeft;
+        scrollLeft = track.scrollLeft;
+        clearInterval(autoPlayInterval); // Stop autoplay while dragging
+    });
+
+    track.addEventListener('mouseup', () => {
+        isDown = false;
+        track.classList.remove('active');
+        startAutoPlay(); // Resume autoplay
+    });
+
+    track.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - track.offsetLeft;
+        const walk = (x - startX) * 2; // Scroll-fast factor
+        track.scrollLeft = scrollLeft - walk;
+    });
+}
+
+// Order Modal Logic
+const modal = document.getElementById('orderModal');
+const orderForm = document.getElementById('orderForm');
+
+function openOrderModal(planName = null) {
+    modal.style.display = 'flex';
+    if (planName) {
+        // You could add a hidden field or update the message based on plan
+        // For now just logging or updating UI if needed
+        console.log('Selected Plan:', planName);
+    }
+}
+
+function scrollToOrder() {
+    const heroSection = document.getElementById('inicio');
+    heroSection.scrollIntoView({ behavior: 'smooth' });
+    // Highlight the CTA button momentarily
+    setTimeout(() => {
+        document.querySelector('.btn-cta').classList.add('pulse');
+        setTimeout(() => document.querySelector('.btn-cta').classList.remove('pulse'), 1000);
+    }, 500);
+}
+
+// Close modal when clicking X or outside
+document.querySelector('.close-modal').addEventListener('click', () => {
+    modal.style.display = 'none';
+});
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Handle Form Submission
+orderForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = orderForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerText;
+    submitBtn.innerText = 'Processando...';
+    submitBtn.disabled = true;
+
+    const formData = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        flavor: document.getElementById('flavor').value,
+        message: `Gostaria de encomendar o bolo da promoção (Sabor: ${document.getElementById('flavor').value})`
+    };
+
+    try {
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Redirect to WhatsApp
+            window.location.href = data.whatsappLink;
+        } else {
+            alert('Erro ao processar pedido: ' + (data.message || 'Tente novamente.'));
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Erro de conexão. Tente novamente.');
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// Mobile Menu Toggle (Simple implementation)
+document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks.style.display === 'flex') {
+        navLinks.style.display = 'none';
+    } else {
+        navLinks.style.display = 'flex';
+        navLinks.style.flexDirection = 'column';
+        navLinks.style.position = 'absolute';
+        navLinks.style.top = '100%';
+        navLinks.style.left = '0';
+        navLinks.style.width = '100%';
+        navLinks.style.background = 'rgba(0,0,0,0.95)';
+        navLinks.style.padding = '1rem';
+    }
+});
+
+// Theme Toggle Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const sunWrapper = document.getElementById('sun-wrapper');
+    const moonWrapper = document.getElementById('moon-wrapper');
+    
+    // Check saved theme or default to 'dark'
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+    }
+
+    function updateThemeIcon(theme) {
+        if (!sunWrapper || !moonWrapper) return;
+        
+        if (theme === 'light') {
+            // Light mode active -> Show Moon (to switch back to dark)
+            sunWrapper.style.display = 'none';
+            moonWrapper.style.display = 'block';
+        } else {
+            // Dark mode active -> Show Sun (to switch to light)
+            sunWrapper.style.display = 'block';
+            moonWrapper.style.display = 'none';
+        }
+    }
+});
