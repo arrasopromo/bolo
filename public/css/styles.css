@@ -245,7 +245,18 @@ body {
 }
 
 [data-theme="light"] .hero-section {
-    background-color: transparent;
+    background-color: var(--dark-bg);
+    background-image: none;
+}
+
+[data-theme="light"] .hero-section .main-title {
+    color: var(--seal-brown) !important;
+    background: none;
+    -webkit-text-fill-color: var(--seal-brown);
+}
+
+[data-theme="light"] .hero-section .subtitle {
+    color: var(--text-muted) !important;
 }
 
 .main-title {
