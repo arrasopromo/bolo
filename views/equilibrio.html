@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Ponto de Equilíbrio - BelleCake</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        .equilibrio-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=white%20frosted%20cake%20with%20strawberries%20and%20white%20chocolate%20truffles%20on%20top%2C%20dark%20moody%20lighting%2C%20cinematic%2C%20high%20resolution%2C%20food%20photography%2C%20floating%20particles&image_size=square_hd');
+            background-size: cover;
+            background-position: center;
+            flex-direction: column;
+        }
+
+        .calculator-card {
+            background: var(--dark-card);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            width: 100%;
+            max-width: 550px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .calc-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary-yellow);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .stepper-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .step-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 2px;
+            background-color: var(--card-border);
+            z-index: 0;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--dark-bg);
+            border: 2px solid var(--card-border);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 1;
+            margin: 0 30px; /* Space for the line */
+            transition: all 0.3s ease;
+        }
+
+        .step-circle.active {
+            border-color: var(--primary-yellow);
+            color: var(--primary-yellow);
+            box-shadow: 0 0 10px rgba(255, 184, 0, 0.3);
+        }
+
+        .step-circle.completed {
+            background: var(--primary-yellow);
+            color: var(--seal-brown);
+            border-color: var(--primary-yellow);
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-highlight {
+            background: rgba(255, 184, 0, 0.1);
+            border: 1px solid var(--primary-yellow);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-yellow);
+            display: block;
+        }
+
+        .ai-tip-box {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border-left: 4px solid var(--success-green);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            font-style: italic;
+            color: #e0e0e0;
+            line-height: 1.6;
+            display: none; /* Hidden by default */
+        }
+
+        .ai-loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-muted);
+        }
+
+        .ai-loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Input styling overrides if needed */
+        input[type="number"] {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            color: var(--new-tan);
+            padding: 0.8rem;
+            border-radius: 8px;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-yellow);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--new-tan);
+            color: var(--new-tan);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--new-tan);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        small {
+            display: block;
+            margin-top: 0.3rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo-container">
+            <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="nav-logo">
+        </div>
+        <a href="/" class="btn-primary small">
+            <i data-lucide="home"></i> VOLTAR
+        </a>
+    </nav>
+
+    <main class="equilibrio-section">
+        
+        <div class="calculator-card">
+            <h1 class="calc-title">Meta Mensal</h1>
+            <div class="stepper-container">
+                <div class="step-line"></div>
+                <div class="step-circle active" id="circle-1">1</div>
+                <div class="step-circle" id="circle-2">2</div>
+            </div>
+
+            <!-- ETAPA 1: CÁLCULO -->
+            <div id="step-1" class="step-content active">
+                <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                    Vamos calcular sua Meta de Faturamento Mensal (Ponto de Equilíbrio).
+                </p>
+                
+                <form id="calcFormStep1">
+                    <div class="form-group">
+                        <label>Custos Fixos Mensais (R$)</label>
+                        <input type="number" id="fixedCosts" placeholder="Ex: 1500,00" step="0.01" required>
+                        <small>Aluguel, luz, internet, MEI, salários, etc.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Faturamento Total de um Mês Exemplo (R$)</label>
+                        <input type="number" id="avgRevenue" placeholder="Ex: 10000,00" step="0.01" required>
+                        <small>Quanto você vendeu no total em um mês típico?</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Custos Variáveis desse Mês (R$)</label>
+                        <input type="number" id="avgVariableCost" placeholder="Ex: 6000,00" step="0.01" required>
+                        <small>Quanto gastou de material (ingredientes, embalagens) para fazer essas vendas?</small>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width: 100%;">
+                        Calcular Meta Financeira <i data-lucide="arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- ETAPA 2: ACOMPANHAMENTO -->
+            <div id="step-2" class="step-content">
+                <div class="result-highlight">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Sua Meta de Faturamento Mensal</span>
+                    <span class="result-number" id="pe-result">R$ 0,00</span>
+                    <span style="color: var(--text-muted);">para cobrir todos os custos</span>
+                </div>
+
+                <p style="text-align: center; color: var(--new-tan); margin-bottom: 1rem; font-weight: 600;">
+                    Quanto você já faturou este mês (Vendas Atuais)?
+                </p>
+
+                <form id="calcFormStep2">
+                    <div class="form-group">
+                        <label>Faturamento Atual (R$)</label>
+                        <input type="number" id="salesCurrent" placeholder="Ex: 3000,00" step="0.01" required>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="button" class="btn-secondary" onclick="prevStep()">
+                            <i data-lucide="arrow-left"></i> Voltar
+                        </button>
+                        <button type="submit" class="btn-primary" style="flex: 1;">
+                            Analisar Financeiro <i data-lucide="bar-chart-2"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="ai-loading" class="ai-loading">
+                    <i data-lucide="loader-2"></i>
+                    <p>Consultando a IA para dicas personalizadas...</p>
+                </div>
+
+                <div id="ai-tip-container" class="ai-tip-box">
+                    <h3 style="color: var(--success-green); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="sparkles"></i> Dica da Especialista
+                    </h3>
+                    <div id="ai-tip-content"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        let metaFaturamento = 0;
+
+        // Step 1 Submission
+        document.getElementById('calcFormStep1').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fixedCosts = parseFloat(document.getElementById('fixedCosts').value);
+            const avgRevenue = parseFloat(document.getElementById('avgRevenue').value);
+            const avgVariableCost = parseFloat(document.getElementById('avgVariableCost').value);
+
+            if (avgRevenue <= 0 || avgVariableCost < 0) {
+                alert('Por favor, insira valores válidos para faturamento e custos.');
+                return;
+            }
+
+            if (avgVariableCost >= avgRevenue) {
+                alert('O custo variável não pode ser maior ou igual ao faturamento. Assim você teria prejuízo em cada venda!');
+                return;
+            }
+
+            // Calculation: 
+            // 1. Calculate Margin % = (Revenue - Variable Costs) / Revenue
+            const marginValue = avgRevenue - avgVariableCost;
+            const marginPercent = marginValue / avgRevenue; // Decimal (e.g., 0.40)
+
+            // 2. Break-even Revenue = Fixed Costs / Margin Decimal
+            metaFaturamento = fixedCosts / marginPercent;
+
+            // Update UI
+            document.getElementById('pe-result').textContent = metaFaturamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            // Go to next step
+            goToStep(2);
+        });
+
+        // Step 2 Submission
+        document.getElementById('calcFormStep2').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const salesCurrent = parseFloat(document.getElementById('salesCurrent').value);
+            
+            // Show loading
+            const loading = document.getElementById('ai-loading');
+            const tipContainer = document.getElementById('ai-tip-container');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            loading.style.display = 'block';
+            tipContainer.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Analisando...';
+
+            try {
+                const response = await fetch('/api/dicas-vendas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        metaFaturamento: metaFaturamento,
+                        vendasAtuais: salesCurrent
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('ai-tip-content').innerText = data.message;
+                    tipContainer.style.display = 'block';
+                } else {
+                    alert('Erro ao buscar dicas: ' + data.message);
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert('Erro de conexão. O servidor pode estar offline. Tente recarregar a página.');
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Analisar Progresso <i data-lucide="bar-chart-2"></i>';
+                lucide.createIcons();
+            }
+        });
+
+        function goToStep(step) {
+            // Update circles
+            if (step === 2) {
+                document.getElementById('circle-1').classList.remove('active');
+                document.getElementById('circle-1').classList.add('completed');
+                document.getElementById('circle-1').innerHTML = '<i data-lucide="check" style="width: 20px;"></i>';
+                
+                document.getElementById('circle-2').classList.add('active');
+                
+                // Show content
+                document.getElementById('step-1').classList.remove('active');
+                document.getElementById('step-2').classList.add('active');
+            }
+            lucide.createIcons();
+        }
+
+        function prevStep() {
+            // Update circles
+            document.getElementById('circle-1').classList.remove('completed');
+            document.getElementById('circle-1').classList.add('active');
+            document.getElementById('circle-1').textContent = '1';
+            
+            document.getElementById('circle-2').classList.remove('active');
+
+            // Show content
+            document.getElementById('step-2').classList.remove('active');
+            document.getElementById('step-1').classList.add('active');
+            
+            // Hide previous results
+            document.getElementById('ai-tip-container').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

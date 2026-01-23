@@ -34,8 +34,17 @@ if (track && cards.length > 0) {
         const gap = parseFloat(style.gap) || 24;
         const itemWidth = cardWidth + gap;
         
-        // Calculate index based on scroll position
-        let index = Math.round(track.scrollLeft / itemWidth);
+        // Calculate index based on scroll position percentage
+        // This ensures the last dot is active when scrolled to the very end
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        let index;
+
+        if (maxScroll > 0) {
+            const scrollRatio = track.scrollLeft / maxScroll;
+            index = Math.round(scrollRatio * (cardCount - 1));
+        } else {
+            index = 0;
+        }
         
         // Clamp index
         if (index < 0) index = 0;
@@ -120,82 +129,79 @@ if (track && cards.length > 0) {
     });
 }
 
-// Order Modal Logic
+// Order Modal Logic - REMOVED/DISABLED as elements are not in HTML
 const modal = document.getElementById('orderModal');
-const orderForm = document.getElementById('orderForm');
+if (modal) {
+    const orderForm = document.getElementById('orderForm');
 
-function openOrderModal(planName = null) {
-    modal.style.display = 'flex';
-    if (planName) {
-        // You could add a hidden field or update the message based on plan
-        // For now just logging or updating UI if needed
-        console.log('Selected Plan:', planName);
-    }
-}
-
-function scrollToOrder() {
-    const heroSection = document.getElementById('inicio');
-    heroSection.scrollIntoView({ behavior: 'smooth' });
-    // Highlight the CTA button momentarily
-    setTimeout(() => {
-        document.querySelector('.btn-cta').classList.add('pulse');
-        setTimeout(() => document.querySelector('.btn-cta').classList.remove('pulse'), 1000);
-    }, 500);
-}
-
-// Close modal when clicking X or outside
-document.querySelector('.close-modal').addEventListener('click', () => {
-    modal.style.display = 'none';
-});
-
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Handle Form Submission
-orderForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const submitBtn = orderForm.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerText;
-    submitBtn.innerText = 'Processando...';
-    submitBtn.disabled = true;
-
-    const formData = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        flavor: document.getElementById('flavor').value,
-        message: `Gostaria de encomendar o bolo da promoção (Sabor: ${document.getElementById('flavor').value})`
-    };
-
-    try {
-        const response = await fetch('/api/contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Redirect to WhatsApp
-            window.location.href = data.whatsappLink;
-        } else {
-            alert('Erro ao processar pedido: ' + (data.message || 'Tente novamente.'));
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
+    function openOrderModal(planName = null) {
+        modal.style.display = 'flex';
+        if (planName) {
+            console.log('Selected Plan:', planName);
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Erro de conexão. Tente novamente.');
-        submitBtn.innerText = originalText;
-        submitBtn.disabled = false;
     }
-});
+
+    // Close modal when clicking X or outside
+    const closeBtn = document.querySelector('.close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Handle Form Submission
+    if (orderForm) {
+        orderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = orderForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = 'Processando...';
+            submitBtn.disabled = true;
+
+            const formData = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                flavor: document.getElementById('flavor').value,
+                message: `Gostaria de encomendar o bolo da promoção (Sabor: ${document.getElementById('flavor').value})`
+            };
+
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = data.whatsappLink;
+                } else {
+                    alert('Erro ao processar pedido: ' + (data.message || 'Tente novamente.'));
+                    submitBtn.innerText = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro de conexão. Tente novamente.');
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+} else {
+    // Define dummy function to prevent errors if called from HTML
+    window.openOrderModal = function() {}; 
+}
 
 // Mobile Menu Toggle (Simple implementation)
 document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
@@ -220,8 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunWrapper = document.getElementById('sun-wrapper');
     const moonWrapper = document.getElementById('moon-wrapper');
     
-    // Check saved theme or default to 'dark'
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    // Check saved theme or default to 'light'
+    const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
 

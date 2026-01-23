@@ -90,12 +90,17 @@ html {
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: transparent;
+    background: linear-gradient(135deg, var(--seal-brown) 0%, var(--falu-red) 100%);
+    background-attachment: fixed;
     color: var(--text-white);
     overflow-x: hidden;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+}
+
+[data-theme="light"] body {
+    background: transparent;
 }
 
 .background-overlay {
@@ -112,12 +117,14 @@ body {
 }
 
 [data-theme="light"] body {
-    background-color: var(--dark-bg); /* Use the light theme bg color */
+    background-color: transparent; /* Allow overlay to show */
 }
 
 [data-theme="light"] .background-overlay {
-    opacity: 0.1;
-    display: block; /* Ensure it's there but faint, or none if preferred */
+    opacity: 1;
+    display: block;
+    /* Light overlay on top of the cake image so dark text remains readable */
+    background-image: linear-gradient(rgba(255, 251, 247, 0.85), rgba(255, 251, 247, 0.85)), url('https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=white%20frosted%20cake%20with%20strawberries%20and%20white%20chocolate%20truffles%20on%20top%2C%20dark%20moody%20lighting%2C%20cinematic%2C%20high%20resolution%2C%20food%20photography%2C%20floating%20particles&image_size=square_hd');
 }
 
 /* Navbar */
@@ -214,6 +221,7 @@ body {
     justify-content: center;
     width: 100%;
     position: relative;
+    background-color: var(--seal-brown); /* Ensure dark background behind image */
     /* Ensure dark cake background is visible here specifically as requested */
     background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=white%20frosted%20cake%20with%20strawberries%20and%20white%20chocolate%20truffles%20on%20top%2C%20dark%20moody%20lighting%2C%20cinematic%2C%20high%20resolution%2C%20food%20photography%2C%20floating%20particles&image_size=square_hd');
     background-size: cover;
@@ -244,35 +252,19 @@ body {
     color: white !important; /* Changed to white as requested */
 }
 
-[data-theme="light"] .hero-section {
-    background-color: var(--dark-bg);
-    background-image: none;
-}
-
-[data-theme="light"] .hero-section .main-title {
-    color: var(--seal-brown) !important;
-    background: none;
-    -webkit-text-fill-color: var(--seal-brown);
-}
-
-[data-theme="light"] .hero-section .subtitle {
-    color: var(--text-muted) !important;
-}
+/* Hero section overrides removed to keep it dark in light mode */
+/* [data-theme="light"] .hero-section { ... } rules deleted */
 
 .main-title {
-    font-family: 'Inter', sans-serif; /* Matched to subtitle */
-    font-size: 3.5rem; /* Larger font */
+    font-family: 'Inter', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 900;
     line-height: 1.1;
     margin-bottom: 1.5rem;
     text-transform: uppercase;
+    letter-spacing: 1px;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    letter-spacing: 1px; /* Stretched text */
-    /* Very Light Gradient (Cream/White/Light Gold) */
-    background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E7 50%, #FFE4B5 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent; /* Fallback */
+    color: var(--new-tan);
 }
 
 .highlight-yellow {
@@ -680,11 +672,15 @@ body {
 /* Audience Section */
 .audience-section {
     padding: 6rem 2rem;
-    /* Solid Background */
-    background: var(--audience-bg);
+    /* Transparent in dark mode to show body gradient */
+    background: transparent;
     text-align: center;
     position: relative;
     z-index: 1;
+}
+
+[data-theme="light"] .audience-section {
+    background: var(--audience-bg);
 }
 
 .section-badge {
@@ -709,6 +705,7 @@ body {
 .audience-title .highlight {
     background: linear-gradient(120deg, var(--raw-sienna), var(--new-tan));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -992,10 +989,14 @@ body {
 /* Who Am I Section */
 .who-am-i-section {
     padding: 6rem 2rem;
-    /* Low Contrast - Matching Audience Section Background */
-    background: var(--audience-bg);
+    /* Transparent in dark mode to show body gradient */
+    background: transparent;
     position: relative;
     z-index: 1;
+}
+
+[data-theme="light"] .who-am-i-section {
+    background: var(--audience-bg);
 }
 
 .who-content {
@@ -1054,11 +1055,6 @@ body {
         gap: 2rem;
     }
     
-    .who-am-i-section {
-         /* Low contrast for mobile as well */
-         background: var(--audience-bg);
-    }
-
     .who-text {
         text-align: center;
         margin: 0 auto;
