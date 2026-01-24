@@ -103,6 +103,51 @@ app.post('/api/dicas-vendas', async (req, res) => {
     }
 });
 
+// API endpoint for cost classification
+app.post('/api/classificar-custo', async (req, res) => {
+    console.log('Recebendo requisição em /api/classificar-custo');
+    const { item } = req.body;
+
+    if (!item) {
+        return res.status(400).json({ success: false, message: 'Item não fornecido.' });
+    }
+
+    try {
+        const prompt = `
+            Você é um especialista em contabilidade para confeitaria.
+            Classifique o seguinte item como "Custo Fixo" ou "Custo Variável".
+            Item: "${item}"
+            
+            Responda APENAS com o formato JSON:
+            {
+                "classificacao": "Custo Fixo" ou "Custo Variável",
+                "explicacao": "Breve explicação de 1 frase do porquê."
+            }
+        `;
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: "Você é um assistente contábil preciso. Responda apenas JSON." },
+                { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" },
+            max_tokens: 150,
+        });
+
+        const result = JSON.parse(completion.choices[0].message.content);
+
+        res.json({
+            success: true,
+            data: result
+        });
+
+    } catch (error) {
+        console.error('Erro na API OpenAI (Classificação):', error);
+        res.status(500).json({ success: false, message: 'Erro ao classificar item.' });
+    }
+});
+
 // API endpoint for contact form (redirects to WhatsApp)
 app.post('/api/contact', (req, res) => {
     const { name, phone, message } = req.body;

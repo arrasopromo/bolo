@@ -35,7 +35,7 @@
         .calc-title {
             font-size: 2rem;
             font-weight: 900;
-            color: var(--primary-yellow);
+            color: #FFFFFF; /* Changed to White for better contrast */
             margin-bottom: 0.5rem;
             text-align: center;
         }
@@ -155,8 +155,22 @@
             width: 100%;
             font-family: 'Inter', sans-serif;
         }
+
+        input[type="text"] {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            color: var(--new-tan);
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input::placeholder {
+            color: rgba(237, 190, 151, 0.5); /* var(--new-tan) with opacity */
+            font-family: 'Inter', sans-serif;
+        }
         
-        input[type="number"]:focus {
+        input[type="number"]:focus, input[type="text"]:focus {
             outline: none;
             border-color: var(--primary-yellow);
         }
@@ -180,8 +194,68 @@
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: var(--new-tan);
+            color: #FFFFFF; /* Changed to White for better contrast */
             font-weight: 600;
+        }
+
+        .equilibrio-section {
+            padding-top: 120px;
+            padding-bottom: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .info-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--primary-yellow);
+            cursor: pointer;
+            vertical-align: middle;
+            margin-left: 5px;
+            transition: transform 0.2s;
+        }
+        
+        .info-icon:hover {
+            transform: scale(1.2);
+        }
+
+        /* Modal Styles */
+        .info-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .info-modal-content {
+            background: var(--dark-card);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            border: 1px solid var(--primary-yellow);
+            color: var(--text-white);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .info-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
         }
 
         .form-group {
@@ -236,12 +310,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Custos Variáveis desse Mês (R$)</label>
+                        <label>Custos Variáveis desse Mês (R$) <i data-lucide="info" class="info-icon" id="variableCostInfo"></i></label>
                         <input type="number" id="avgVariableCost" placeholder="Ex: 6000,00" step="0.01" required>
                         <small>Quanto gastou de material (ingredientes, embalagens) para fazer essas vendas?</small>
                     </div>
 
-                    <button type="submit" class="btn-primary" style="width: 100%;">
+                    <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
                         Calcular Meta Financeira <i data-lucide="arrow-right"></i>
                     </button>
                 </form>
@@ -289,10 +363,123 @@
             </div>
 
         </div>
+
+        <!-- NEW SECTION: Cost Classification -->
+        <div class="classification-container calculator-card" style="margin-top: 3rem; width: 100%; max-width: 550px;">
+            <h3 class="calc-title" style="font-size: 1.5rem; margin-bottom: 1rem;">
+                <i data-lucide="search" style="vertical-align: middle; margin-right: 5px; width: 24px; height: 24px;"></i> 
+                Consultar se é Fixo ou Variável
+            </h3>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <input type="text" id="costInput" placeholder="Ex: Farinha, Aluguel, Embalagem..." style="flex: 1; min-width: 200px;">
+                <button id="btnConsultar" class="btn-primary" style="padding: 0.8rem 1.5rem; justify-content: center;">
+                    Consultar
+                </button>
+            </div>
+            
+            <div id="consultLoading" style="display: none; text-align: center; margin-top: 1rem; color: var(--text-muted);">
+                <i data-lucide="loader-2" class="spin"></i> Verificando...
+            </div>
+
+            <div id="consultResult" style="margin-top: 1rem; display: none; padding: 1rem; border-radius: 8px; text-align: left;">
+                <strong id="resClass" style="font-size: 1.1rem; display: block; margin-bottom: 0.3rem;"></strong>
+                <span id="resDesc" style="color: #e0e0e0; font-size: 0.9rem;"></span>
+            </div>
+        </div>
+
+        <!-- Info Modal -->
+        <div id="infoModal" class="info-modal">
+            <div class="info-modal-content">
+                <i data-lucide="x" class="info-modal-close" id="closeInfoModal"></i>
+                <h3 style="color: var(--primary-yellow); margin-bottom: 1rem;">Exemplos de Custos Variáveis</h3>
+                <p style="line-height: 1.6; color: #e0e0e0;">
+                    Custos variáveis são aqueles que aumentam ou diminuem conforme você produz mais ou menos bolos.
+                </p>
+                <ul style="margin-top: 1rem; padding-left: 1.5rem; color: #e0e0e0; line-height: 1.6;">
+                    <li>Ingredientes (farinha, açúcar, ovos, chocolate)</li>
+                    <li>Embalagens (caixas, fitas, adesivos)</li>
+                    <li>Gás ou energia (proporcional ao uso do forno)</li>
+                    <li>Taxas de cartão de crédito (por venda)</li>
+                    <li>Decorações comestíveis</li>
+                </ul>
+            </div>
+        </div>
     </main>
 
     <script>
         lucide.createIcons();
+
+        // Info Modal Logic
+        const infoIcon = document.getElementById('variableCostInfo');
+        const infoModal = document.getElementById('infoModal');
+        const closeInfoModal = document.getElementById('closeInfoModal');
+
+        if (infoIcon) {
+            infoIcon.addEventListener('click', () => {
+                infoModal.style.display = 'flex';
+                lucide.createIcons();
+            });
+        }
+
+        if (closeInfoModal) {
+            closeInfoModal.addEventListener('click', () => {
+                infoModal.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('click', (e) => {
+            if (e.target === infoModal) {
+                infoModal.style.display = 'none';
+            }
+        });
+        
+        // Cost Classification Logic
+        document.getElementById('btnConsultar').addEventListener('click', async () => {
+            const item = document.getElementById('costInput').value.trim();
+            if (!item) return;
+
+            const loading = document.getElementById('consultLoading');
+            const resultDiv = document.getElementById('consultResult');
+            const resClass = document.getElementById('resClass');
+            const resDesc = document.getElementById('resDesc');
+            const btn = document.getElementById('btnConsultar');
+
+            loading.style.display = 'block';
+            resultDiv.style.display = 'none';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/classificar-custo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const { classificacao, explicacao } = data.data;
+                    
+                    // Style based on type
+                    const isFixed = classificacao.toLowerCase().includes('fixo');
+                    resultDiv.style.background = isFixed ? 'rgba(255, 68, 68, 0.2)' : 'rgba(76, 175, 80, 0.2)';
+                    resultDiv.style.border = isFixed ? '1px solid #ff4444' : '1px solid #4CAF50';
+                    resClass.style.color = isFixed ? '#ff8888' : '#88ff88';
+                    
+                    resClass.textContent = classificacao;
+                    resDesc.textContent = explicacao;
+                    resultDiv.style.display = 'block';
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao consultar.');
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
+            }
+        });
 
         let metaFaturamento = 0;
 
