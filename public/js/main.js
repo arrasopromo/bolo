@@ -218,21 +218,24 @@ if (modal) {
 }
 
 // Mobile Menu Toggle (Simple implementation)
-document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
-    const navLinks = document.querySelector('.nav-links');
-    if (navLinks.style.display === 'flex') {
-        navLinks.style.display = 'none';
-    } else {
-        navLinks.style.display = 'flex';
-        navLinks.style.flexDirection = 'column';
-        navLinks.style.position = 'absolute';
-        navLinks.style.top = '100%';
-        navLinks.style.left = '0';
-        navLinks.style.width = '100%';
-        navLinks.style.background = 'rgba(0,0,0,0.95)';
-        navLinks.style.padding = '1rem';
-    }
-});
+const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+        const navLinks = document.querySelector('.nav-links');
+        if (navLinks.style.display === 'flex') {
+            navLinks.style.display = 'none';
+        } else {
+            navLinks.style.display = 'flex';
+            navLinks.style.flexDirection = 'column';
+            navLinks.style.position = 'absolute';
+            navLinks.style.top = '100%';
+            navLinks.style.left = '0';
+            navLinks.style.width = '100%';
+            navLinks.style.background = 'rgba(0,0,0,0.95)';
+            navLinks.style.padding = '1rem';
+        }
+    });
+}
 
 // Theme Toggle Logic
 document.addEventListener('DOMContentLoaded', () => {

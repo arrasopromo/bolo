@@ -8,34 +8,50 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-cream: #FFFBF7;
+            --text-brown: #32221D;
+            --card-white: #FFFFFF;
+            --border-light: #E5E5E5;
+            --primary-yellow: #FFC107;
+            --secondary-caramel: #CD7A3E;
+            --text-muted: #666666;
+            --success-green: #4CAF50;
+        }
+
+        body {
+            background-color: var(--bg-cream) !important;
+            background-image: none !important;
+            color: var(--text-brown);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+
         .equilibrio-section {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
-            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=white%20frosted%20cake%20with%20strawberries%20and%20white%20chocolate%20truffles%20on%20top%2C%20dark%20moody%20lighting%2C%20cinematic%2C%20high%20resolution%2C%20food%20photography%2C%20floating%20particles&image_size=square_hd');
-            background-size: cover;
-            background-position: center;
+            /* background-image removed for clean light theme */
             flex-direction: column;
         }
 
         .calculator-card {
-            background: var(--dark-card);
+            background: var(--card-white);
             padding: 2.5rem;
             border-radius: 20px;
-            border: 1px solid var(--card-border);
+            border: 1px solid var(--border-light);
             width: 100%;
             max-width: 550px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
         }
 
         .calc-title {
             font-size: 2rem;
             font-weight: 900;
-            color: #FFFFFF; /* Changed to White for better contrast */
+            color: var(--text-brown);
             margin-bottom: 0.5rem;
             text-align: center;
         }
@@ -55,7 +71,7 @@
             transform: translate(-50%, -50%);
             width: 60px;
             height: 2px;
-            background-color: var(--card-border);
+            background-color: var(--border-light);
             z-index: 0;
         }
 
@@ -63,8 +79,8 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--dark-bg);
-            border: 2px solid var(--card-border);
+            background: #FAFAFA;
+            border: 2px solid var(--border-light);
             color: var(--text-muted);
             display: flex;
             align-items: center;
@@ -76,15 +92,15 @@
         }
 
         .step-circle.active {
-            border-color: var(--primary-yellow);
-            color: var(--primary-yellow);
-            box-shadow: 0 0 10px rgba(255, 184, 0, 0.3);
+            border-color: var(--secondary-caramel);
+            color: var(--secondary-caramel);
+            box-shadow: 0 0 10px rgba(205, 122, 62, 0.2);
         }
 
         .step-circle.completed {
-            background: var(--primary-yellow);
-            color: var(--seal-brown);
-            border-color: var(--primary-yellow);
+            background: var(--secondary-caramel);
+            color: white;
+            border-color: var(--secondary-caramel);
         }
 
         .step-content {
@@ -102,8 +118,8 @@
         }
 
         .result-highlight {
-            background: rgba(255, 184, 0, 0.1);
-            border: 1px solid var(--primary-yellow);
+            background: rgba(205, 122, 62, 0.1);
+            border: 1px solid var(--secondary-caramel);
             border-radius: 12px;
             padding: 1.5rem;
             text-align: center;
@@ -113,20 +129,21 @@
         .result-number {
             font-size: 2.5rem;
             font-weight: 900;
-            color: var(--primary-yellow);
+            color: var(--secondary-caramel);
             display: block;
         }
 
         .ai-tip-box {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            background: #FAFAFA;
             border-left: 4px solid var(--success-green);
             padding: 1.5rem;
             border-radius: 8px;
             margin-top: 1.5rem;
             font-style: italic;
-            color: #e0e0e0;
+            color: var(--text-brown);
             line-height: 1.6;
             display: none; /* Hidden by default */
+            border: 1px solid var(--border-light);
         }
 
         .ai-loading {
@@ -145,34 +162,55 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Input styling overrides if needed */
-        input[type="number"] {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--card-border);
-            color: var(--new-tan);
+        /* Input styling overrides */
+        input[type="number"], input[type="text"] {
+            background: #FAFAFA;
+            border: 2px solid #f0f0f0;
+            color: var(--text-brown);
             padding: 0.8rem;
-            border-radius: 8px;
+            border-radius: 10px;
             width: 100%;
             font-family: 'Inter', sans-serif;
-        }
-
-        input[type="text"] {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--card-border);
-            color: var(--new-tan);
-            padding: 0.8rem;
-            border-radius: 8px;
-            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
         }
 
         input::placeholder {
-            color: rgba(237, 190, 151, 0.5); /* var(--new-tan) with opacity */
+            color: #AAA;
             font-family: 'Inter', sans-serif;
         }
         
         input[type="number"]:focus, input[type="text"]:focus {
             outline: none;
-            border-color: var(--primary-yellow);
+            border-color: var(--secondary-caramel);
+            background: white;
+        }
+
+        .btn-primary {
+            background: var(--secondary-caramel);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: #b86b35;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(205, 122, 62, 0.3);
+        }
+
+        .btn-primary.small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
         }
 
         .btn-secondary {
@@ -187,14 +225,14 @@
         }
         
         .btn-secondary:hover {
-            border-color: var(--new-tan);
-            color: var(--new-tan);
+            border-color: var(--secondary-caramel);
+            color: var(--secondary-caramel);
         }
 
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #FFFFFF; /* Changed to White for better contrast */
+            color: var(--text-brown);
             font-weight: 600;
         }
 
@@ -210,7 +248,7 @@
         .info-icon {
             width: 16px;
             height: 16px;
-            color: var(--primary-yellow);
+            color: var(--secondary-caramel);
             cursor: pointer;
             vertical-align: middle;
             margin-left: 5px;
@@ -229,23 +267,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
             z-index: 2000;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(2px);
         }
 
         .info-modal-content {
-            background: var(--dark-card);
+            background: var(--card-white);
             padding: 2rem;
             border-radius: 16px;
             width: 90%;
             max-width: 500px;
             position: relative;
-            border: 1px solid var(--primary-yellow);
-            color: var(--text-white);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-light);
+            color: var(--text-brown);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         
         .info-modal-close {
@@ -273,14 +311,19 @@
 <body>
     <nav class="navbar">
         <div class="logo-container">
-            <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="nav-logo">
+            <a href="/">
+                <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="nav-logo">
+            </a>
         </div>
-        <a href="/" class="btn-primary small">
-            <i data-lucide="home"></i> VOLTAR
-        </a>
+        <div class="nav-profile" style="display: flex; align-items: center; gap: 1rem;">
+             <div style="color: white; font-weight: 600;">Olá, Confeiteira!</div>
+             <div style="width: 40px; height: 40px; background: var(--primary-yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--seal-brown);">
+                <i data-lucide="user"></i>
+             </div>
+        </div>
     </nav>
 
-    <main class="equilibrio-section">
+    <main class="equilibrio-section" style="padding-top: 120px;">
         
         <div class="calculator-card">
             <h1 class="calc-title">Meta Mensal</h1>
@@ -603,6 +646,9 @@
             // Hide previous results
             document.getElementById('ai-tip-container').style.display = 'none';
         }
+        
+        // Initialize icons
+        lucide.createIcons();
     </script>
 </body>
 </html>

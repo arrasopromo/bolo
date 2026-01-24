@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxo de Caixa - BelleCake</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-cream: #FFFBF7;
+            --text-brown: #32221D;
+            --card-white: #FFFFFF;
+            --border-light: #E5E5E5;
+            --primary-yellow: #FFC107;
+            --secondary-caramel: #CD7A3E;
+        }
+
+        body {
+            background: var(--bg-cream) !important;
+            color: var(--text-brown) !important;
+            margin: 0;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Layout Structure */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar (Desktop) */
+        .sidebar {
+            width: 260px;
+            background: var(--navbar-bg); /* Match index menu exactly */
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-logo-container {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            max-width: 140px;
+            height: auto;
+            filter: brightness(0) invert(1); /* Make logo white if it's dark */
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .nav-item {
+            padding: 0.9rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s ease;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--secondary-caramel);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .nav-item i { width: 22px; height: 22px; }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            background: var(--bg-cream);
+            color: var(--text-brown);
+            padding: 1rem 1.5rem;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+
+        .mobile-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .mobile-menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--bg-cream);
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .mobile-menu-dropdown.open {
+            display: flex;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px; /* Width of sidebar */
+            padding: 2.5rem;
+            background: #FFFFFF; /* White background for content area to contrast with cream sidebar/body */
+            border-top-left-radius: 30px;
+            border-bottom-left-radius: 30px;
+            min-height: 100vh;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.02);
+            margin-top: 0;
+        }
+
+        /* Views */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Styles */
+        .header-dash {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 { margin: 0; font-size: 1.8rem; color: var(--text-brown); }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+        
+        .kpi-card:hover { transform: translateY(-3px); }
+        
+        .kpi-title { font-size: 0.85rem; color: #888; margin-bottom: 0.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 2rem; font-weight: 700; color: var(--text-brown); }
+
+        .chart-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.06);
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            position: relative;
+        }
+
+        .chart-container-wrapper {
+            position: relative; 
+            height: 350px; 
+            width: 100%;
+        }
+
+        /* Form Styles */
+        .form-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.06);
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.95rem; font-weight: 600; color: var(--text-brown); }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            background: #FAFAFA;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--secondary-caramel);
+            background: white;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: var(--secondary-caramel); /* Theme color */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+        .btn-submit:hover { background: #b86b35; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(205, 122, 62, 0.3); }
+        .btn-submit:active { transform: scale(0.98); }
+
+        /* Responsive Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px; /* Force scroll on small screens */
+        }
+        
+        th { background: #F9F9F9; font-weight: 600; color: #666; font-size: 0.9rem; text-transform: uppercase; }
+        td { color: var(--text-brown); }
+
+        /* Responsive */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .mobile-header { display: flex; }
+            .charts-row { grid-template-columns: 1fr; }
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+                padding-top: 90px; /* Space for header */
+                border-radius: 0;
+                background: var(--bg-cream); /* Revert to cream on mobile for seamless feel */
+            }
+            .chart-container-wrapper { height: 300px; }
+        }
+
+        @media (max-width: 480px) {
+            .header-dash { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .header-dash select { width: 100%; }
+            .kpi-grid { grid-template-columns: 1fr; }
+            .form-card { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="/membros">
+            <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake" class="mobile-logo">
+        </a>
+        <button id="mobileMenuBtn" style="background:none; border:none; color:var(--text-brown); cursor: pointer;">
+            <i data-lucide="menu" size="28"></i>
+        </button>
+        <div class="mobile-menu-dropdown" id="mobileMenuDropdown">
+            <div class="nav-item active" onclick="switchView('resumo')">
+                <i data-lucide="layout-dashboard"></i> Resumo
+            </div>
+            <div class="nav-item" onclick="switchView('produtos')">
+                <i data-lucide="package"></i> Cadastro Produto
+            </div>
+            <div class="nav-item" onclick="switchView('custos')">
+                <i data-lucide="dollar-sign"></i> Custos Fixos
+            </div>
+            <div class="nav-item" onclick="switchView('vendas')">
+                <i data-lucide="shopping-cart"></i> Vendas
+            </div>
+            <div class="nav-item" onclick="window.location.href='/membros'">
+                <i data-lucide="arrow-left"></i> Voltar Painel
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo-container">
+                <a href="/membros">
+                    <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="sidebar-logo">
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="switchView('resumo')">
+                    <i data-lucide="layout-dashboard"></i> Resumo
+                </li>
+                <li class="nav-item" onclick="switchView('produtos')">
+                    <i data-lucide="package"></i> Cadastro Produto
+                </li>
+                <li class="nav-item" onclick="switchView('custos')">
+                    <i data-lucide="dollar-sign"></i> Custos Fixos
+                </li>
+                <li class="nav-item" onclick="switchView('vendas')">
+                    <i data-lucide="shopping-cart"></i> Vendas
+                </li>
+            </ul>
+            <div style="margin-top: auto;">
+                <div class="nav-item" onclick="window.location.href='/membros'" style="color: #FFFFFF;">
+                    <i data-lucide="arrow-left"></i> Voltar Painel
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- VIEW: RESUMO -->
+            <section id="view-resumo" class="view-section active">
+                <div class="header-dash">
+                    <h1>Resumo Financeiro</h1>
+                    <select id="periodFilter" style="padding: 0.6rem; border-radius: 8px; border: 1px solid #ddd; background: white;">
+                        <option value="today">Hoje</option>
+                        <option value="yesterday">Ontem</option>
+                        <option value="7days">Últimos 7 dias</option>
+                        <option value="30days">Últimos 30 dias</option>
+                    </select>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Vendas (Período)</div>
+                        <div class="kpi-value" id="totalSales">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Custo Variável</div>
+                        <div class="kpi-value" id="totalVariableCost" style="color: #F44336;">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Lucro Líquido</div>
+                        <div class="kpi-value" id="totalProfit" style="color: #4CAF50;">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Ticket Médio</div>
+                        <div class="kpi-value" id="ticketAvg">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Produtos Vendidos</div>
+                        <div class="kpi-value" id="totalItems">0</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-section" style="margin-bottom: 0;">
+                        <h3 style="margin-top:0; margin-bottom: 1.5rem; font-size: 1.2rem;">Desempenho de Vendas</h3>
+                        <div class="chart-container-wrapper">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-section" style="margin-bottom: 0;">
+                        <h3 style="margin-top:0; margin-bottom: 1.5rem; font-size: 1.2rem;">Ticket Médio Diário</h3>
+                        <div class="chart-container-wrapper">
+                            <canvas id="ticketChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Products Section -->
+                <div class="chart-section">
+                    <h3 style="margin-top:0; margin-bottom: 1.5rem; font-size: 1.2rem;">Produtos Mais Vendidos</h3>
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f9f9f9; border-bottom: 2px solid #eee;">
+                                <tr>
+                                    <th style="padding: 1rem; text-align: left;">Produto</th>
+                                    <th style="padding: 1rem; text-align: left;">Qtd</th>
+                                    <th style="padding: 1rem; text-align: left;">Faturamento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProductsTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: CUSTOS -->
+            <section id="view-custos" class="view-section">
+                <div class="header-dash">
+                    <h1>Custos Fixos</h1>
+                </div>
+
+                <!-- AI Classification Tool -->
+                <div class="classification-container calculator-card" style="margin-bottom: 2rem; width: 100%;">
+                    <h3 class="calc-title" style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-brown);">
+                        <i data-lucide="search" style="vertical-align: middle; margin-right: 5px;"></i> 
+                        Consultar Classificação de Custo (IA)
+                    </h3>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="text" id="costInput" placeholder="Ex: Bolo Chantilly Ninho e Nutella Aro 15" style="flex: 1; min-width: 200px; padding: 0.8rem; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text-brown);">
+                        <button id="btnConsultar" class="btn-primary" style="margin: 0; padding: 0.8rem 1.5rem; border-radius: 8px;">
+                            Consultar
+                        </button>
+                    </div>
+                    <div id="consultLoading" style="display: none; margin-top: 1rem; color: var(--text-muted); text-align: center;">
+                        <i data-lucide="loader-2" class="spin"></i> Verificando...
+                    </div>
+                    <div id="consultResult" style="margin-top: 1rem; display: none; padding: 1rem; border-radius: 8px; text-align: left;">
+                        <strong id="resClass" style="font-size: 1.1rem; display: block; margin-bottom: 0.3rem;"></strong>
+                        <span id="resDesc" style="font-size: 0.9rem;"></span>
+                    </div>
+                </div>
+                
+                <div class="form-card">
+                    <h3 style="margin-top:0; margin-bottom: 1.5rem;">Novo Custo Fixo</h3>
+                    <form id="fixedCostForm">
+                        <div class="form-group">
+                            <label>Descrição do Custo</label>
+                            <input type="text" id="costName" placeholder="Ex: Aluguel, Internet, Luz" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor (R$)</label>
+                            <input type="number" id="costAmount" step="0.01" placeholder="0.00" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="margin-bottom: 0.8rem; display: block;">Tipo de Recorrência</label>
+                            <div class="recurrence-options">
+                                <label class="radio-card">
+                                    <input type="radio" name="recurrenceType" value="monthly" checked onchange="toggleInstallments()"> 
+                                    <span class="radio-label">
+                                        <i data-lucide="calendar-check-2"></i> Mensal
+                                    </span>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="recurrenceType" value="installment" onchange="toggleInstallments()"> 
+                                    <span class="radio-label">
+                                        <i data-lucide="credit-card"></i> Parcelado
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <style>
+                            .recurrence-options {
+                                display: flex;
+                                gap: 1rem;
+                            }
+                            .radio-card input {
+                                display: none;
+                            }
+                            .radio-label {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                padding: 0.8rem 1.2rem;
+                                border: 1px solid var(--input-border);
+                                border-radius: 8px;
+                                cursor: pointer;
+                                background: var(--input-bg);
+                                color: var(--text-muted);
+                                transition: all 0.2s;
+                                font-weight: 500;
+                            }
+                            .radio-card input:checked + .radio-label {
+                                background: var(--primary-yellow);
+                                color: white;
+                                border-color: var(--primary-yellow);
+                                box-shadow: 0 4px 10px rgba(205, 122, 62, 0.2);
+                            }
+                            .radio-label:hover {
+                                border-color: var(--primary-yellow);
+                            }
+                        </style>
+
+                        <div class="form-group" id="installmentsGroup" style="display: none;">
+                            <label>Número de Parcelas</label>
+                            <input type="number" id="costInstallments" min="2" value="2" placeholder="Ex: 10">
+                        </div>
+
+                        <button type="submit" class="btn-submit">Registrar Custo</button>
+                    </form>
+                </div>
+
+                <div style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Custos deste Mês</h3>
+                    <div id="fixedCostsList" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: PRODUTOS -->
+            <section id="view-produtos" class="view-section">
+                <div class="header-dash">
+                    <h1>Cadastro de Produtos</h1>
+                </div>
+                
+                <div class="form-card">
+                    <h3 style="margin-top:0; margin-bottom: 1.5rem;">Novo Produto</h3>
+                    <form id="productForm">
+                        <div class="form-group">
+                            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; background: #FFFBF7; padding: 0.8rem; border-radius: 8px; border: 1px dashed #CD7A3E;">
+                                💡 <strong>Dica:</strong> Cadastre o nome completo (Sabor + Tamanho) caso o preço varie.<br>
+                                <span style="font-style: italic; display: block; margin-top: 0.3rem;">Ex: Bolo Chantilly Ninho e Nutella Aro 15</span>
+                            </div>
+                            <label>Nome do Produto</label>
+                            <input type="text" id="prodName" placeholder="Ex: Bolo Chantilly Ninho e Nutella Aro 15" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Custo Variável (R$)</label>
+                            <input type="number" id="prodCost" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Preço de Venda (R$)</label>
+                            <input type="number" id="prodPrice" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <button type="submit" class="btn-submit">Cadastrar Produto</button>
+                    </form>
+                </div>
+                
+                <div style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Produtos Cadastrados</h3>
+                    <div id="productsList" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: VENDAS -->
+            <section id="view-vendas" class="view-section">
+                <div class="header-dash">
+                    <h1>Registro de Vendas</h1>
+                </div>
+
+                <div class="form-card">
+                    <h3 style="margin-top:0; margin-bottom: 1.5rem;">Nova Venda</h3>
+                    <form id="saleForm">
+                        <div class="form-group">
+                            <label>Produto</label>
+                            <select id="productSelect" required>
+                                <option value="">Carregando...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantidade</label>
+                            <input type="number" id="quantity" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Data</label>
+                            <input type="date" id="saleDate" required>
+                        </div>
+                        <button type="submit" class="btn-submit" style="background: #4CAF50;">Registrar Venda</button>
+                    </form>
+                </div>
+
+                <div style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Últimas Vendas</h3>
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f9f9f9; border-bottom: 2px solid #eee;">
+                                <tr>
+                                    <th style="padding: 1rem; text-align: left;">Data</th>
+                                    <th style="padding: 1rem; text-align: left;">Produto</th>
+                                    <th style="padding: 1rem; text-align: left;">Qtd</th>
+                                    <th style="padding: 1rem; text-align: left;">Valor Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        document.getElementById('saleDate').valueAsDate = new Date();
+
+        // --- Navigation Logic ---
+        function switchView(viewId) {
+            // Update UI state
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            // Update Menu Active State (Desktop & Mobile)
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll(`.nav-item[onclick*="'${viewId}'"]`).forEach(el => el.classList.add('active'));
+
+            // Close mobile menu if open
+            document.getElementById('mobileMenuDropdown').classList.remove('open');
+            
+            // Refresh data
+            if(viewId === 'resumo') loadDashboard();
+            if(viewId === 'produtos') loadProductsList(); 
+            if(viewId === 'custos') loadFixedCosts();
+            if(viewId === 'vendas') {
+                loadProducts(); 
+                loadRecentSales(); 
+            }
+        }
+
+        // Mobile Menu Toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            document.getElementById('mobileMenuDropdown').classList.toggle('open');
+        });
+
+        // --- Data Logic ---
+
+        // Load Products for Select
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products');
+                const products = await res.json();
+                const select = document.getElementById('productSelect');
+                select.innerHTML = '<option value="">Selecione um produto</option>';
+                products.forEach(p => {
+                    select.innerHTML += `<option value="${p._id}">${p.name} - R$ ${p.salePrice.toFixed(2)}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        // Load Products List (Visual)
+        async function loadProductsList() {
+            try {
+                const res = await fetch('/api/products');
+                const products = await res.json();
+                const container = document.getElementById('productsList');
+                container.innerHTML = '';
+                if(products.length === 0) {
+                    container.innerHTML = '<div style="color:#888;">Nenhum produto cadastrado.</div>';
+                    return;
+                }
+                products.forEach(p => {
+                    container.innerHTML += `
+                        <div style="background: white; padding: 1.2rem; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.5rem;">${p.name}</div>
+                            <div style="display:flex; justify-content:space-between; font-size: 0.9rem;">
+                                <span style="color: #666;">Custo: R$ ${p.variableCost.toFixed(2)}</span>
+                                <span style="color: #4CAF50; font-weight:600;">Venda: R$ ${p.salePrice.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading products list:', error);
+            }
+        }
+
+        // Load Recent Sales
+        async function loadRecentSales() {
+            try {
+                const res = await fetch('/api/sales?period=30days'); 
+                const sales = await res.json();
+                sales.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                const tbody = document.getElementById('salesTableBody');
+                tbody.innerHTML = '';
+                
+                if(sales.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding:1rem; text-align:center; color:#888;">Nenhuma venda recente.</td></tr>';
+                    return;
+                }
+
+                sales.slice(0, 15).forEach(s => { 
+                    const productName = s.product ? s.product.name : 'Produto removido';
+                    tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 1rem;">${new Date(s.date).toLocaleDateString()}</td>
+                            <td style="padding: 1rem;">${productName}</td>
+                            <td style="padding: 1rem;">${s.quantity}</td>
+                            <td style="padding: 1rem;">R$ ${s.totalAmount.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading sales list:', error);
+            }
+        }
+
+        // Load Fixed Costs
+        async function loadFixedCosts() {
+            try {
+                const res = await fetch('/api/fixed-costs?period=this_month');
+                const costs = await res.json();
+                const container = document.getElementById('fixedCostsList');
+                container.innerHTML = '';
+                if(costs.length === 0) {
+                    container.innerHTML = '<div style="color:#888;">Nenhum custo registrado neste mês.</div>';
+                    return;
+                }
+                costs.forEach(c => {
+                    container.innerHTML += `
+                        <div style="background: white; padding: 1.2rem; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.5rem;">${c.name}</div>
+                            <div style="display:flex; justify-content:space-between; font-size: 0.9rem;">
+                                <span style="color: #666;">Data: ${new Date(c.date).toLocaleDateString()}</span>
+                                <span style="color: #F44336; font-weight:600;">R$ ${c.amount.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading fixed costs:', error);
+            }
+        }
+
+        // Load Dashboard Data
+        async function loadDashboard() {
+            try {
+                const period = document.getElementById('periodFilter').value;
+                const res = await fetch(`/api/dashboard-stats?period=${period}`);
+                const data = await res.json();
+                
+                const stats = data.summary;
+
+                document.getElementById('totalSales').innerText = `R$ ${stats.totalRevenue.toFixed(2)}`;
+                // document.getElementById('totalCost').innerText = `R$ ${stats.totalCost.toFixed(2)}`;
+                document.getElementById('totalVariableCost').innerText = `R$ ${stats.totalVariableCost.toFixed(2)}`;
+                document.getElementById('totalProfit').innerText = `R$ ${stats.netProfit.toFixed(2)}`;
+                document.getElementById('ticketAvg').innerText = `R$ ${stats.ticketAverage.toFixed(2)}`;
+                document.getElementById('totalItems').innerText = stats.salesCount;
+                
+                // Payment methods elements not currently in DOM
+                // document.getElementById('pixSales').innerText = stats.salesByMethod.pix || 0;
+                // document.getElementById('cardSales').innerText = (stats.salesByMethod.credit || 0) + (stats.salesByMethod.debit || 0);
+                
+                updateCharts(data.charts);
+                updateTopProducts(stats.topProducts);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        function updateTopProducts(products) {
+            const tbody = document.getElementById('topProductsTable');
+            tbody.innerHTML = '';
+            
+            if (!products || products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="padding:1rem; text-align:center; color:#888;">Nenhum produto vendido no período.</td></tr>';
+                return;
+            }
+
+            products.forEach(p => {
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 1rem; font-weight: 500;">${p.name}</td>
+                        <td style="padding: 1rem;">${p.quantity}</td>
+                        <td style="padding: 1rem; color: var(--secondary-caramel); font-weight: 600;">R$ ${p.revenue.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Register Product
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+
+            const data = {
+                name: document.getElementById('prodName').value,
+                variableCost: parseFloat(document.getElementById('prodCost').value),
+                salePrice: parseFloat(document.getElementById('prodPrice').value)
+            };
+            
+            try {
+                await fetch('/api/products', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                alert('Produto cadastrado com sucesso!');
+                e.target.reset();
+                loadProductsList();
+            } catch (error) {
+                alert('Erro ao cadastrar produto');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Toggle Installments Input
+        function toggleInstallments() {
+            const type = document.querySelector('input[name="recurrenceType"]:checked').value;
+            const group = document.getElementById('installmentsGroup');
+            group.style.display = type === 'installment' ? 'block' : 'none';
+        }
+
+        // Cost Classification Logic
+        document.getElementById('btnConsultar').addEventListener('click', async () => {
+            const item = document.getElementById('costInput').value.trim();
+            if (!item) return;
+
+            const loading = document.getElementById('consultLoading');
+            const resultDiv = document.getElementById('consultResult');
+            const resClass = document.getElementById('resClass');
+            const resDesc = document.getElementById('resDesc');
+            const btn = document.getElementById('btnConsultar');
+
+            loading.style.display = 'block';
+            resultDiv.style.display = 'none';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/classificar-custo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const { classificacao, explicacao } = data.data;
+                    
+                    const isFixed = classificacao.toLowerCase().includes('fixo');
+                    resultDiv.style.background = isFixed ? 'rgba(255, 68, 68, 0.1)' : 'rgba(76, 175, 80, 0.1)';
+                    resultDiv.style.border = isFixed ? '1px solid #ff4444' : '1px solid #4CAF50';
+                    resClass.style.color = isFixed ? '#d32f2f' : '#388e3c';
+                    
+                    resClass.textContent = classificacao;
+                    resDesc.textContent = explicacao;
+                    resultDiv.style.display = 'block';
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao consultar.');
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
+            }
+        });
+
+        // Register Fixed Cost
+        document.getElementById('fixedCostForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+
+            const recurrenceType = document.querySelector('input[name="recurrenceType"]:checked').value;
+            const installments = recurrenceType === 'installment' ? 
+                parseInt(document.getElementById('costInstallments').value) : 1;
+
+            const data = {
+                name: document.getElementById('costName').value,
+                amount: parseFloat(document.getElementById('costAmount').value),
+                date: new Date(),
+                recurrenceType,
+                installments
+            };
+            
+            try {
+                await fetch('/api/fixed-costs', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                alert('Custo registrado com sucesso!');
+                e.target.reset();
+                document.querySelector('input[name="recurrenceType"][value="monthly"]').checked = true;
+                toggleInstallments();
+                loadFixedCosts();
+            } catch (error) {
+                alert('Erro ao registrar custo');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Register Sale
+        document.getElementById('saleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Registrando...';
+            btn.disabled = true;
+
+            const data = {
+                productId: document.getElementById('productSelect').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                date: document.getElementById('saleDate').value,
+                paymentMethod: document.getElementById('paymentMethod').value
+            };
+            
+            try {
+                await fetch('/api/sales', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                alert('Venda registrada com sucesso!');
+                e.target.reset();
+                document.getElementById('saleDate').valueAsDate = new Date();
+                loadRecentSales();
+            } catch (error) {
+                alert('Erro ao registrar venda');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Chart.js Setup
+        let salesChartInstance = null;
+        let ticketChartInstance = null;
+
+        function updateCharts(chartData) {
+            updateSalesChart(chartData);
+            updateTicketChart(chartData);
+        }
+
+        function updateSalesChart(data) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            if (salesChartInstance) salesChartInstance.destroy();
+
+            salesChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Vendas (R$)',
+                        data: data.revenue,
+                        borderColor: '#CD7A3E',
+                        backgroundColor: 'rgba(205, 122, 62, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#FFF',
+                        pointBorderColor: '#CD7A3E',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { 
+                                stepSize: 100,
+                                callback: function(value) { return 'R$ ' + value; }
+                            }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateTicketChart(data) {
+            const ctx = document.getElementById('ticketChart').getContext('2d');
+            if (ticketChartInstance) ticketChartInstance.destroy();
+
+            ticketChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Ticket Médio (R$)',
+                        data: data.ticket,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#FFF',
+                        pointBorderColor: '#4CAF50',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { 
+                                callback: function(value) { return 'R$ ' + value; }
+                            }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('periodFilter').addEventListener('change', loadDashboard);
+
+        // Init
+        loadDashboard();
+        loadProductsList();
+        loadRecentSales();
+    </script>
+</body>
+</html>
