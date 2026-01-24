@@ -34,6 +34,11 @@ app.get('/equilibrio', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'equilibrio.html'));
 });
 
+// Serve the Members Area page
+app.get('/membros', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'membros.html'));
+});
+
 // API endpoint for sales tips (OpenAI integration)
 app.post('/api/dicas-vendas', async (req, res) => {
     console.log('Recebendo requisição em /api/dicas-vendas');

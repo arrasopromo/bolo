@@ -1331,3 +1331,15 @@ body:not([data-theme="light"]) .audience-title .highlight {
 .modal-link-secondary:hover {
     color: #FFFFFF;
 }
+
+/* Footer Styles */
+.site-footer {
+    padding: 2rem 1rem;
+    text-align: center;
+    margin-top: 0;
+    background: transparent; /* Match Who Am I section in dark mode */
+}
+
+[data-theme="light"] .site-footer {
+    background: var(--audience-bg); /* Match Who Am I section in light mode */
+}
