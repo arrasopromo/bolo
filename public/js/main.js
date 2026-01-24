@@ -1,133 +1,147 @@
-// Slider Logic (Why Us - Hybrid CSS-First)
-const track = document.getElementById('whyUsTrack');
-const dotsContainer = document.getElementById('whyUsDots');
-const cards = document.querySelectorAll('.why-us-card');
+// Slider Logic (Generic)
+function initSlider(trackId, dotsId, cardSelector, gapDefault = 24) {
+    const track = document.getElementById(trackId);
+    const dotsContainer = document.getElementById(dotsId);
+    const cards = track ? track.querySelectorAll(cardSelector) : [];
 
-if (track && cards.length > 0) {
-    const cardCount = cards.length;
-    let autoPlayInterval;
-    
-    // Create Dots
-    dotsContainer.innerHTML = '';
-    for (let i = 0; i < cardCount; i++) {
-        const dot = document.createElement('div');
-        dot.classList.add('why-us-dot');
-        if (i === 0) dot.classList.add('active');
+    if (track && cards.length > 0) {
+        const cardCount = cards.length;
+        let autoPlayInterval;
         
-        dot.addEventListener('click', () => {
-            const cardWidth = cards[0].offsetWidth;
-            const style = window.getComputedStyle(track);
-            const gap = parseFloat(style.gap) || 24; // Default to 24px if parsing fails
-            
-            track.scrollTo({
-                left: i * (cardWidth + gap),
-                behavior: 'smooth'
-            });
-        });
-        dotsContainer.appendChild(dot);
-    }
-
-    // Update active dot on scroll
-    const updateActiveDot = () => {
-        const cardWidth = cards[0].offsetWidth;
-        const style = window.getComputedStyle(track);
-        const gap = parseFloat(style.gap) || 24;
-        const itemWidth = cardWidth + gap;
-        
-        // Calculate index based on scroll position percentage
-        // This ensures the last dot is active when scrolled to the very end
-        const maxScroll = track.scrollWidth - track.clientWidth;
-        let index;
-
-        if (maxScroll > 0) {
-            const scrollRatio = track.scrollLeft / maxScroll;
-            index = Math.round(scrollRatio * (cardCount - 1));
-        } else {
-            index = 0;
+        // Create Dots
+        if (dotsContainer) {
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < cardCount; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('why-us-dot'); // Reuse same dot style
+                if (i === 0) dot.classList.add('active');
+                
+                dot.addEventListener('click', () => {
+                    const cardWidth = cards[0].offsetWidth;
+                    const style = window.getComputedStyle(track);
+                    const gap = parseFloat(style.gap) || gapDefault;
+                    
+                    track.scrollTo({
+                        left: i * (cardWidth + gap),
+                        behavior: 'smooth'
+                    });
+                });
+                dotsContainer.appendChild(dot);
+            }
         }
-        
-        // Clamp index
-        if (index < 0) index = 0;
-        if (index >= cardCount) index = cardCount - 1;
 
-        document.querySelectorAll('.why-us-dot').forEach((dot, i) => {
-            if (i === index) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
-        });
-    };
-
-    track.addEventListener('scroll', () => {
-        window.requestAnimationFrame(updateActiveDot);
-    });
-
-    // Auto Play
-    const startAutoPlay = () => {
-        clearInterval(autoPlayInterval);
-        autoPlayInterval = setInterval(() => {
+        // Update active dot on scroll
+        const updateActiveDot = () => {
+            if (!dotsContainer) return;
+            
             const cardWidth = cards[0].offsetWidth;
             const style = window.getComputedStyle(track);
-            const gap = parseFloat(style.gap) || 24;
-            const itemWidth = cardWidth + gap;
+            const gap = parseFloat(style.gap) || gapDefault;
             
-            let nextScroll = track.scrollLeft + itemWidth;
+            // Calculate index based on scroll position
             const maxScroll = track.scrollWidth - track.clientWidth;
-            
-            // Loop back to start if at end
-            if (track.scrollLeft >= maxScroll - 10) {
-                nextScroll = 0;
+            let index;
+
+            if (maxScroll > 0) {
+                const scrollRatio = track.scrollLeft / maxScroll;
+                index = Math.round(scrollRatio * (cardCount - 1));
+            } else {
+                index = 0;
             }
             
-            track.scrollTo({
-                left: nextScroll,
-                behavior: 'smooth'
+            // Clamp index
+            if (index < 0) index = 0;
+            if (index >= cardCount) index = cardCount - 1;
+
+            const dots = dotsContainer.querySelectorAll('.why-us-dot');
+            dots.forEach((dot, i) => {
+                if (i === index) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
             });
-        }, 15000);
-    };
+        };
 
-    // Start Autoplay
-    startAutoPlay();
+        track.addEventListener('scroll', () => {
+            window.requestAnimationFrame(updateActiveDot);
+        });
 
-    // Pause on Interaction
-    track.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
-    track.addEventListener('touchstart', () => clearInterval(autoPlayInterval), { passive: true });
-    
-    // Resume on mouse leave
-    track.addEventListener('mouseleave', () => {
-        isDown = false;
-        track.classList.remove('active');
+        // Auto Play
+        const startAutoPlay = () => {
+            clearInterval(autoPlayInterval);
+            autoPlayInterval = setInterval(() => {
+                const cardWidth = cards[0].offsetWidth;
+                const style = window.getComputedStyle(track);
+                const gap = parseFloat(style.gap) || gapDefault;
+                const itemWidth = cardWidth + gap;
+                
+                let nextScroll = track.scrollLeft + itemWidth;
+                const maxScroll = track.scrollWidth - track.clientWidth;
+                
+                // Loop back to start if at end
+                if (track.scrollLeft >= maxScroll - 10) {
+                    nextScroll = 0;
+                }
+                
+                track.scrollTo({
+                    left: nextScroll,
+                    behavior: 'smooth'
+                });
+            }, 6000); // Faster autoplay for better engagement (6s)
+        };
+
+        // Start Autoplay
         startAutoPlay();
-    });
 
-    // Mouse Drag Implementation
-    let isDown = false;
-    let startX;
-    let scrollLeft;
+        // Pause on Interaction
+        track.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
+        track.addEventListener('touchstart', () => clearInterval(autoPlayInterval), { passive: true });
+        
+        // Resume on mouse leave
+        track.addEventListener('mouseleave', () => {
+            isDown = false;
+            track.classList.remove('active');
+            startAutoPlay();
+        });
 
-    track.addEventListener('mousedown', (e) => {
-        isDown = true;
-        track.classList.add('active');
-        startX = e.pageX - track.offsetLeft;
-        scrollLeft = track.scrollLeft;
-        clearInterval(autoPlayInterval); // Stop autoplay while dragging
-    });
+        // Mouse Drag Implementation
+        let isDown = false;
+        let startX;
+        let scrollLeft;
 
-    track.addEventListener('mouseup', () => {
-        isDown = false;
-        track.classList.remove('active');
-        startAutoPlay(); // Resume autoplay
-    });
+        track.addEventListener('mousedown', (e) => {
+            isDown = true;
+            track.classList.add('active');
+            startX = e.pageX - track.offsetLeft;
+            scrollLeft = track.scrollLeft;
+            clearInterval(autoPlayInterval);
+        });
 
-    track.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - track.offsetLeft;
-        const walk = (x - startX) * 2; // Scroll-fast factor
-        track.scrollLeft = scrollLeft - walk;
-    });
+        track.addEventListener('mouseup', () => {
+            isDown = false;
+            track.classList.remove('active');
+            startAutoPlay();
+        });
+
+        track.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - track.offsetLeft;
+            const walk = (x - startX) * 2;
+            track.scrollLeft = scrollLeft - walk;
+        });
+    }
 }
+
+// Initialize Sliders
+document.addEventListener('DOMContentLoaded', () => {
+    // Why Us Slider
+    initSlider('whyUsTrack', 'whyUsDots', '.why-us-card');
+    
+    // Video Slider
+    initSlider('videoTrack', 'videoDots', '.video-slide');
+});
 
 // Order Modal Logic - REMOVED/DISABLED as elements are not in HTML
 const modal = document.getElementById('orderModal');

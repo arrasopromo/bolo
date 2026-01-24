@@ -393,14 +393,37 @@ body {
     max-width: 350px;
 }
 
+@keyframes pulse-animation {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 187, 0, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 187, 0, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 187, 0, 0); }
+}
+
+@keyframes pulse-border-only {
+    0% { box-shadow: 0 0 0 0 rgba(255, 187, 0, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 187, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 187, 0, 0); }
+}
+
+.btn-cta.pulse {
+    animation: pulse-animation 2s infinite;
+}
+
+@media (max-width: 768px) {
+    .btn-cta.pulse {
+        animation: pulse-border-only 2s infinite;
+    }
+}
+
 .how-it-works-link {
     display: block;
     text-align: center;
     color: var(--text-white);
     margin-top: 1rem;
     text-decoration: underline;
-    font-size: 0.9rem;
+    font-size: 0.95rem; /* Increased slightly */
     cursor: pointer;
+    font-weight: 500;
     transition: color 0.2s;
 }
 
@@ -470,10 +493,10 @@ body {
 .main-price {
     font-size: 3rem; /* Slightly smaller */
     font-weight: 900;
-    color: #32221D;
+    color: var(--success-green); /* Verde igual economize */
     line-height: 1;
     margin-bottom: 1rem;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    text-shadow: none; /* Removed shadow as requested */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -483,7 +506,7 @@ body {
     font-size: 0.9rem;
     font-weight: 400;
     color: var(--text-muted);
-    margin-bottom: -5px;
+    margin-bottom: 0px;
 }
 
 .btn-cta {
@@ -687,7 +710,7 @@ body {
 
     .annotation.heart-icon {
         /* Heart: Opposite side (Left), aligned with 26 anos */
-        top: 25%;
+        top: 45%; /* Moved down from 35% */
         bottom: auto;
         left: 0;
         right: auto;
@@ -786,6 +809,34 @@ body {
 }
 
 /* Audience Section */
+/* Video Slider Styles */
+.video-slider-container {
+    position: relative;
+    max-width: 600px; /* Reduced from default/inline huge size */
+    margin: 0 auto;
+    overflow: hidden;
+    padding: 0 1rem;
+}
+
+.video-track::-webkit-scrollbar {
+    display: none;
+}
+
+.video-track {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.video-slide {
+    flex: 0 0 100%; /* Default to full width of container */
+    scroll-snap-align: center;
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    aspect-ratio: 16/9;
+}
+
 .audience-section {
     padding: 6rem 2rem;
     /* Transparent in dark mode to show body gradient */
@@ -823,6 +874,13 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+/* Dark mode override for VOCÊ highlight */
+body:not([data-theme="light"]) .audience-title .highlight {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #FFFFFF;
 }
 
 .audience-subtitle {
@@ -1030,6 +1088,11 @@ body {
     margin-bottom: 1.5rem;
     color: var(--heading-color);
 }
+
+/* Force white price in dark mode as requested - REMOVED PER USER REQUEST */
+/* body:not([data-theme="light"]) .table-price {
+    color: #FFFFFF;
+} */
 
 .table-price span {
     font-size: 1rem;
