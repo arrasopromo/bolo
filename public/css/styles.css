@@ -501,6 +501,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     transition: transform 0.2s;
+    text-decoration: none; /* Ensure no underline for links */
 }
 
 .btn-cta:hover {
