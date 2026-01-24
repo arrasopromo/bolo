@@ -219,7 +219,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício</li>
                 </ul>
-                <a href="https://pay.cakto.com.br/3aoidkh_738778" class="btn-cta" target="_blank">
+                <a href="javascript:void(0)" class="btn-cta" onclick="openUpgradeModal()">
                     QUERO ESTE
                 </a>
             </div>
@@ -266,17 +266,71 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <img src="/images/eu.png" alt="Isabelle Santos" class="who-image">
             </div>
         </div>
+        <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4rem; text-align: center;">
+            <p>&copy; Todos direitos reservados 2026</p>
+        </div>
     </section>
 
     <!-- Order Modal removed as requested -->
 
+    <!-- Upgrade Modal -->
+    <div id="upgradeModal" class="modal-overlay">
+        <div class="modal-content">
+            <i data-lucide="x" class="modal-close" onclick="closeUpgradeModal()"></i>
+            <div class="modal-headline">Faça Upgrade para o acesso completo</div>
+            
+            <div class="modal-inner-card" style="border: 1px solid rgba(0,0,0,0.2); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="table-title" style="font-size: 1.5rem; margin-bottom: 0.5rem;">Acesso Completo</div>
+                <div class="table-price" style="font-size: 2.5rem; margin-bottom: 1rem;">
+                    R$ 29,90 <span style="font-size: 1rem;">/único</span>
+                </div>
+
+                <ul class="table-features" style="text-align: left; margin-bottom: 1.5rem; list-style: none;">
+                    <li><i data-lucide="check"></i> Acesso Imediato à Planilha</li>
+                    <li><i data-lucide="check"></i> Aulas de Explicação</li>
+                    <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
+                    <li><i data-lucide="check"></i> Suporte via WhatsApp</li>
+                    <li class="highlight-feature" style="border: 2px dashed var(--primary-yellow); padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <span class="bonus-label" style="color: var(--primary-yellow); font-size: 0.7rem; display: block; font-weight: 800; text-transform: uppercase;">Bônus exclusivo</span>
+                        <div class="bonus-content" style="font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
+                            <i data-lucide="gift" style="color: var(--primary-yellow); width: 16px;"></i>
+                            Ferramenta para cálculo de ponto de equilíbrio com IA integrada
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <a href="https://pay.cakto.com.br/984m3jr_738897" class="modal-btn-primary" target="_blank">
+                SIM, QUERO POR 29,90
+            </a>
+            
+            <a href="https://pay.cakto.com.br/3aoidkh_738778" class="modal-link-secondary" target="_blank">
+                Não, prefiro continuar com o plano básico
+            </a>
+        </div>
+    </div>
+
     <script src="/js/main.js"></script>
     <script>
         lucide.createIcons();
+        
+        function openUpgradeModal() {
+            const modal = document.getElementById('upgradeModal');
+            modal.style.display = 'flex';
+            lucide.createIcons(); // Ensure icons render in modal
+        }
+        
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').style.display = 'none';
+        }
+        
+        // Close on outside click
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('upgradeModal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
     </script>
-    
-    <footer style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem;">
-        <p>&copy; Todos direitos reservados 2026</p>
-    </footer>
 </body>
 </html>
