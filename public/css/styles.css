@@ -463,6 +463,15 @@ body {
 }
 
 /* Recommended Badge Styling */
+.bonus-label {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+[data-theme="light"] .bonus-label {
+    color: var(--seal-brown);
+}
+
 .recommended-badge {
     position: absolute;
     top: -18px;
@@ -803,6 +812,8 @@ body {
     .main-price {
         font-size: 2.5rem;
     }
+
+    /* Responsive overrides moved to end of file to ensure they take precedence over generic styles */
 }
 
 /* Video Section */
@@ -1382,4 +1393,42 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
 [data-theme="light"] .site-footer {
     background: var(--audience-bg); /* Match Who Am I section in light mode */
+}
+
+/* =========================================
+   Mobile Specific Overrides (High Priority)
+   ========================================= */
+@media (max-width: 768px) {
+    /* Adjust section titles - significantly reduced for mobile */
+    .audience-title, .video-title, .who-title {
+        font-size: 2.0rem !important; /* Force override */
+    }
+
+    /* Reduce pricing card height (padding) but keep width */
+    .pricing-table {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .pricing-table .table-features {
+        margin-bottom: 1.5rem !important;
+    }
+
+    /* Modal Mobile Improvements */
+    .modal-content {
+        padding: 1.5rem !important;
+        width: 95% !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+
+    .modal-close {
+        top: 10px !important;
+        right: 10px !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        border-radius: 50%;
+        padding: 4px;
+        width: 32px !important;
+        height: 32px !important;
+        color: #333 !important; /* Ensure X is visible against white bg */
+    }
 }

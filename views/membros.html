@@ -168,7 +168,7 @@
             </a>
         </div>
         <div class="nav-profile">
-             <div style="color: white; font-weight: 600;">Olá, Confeiteira!</div>
+             <div id="userNameDisplay" style="color: white; font-weight: 600;">Olá, Confeiteira!</div>
              <div style="width: 40px; height: 40px; background: var(--primary-yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--seal-brown);">
                 <i data-lucide="user"></i>
              </div>
@@ -271,6 +271,38 @@
     <script src="/js/main.js"></script>
     <script>
         lucide.createIcons();
+
+        // Check for token in URL (Login via Link/Webhook)
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (token) {
+                // Save token
+                localStorage.setItem('bellecake_token', token);
+                
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            const storedToken = localStorage.getItem('bellecake_token');
+            if (storedToken) {
+                try {
+                    const res = await fetch('/api/user/me', {
+                        headers: { 'Authorization': `Bearer ${storedToken}` }
+                    });
+                    if (res.ok) {
+                        const userData = await res.json();
+                        const nameDisplay = document.getElementById('userNameDisplay');
+                        if (nameDisplay && userData.name) {
+                            nameDisplay.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao buscar usuário:', e);
+                }
+            }
+        });
     </script>
 </body>
 </html>

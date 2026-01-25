@@ -316,7 +316,7 @@
             </a>
         </div>
         <div class="nav-profile" style="display: flex; align-items: center; gap: 1rem;">
-             <div style="color: white; font-weight: 600;">Olá, Confeiteira!</div>
+             <div id="userNameDisplay" style="color: white; font-weight: 600;">Olá, Confeiteira!</div>
              <div style="width: 40px; height: 40px; background: var(--primary-yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--seal-brown);">
                 <i data-lucide="user"></i>
              </div>
@@ -451,6 +451,30 @@
 
     <script>
         lucide.createIcons();
+
+        // Auth & User Info
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('bellecake_token');
+            if (token) {
+                try {
+                    const res = await fetch('/api/user/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const userData = await res.json();
+                        const nameDisplay = document.getElementById('userNameDisplay');
+                        if (nameDisplay && userData.name) {
+                            nameDisplay.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao buscar usuário:', e);
+                }
+            } else {
+                 // Optional: redirect to login if this page requires auth
+                 // window.location.href = '/membros'; 
+            }
+        });
 
         // Info Modal Logic
         const infoIcon = document.getElementById('variableCostInfo');

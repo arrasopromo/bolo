@@ -29,12 +29,147 @@ app.use((req, res, next) => {
     next();
 });
 
+// Authentication Middleware
+const authenticateUser = async (req, res, next) => {
+    try {
+        const token = req.headers['authorization'] || req.query.token;
+        if (!token) {
+            // Allow public access to webhook and static files, but API needs token
+            // If it's a webhook request, skip auth
+            if (req.path.startsWith('/api/webhook')) return next();
+            // If it's a static file request (view), we might handle it differently or client-side redirect
+            // For API requests:
+            if (req.path.startsWith('/api/')) {
+                return res.status(401).json({ error: 'Token de acesso não fornecido.' });
+            }
+            return next();
+        }
+        
+        // Remove 'Bearer ' if present
+        const cleanToken = token.replace('Bearer ', '');
+        
+        const user = await User.findOne({ token: cleanToken });
+        if (!user) {
+            if (req.path.startsWith('/api/')) {
+                return res.status(401).json({ error: 'Token inválido.' });
+            }
+            return next();
+        }
+        
+        req.user = user;
+        next();
+    } catch (err) {
+        console.error('Auth error:', err);
+        res.status(500).json({ error: 'Erro na autenticação' });
+    }
+};
+
+app.use(authenticateUser);
+
+// --- Webhook Endpoint (Moved to top for priority) ---
+app.post('/api/webhook/cakto', async (req, res) => {
+    console.log('🪝 WEBHOOK CAKTO RECEBIDO');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('------------------------------------------------');
+
+    try {
+        // Normalização dos dados (tentativa de capturar vários formatos possíveis)
+        const payload = req.body;
+        
+        // Mapeamento de campos (ajuste conforme o payload real da Cakto)
+        // Geralmente: status, customer (name, email), product (name, id)
+        const status = payload.status || payload.current_status || payload.event || '';
+        const email = payload.email || payload.customer?.email || payload.client_email || '';
+        const name = payload.name || payload.customer?.name || payload.client_name || payload.customer?.full_name || 'Cliente';
+        const productName = payload.product_name || payload.product?.name || '';
+        
+        console.log(`Processando: Email=${email}, Status=${status}, Produto=${productName}`);
+
+        // Validar se é uma compra aprovada/paga
+        // Aceita 'paid', 'approved', 'completed', etc.
+        // Adicionado 'pix', 'generated', 'pending', 'waiting' para testes conforme solicitado
+        const isPaid = ['paid', 'approved', 'completed', 'authorized', 'pix', 'generated', 'pending', 'waiting'].some(s => status.toLowerCase().includes(s));
+
+        if (!isPaid) {
+            console.log('⚠️ Ignorando webhook: Status não é de pagamento aprovado ou pendente de teste.');
+            return res.status(200).json({ message: 'Ignored: Not a paid status' });
+        }
+
+        if (!email) {
+            console.error('❌ Erro: Email não encontrado no payload.');
+            return res.status(400).json({ error: 'Email missing' });
+        }
+
+        // Determinar Plano com base no nome do produto
+        // Ajuste essas strings conforme o nome real do seu produto na Cakto
+        let plan = 'basic';
+        if (productName.toLowerCase().includes('completo') || 
+            productName.toLowerCase().includes('premium') || 
+            productName.toLowerCase().includes('vitalício') ||
+            productName.toLowerCase().includes('combo')) {
+            plan = 'complete';
+        }
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+        
+        if (!user) {
+            console.log('🆕 Criando novo usuário...');
+            // Create new user with token
+            const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            
+            // Calculate subscription expiration (1 month free for complete plan logic removed/adjusted as per request for lifetime access in pricing, 
+            // but keeping logic for "assinatura por 1 mes gratuita" from previous prompt if needed, 
+            // THOUGH user said "acesso vitalicio" in pricing just now. 
+            // Let's set status active.
+            
+            let subscriptionExpiresAt = null;
+            let subscriptionStatus = 'active'; // Acesso vitalício por padrão se pagou
+
+            // Se for recorrência (fluxo de caixa separado), ajustar aqui. 
+            // Por enquanto, acesso vitalício à planilha.
+            
+            user = new User({
+                name,
+                email,
+                plan, // basic, complete
+                token,
+                status: 'active',
+                subscriptionStatus,
+                subscriptionExpiresAt
+            });
+            await user.save();
+            console.log(`✅ Usuário criado com sucesso: ${email} | Token: ${token}`);
+        } else {
+            console.log('🔄 Atualizando usuário existente...');
+            // Update existing user
+            user.plan = plan === 'complete' ? 'complete' : user.plan; // Upgrade if new plan is complete
+            user.status = 'active';
+            user.subscriptionStatus = 'active';
+            
+            await user.save();
+            console.log(`✅ Usuário atualizado: ${email}`);
+        }
+        
+        res.status(200).json({ message: 'Webhook processed successfully', user_token: user.token });
+    } catch (err) {
+        console.error('❌ Webhook error:', err);
+        res.status(500).json({ error: 'Webhook processing failed' });
+    }
+});
+
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve the landing page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
+});
+
+// Serve the Presentation page
+app.get('/apresentacao', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'apresentacao.html'));
 });
 
 // Serve the Break-even Calculator page
@@ -52,13 +187,27 @@ app.get('/fluxo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'fluxo.html'));
 });
 
+// Get current user info
+app.get('/api/user/me', async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        res.json({
+            name: req.user.name,
+            email: req.user.email,
+            plan: req.user.plan
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao buscar dados do usuário' });
+    }
+});
+
 // --- API Routes for Fluxo ---
 
-// Get all products for a user (simulated user for now)
+// Get all products for a user
 app.get('/api/products', async (req, res) => {
     try {
-        // TODO: Get user from session/token. For now, using a dummy user ID or just returning all.
-        const products = await Product.find().sort({ name: 1 });
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const products = await Product.find({ user: req.user._id }).sort({ name: 1 });
         res.json(products);
     } catch (err) {
         res.status(500).json({ error: 'Erro ao buscar produtos' });
@@ -68,12 +217,13 @@ app.get('/api/products', async (req, res) => {
 // Create a new product
 app.post('/api/products', async (req, res) => {
     try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { name, variableCost, salePrice } = req.body;
         const newProduct = new Product({
             name,
             variableCost,
             salePrice,
-            // user: req.user.id // TODO: Add user association
+            user: req.user._id
         });
         await newProduct.save();
         res.json(newProduct);
@@ -85,8 +235,9 @@ app.post('/api/products', async (req, res) => {
 // Get sales with filters
 app.get('/api/sales', async (req, res) => {
     try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { period } = req.query; // today, yesterday, 7days, 30days, lastmonth
-        let query = {};
+        let query = { user: req.user._id };
         const now = new Date();
         
         if (period === 'today') {
@@ -119,8 +270,9 @@ app.get('/api/sales', async (req, res) => {
 // Register a sale
 app.post('/api/sales', async (req, res) => {
     try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { productId, quantity, date, paymentMethod } = req.body;
-        const product = await Product.findById(productId);
+        const product = await Product.findOne({ _id: productId, user: req.user._id });
         
         if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
         
@@ -135,7 +287,8 @@ app.post('/api/sales', async (req, res) => {
             totalCost,
             profit,
             paymentMethod: paymentMethod || 'pix',
-            date: date || new Date()
+            date: date || new Date(),
+            user: req.user._id
         });
         
         await newSale.save();
@@ -149,6 +302,7 @@ app.post('/api/sales', async (req, res) => {
 
 app.get('/api/fixed-costs', async (req, res) => {
     try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { period } = req.query;
         let start, end;
         const now = new Date();
@@ -161,7 +315,7 @@ app.get('/api/fixed-costs', async (req, res) => {
              end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
         }
         
-        const costs = await FixedCost.find({ date: { $lte: end } }).sort({ date: -1 });
+        const costs = await FixedCost.find({ date: { $lte: end }, user: req.user._id }).sort({ date: -1 });
         
         const activeCosts = costs.map(cost => {
              const costDate = new Date(cost.date);
@@ -187,13 +341,15 @@ app.get('/api/fixed-costs', async (req, res) => {
 
 app.post('/api/fixed-costs', async (req, res) => {
     try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { name, amount, date, recurrenceType, installments } = req.body;
         const newCost = new FixedCost({
             name,
             amount,
             date: date || new Date(),
             recurrenceType: recurrenceType || 'monthly',
-            installments: installments || 1
+            installments: installments || 1,
+            user: req.user._id
         });
         await newCost.save();
         res.json(newCost);
@@ -205,6 +361,7 @@ app.post('/api/fixed-costs', async (req, res) => {
 // --- Dashboard Stats Route ---
 app.get('/api/dashboard-stats', async (req, res) => {
     try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { period } = req.query; // today, yesterday, 7days, 30days
         const now = new Date();
         let start, end;
@@ -233,13 +390,13 @@ app.get('/api/dashboard-stats', async (req, res) => {
             end = new Date();
         }
 
-        const dateQuery = { date: { $gte: start, $lte: end } };
+        const dateQuery = { date: { $gte: start, $lte: end }, user: req.user._id };
 
         // Fetch Sales
         const sales = await Sale.find(dateQuery).populate('product');
         
         // Fetch Fixed Costs (Handle recurrence)
-        const allFixedCosts = await FixedCost.find();
+        const allFixedCosts = await FixedCost.find({ user: req.user._id });
         let totalFixedCost = 0;
 
         // Helper to check if a date is in range
@@ -379,97 +536,8 @@ app.get('/api/dashboard-stats', async (req, res) => {
 });
 
 // --- Webhook Endpoint ---
-app.post('/api/webhook/cakto', async (req, res) => {
-    console.log('------------------------------------------------');
-    console.log('🪝 WEBHOOK CAKTO RECEBIDO');
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-    console.log('------------------------------------------------');
-
-    try {
-        // Normalização dos dados (tentativa de capturar vários formatos possíveis)
-        const payload = req.body;
-        
-        // Mapeamento de campos (ajuste conforme o payload real da Cakto)
-        // Geralmente: status, customer (name, email), product (name, id)
-        const status = payload.status || payload.current_status || payload.event || '';
-        const email = payload.email || payload.customer?.email || payload.client_email || '';
-        const name = payload.name || payload.customer?.name || payload.client_name || payload.customer?.full_name || 'Cliente';
-        const productName = payload.product_name || payload.product?.name || '';
-        
-        console.log(`Processando: Email=${email}, Status=${status}, Produto=${productName}`);
-
-        // Validar se é uma compra aprovada/paga
-        // Aceita 'paid', 'approved', 'completed', etc.
-        const isPaid = ['paid', 'approved', 'completed', 'authorized'].some(s => status.toLowerCase().includes(s));
-
-        if (!isPaid) {
-            console.log('⚠️ Ignorando webhook: Status não é de pagamento aprovado.');
-            return res.status(200).json({ message: 'Ignored: Not a paid status' });
-        }
-
-        if (!email) {
-            console.error('❌ Erro: Email não encontrado no payload.');
-            return res.status(400).json({ error: 'Email missing' });
-        }
-
-        // Determinar Plano com base no nome do produto
-        // Ajuste essas strings conforme o nome real do seu produto na Cakto
-        let plan = 'basic';
-        if (productName.toLowerCase().includes('completo') || 
-            productName.toLowerCase().includes('premium') || 
-            productName.toLowerCase().includes('vitalício') ||
-            productName.toLowerCase().includes('combo')) {
-            plan = 'complete';
-        }
-
-        // Check if user exists
-        let user = await User.findOne({ email });
-        
-        if (!user) {
-            console.log('🆕 Criando novo usuário...');
-            // Create new user with token
-            const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            
-            // Calculate subscription expiration (1 month free for complete plan logic removed/adjusted as per request for lifetime access in pricing, 
-            // but keeping logic for "assinatura por 1 mes gratuita" from previous prompt if needed, 
-            // THOUGH user said "acesso vitalicio" in pricing just now. 
-            // Let's set status active.
-            
-            let subscriptionExpiresAt = null;
-            let subscriptionStatus = 'active'; // Acesso vitalício por padrão se pagou
-
-            // Se for recorrência (fluxo de caixa separado), ajustar aqui. 
-            // Por enquanto, acesso vitalício à planilha.
-            
-            user = new User({
-                name,
-                email,
-                plan, // basic, complete
-                token,
-                status: 'active',
-                subscriptionStatus,
-                subscriptionExpiresAt
-            });
-            await user.save();
-            console.log(`✅ Usuário criado com sucesso: ${email} | Token: ${token}`);
-        } else {
-            console.log('🔄 Atualizando usuário existente...');
-            // Update existing user
-            user.plan = plan === 'complete' ? 'complete' : user.plan; // Upgrade if new plan is complete
-            user.status = 'active';
-            user.subscriptionStatus = 'active';
-            
-            await user.save();
-            console.log(`✅ Usuário atualizado: ${email}`);
-        }
-        
-        res.status(200).json({ message: 'Webhook processed successfully', user_token: user.token });
-    } catch (err) {
-        console.error('❌ Webhook error:', err);
-        res.status(500).json({ error: 'Webhook processing failed' });
-    }
-});
+// MOVED TO TOP OF FILE
+// app.post('/api/webhook/cakto', async (req, res) => { ... })
 
 // API endpoint for sales tips (OpenAI integration)
 app.post('/api/dicas-vendas', async (req, res) => {
