@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    cpf: { type: String },
+    phone: { type: String },
     token: { type: String },
     plan: { type: String, enum: ['basic', 'complete'], default: 'basic' },
     status: { type: String, default: 'pending' },

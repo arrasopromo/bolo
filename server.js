@@ -104,12 +104,52 @@ app.post('/api/webhook/cakto', async (req, res) => {
             return null;
         };
 
+        // Helper to find CPF recursively
+        const findCPF = (obj) => {
+            if (!obj || typeof obj !== 'object') return null;
+            if (obj.cpf) return obj.cpf;
+            if (obj.doc) return obj.doc;
+            if (obj.document) return obj.document;
+            if (obj.customer_document) return obj.customer_document;
+            if (obj.buyer_document) return obj.buyer_document;
+            
+            for (const k in obj) {
+                const val = findCPF(obj[k]);
+                if (val) return val;
+            }
+            return null;
+        };
+
+        // Helper to find Phone recursively
+        const findPhone = (obj) => {
+            if (!obj || typeof obj !== 'object') return null;
+            if (obj.phone) return obj.phone;
+            if (obj.mobile) return obj.mobile;
+            if (obj.cellphone) return obj.cellphone;
+            if (obj.whatsapp) return obj.whatsapp;
+            if (obj.customer_phone) return obj.customer_phone;
+            if (obj.buyer_phone) return obj.buyer_phone;
+            
+            for (const k in obj) {
+                const val = findPhone(obj[k]);
+                if (val) return val;
+            }
+            return null;
+        };
+
         const status = findValue(payload, 'status') || findValue(payload, 'current_status') || findValue(payload, 'event') || 'approved'; // Default to approved if not found to ensure it works
         const email = findEmail(payload);
+        
+        let cpf = findCPF(payload);
+        if (cpf) cpf = String(cpf).replace(/\D/g, ''); // Remove non-digits
+        
+        let phone = findPhone(payload);
+        if (phone) phone = String(phone).replace(/\D/g, ''); // Remove non-digits
+
         const name = findValue(payload, 'name') || findValue(payload, 'full_name') || 'Cliente';
         const productName = findValue(payload, 'product_name') || 'Produto';
         
-        console.log(`Processando: Email=${email}, Status=${status}, Produto=${productName}`);
+        console.log(`Processando: Email=${email}, CPF=${cpf}, Phone=${phone}, Status=${status}, Produto=${productName}`);
 
         // Validar se é uma compra aprovada/paga
         // Aceita 'paid', 'approved', 'completed', etc.
@@ -122,35 +162,7 @@ app.post('/api/webhook/cakto', async (req, res) => {
             return res.status(200).json({ message: 'Ignored: Not a paid status', received_status: status });
         }
 
-        if (!email) {
-            console.error('❌ Erro: Email não encontrado no payload.');
-            // Generate a fallback email to ensure creation works for testing
-            const fallbackEmail = `sem_email_${Date.now()}@bellecake.com`;
-            console.log(`⚠️ Usando email de fallback: ${fallbackEmail}`);
-            
-            // Still create user with fallback
-             let user = await User.findOne({ email: fallbackEmail });
-             if (!user) {
-                const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-                user = new User({ 
-                    name: name || 'Cliente Sem Email', 
-                    email: fallbackEmail, 
-                    plan: 'basic', 
-                    token, 
-                    status: 'active' 
-                });
-                await user.save();
-             }
-             
-             return res.status(200).json({ 
-                 message: 'User created with fallback email', 
-                 user_token: user.token,
-                 original_payload: payload 
-             });
-        }
-
         // Determinar Plano com base no nome do produto
-        // Ajuste essas strings conforme o nome real do seu produto na Cakto
         let plan = 'basic';
         if (productName.toLowerCase().includes('completo') || 
             productName.toLowerCase().includes('premium') || 
@@ -159,36 +171,39 @@ app.post('/api/webhook/cakto', async (req, res) => {
             plan = 'complete';
         }
 
-        // Check if user exists
-        let user = await User.findOne({ email });
-        
+        // Search for existing user by Email OR CPF OR Phone
+        const searchConditions = [];
+        if (email) searchConditions.push({ email });
+        if (cpf) searchConditions.push({ cpf });
+        if (phone) searchConditions.push({ phone });
+
+        let user = null;
+        if (searchConditions.length > 0) {
+            user = await User.findOne({ $or: searchConditions });
+        }
+
         if (!user) {
             console.log('🆕 Criando novo usuário...');
-            // Create new user with token
+            
+            // Generate fallback email if missing
+            const finalEmail = email || `sem_email_${Date.now()}@bellecake.com`;
+            if (!email) console.log(`⚠️ Usando email de fallback: ${finalEmail}`);
+
             const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             
-            // Calculate subscription expiration (1 month free for complete plan logic removed/adjusted as per request for lifetime access in pricing, 
-            // but keeping logic for "assinatura por 1 mes gratuita" from previous prompt if needed, 
-            // THOUGH user said "acesso vitalicio" in pricing just now. 
-            // Let's set status active.
-            
-            let subscriptionExpiresAt = null;
-            let subscriptionStatus = 'active'; // Acesso vitalício por padrão se pagou
-
-            // Se for recorrência (fluxo de caixa separado), ajustar aqui. 
-            // Por enquanto, acesso vitalício à planilha.
-            
             user = new User({
-                name,
-                email,
-                plan, // basic, complete
+                name: name || 'Cliente',
+                email: finalEmail,
+                cpf,
+                phone,
+                plan,
                 token,
                 status: 'active',
-                subscriptionStatus,
-                subscriptionExpiresAt
+                subscriptionStatus: 'active',
+                subscriptionExpiresAt: null
             });
             await user.save();
-            console.log(`✅ Usuário criado com sucesso: ${email} | Token: ${token}`);
+            console.log(`✅ Usuário criado com sucesso: ${finalEmail} | Token: ${token}`);
         } else {
             console.log('🔄 Atualizando usuário existente...');
             // Update existing user
@@ -196,8 +211,12 @@ app.post('/api/webhook/cakto', async (req, res) => {
             user.status = 'active';
             user.subscriptionStatus = 'active';
             
+            // Update CPF/Phone if missing in DB but present in payload
+            if (cpf && !user.cpf) user.cpf = cpf;
+            if (phone && !user.phone) user.phone = phone;
+
             await user.save();
-            console.log(`✅ Usuário atualizado: ${email}`);
+            console.log(`✅ Usuário atualizado: ${user.email}`);
         }
         
         res.status(200).json({ message: 'Webhook processed successfully', user_token: user.token });
