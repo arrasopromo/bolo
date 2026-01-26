@@ -183,6 +183,11 @@ app.get('/membros', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'membros.html'));
 });
 
+// Redirect /membro to /membros (common typo fix)
+app.get('/membro', (req, res) => {
+    res.redirect('/membros');
+});
+
 // Serve the Cash Flow (Fluxo) page
 app.get('/fluxo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'fluxo.html'));
