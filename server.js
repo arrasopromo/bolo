@@ -88,9 +88,10 @@ app.post('/api/webhook/cakto', async (req, res) => {
 
         // Validar se é uma compra aprovada/paga
         // Aceita 'paid', 'approved', 'completed', etc.
-        // Adicionado 'pix', 'generated', 'pending', 'waiting', 'created' para testes conforme solicitado
-        const isPaid = ['paid', 'approved', 'completed', 'authorized', 'pix', 'generated', 'pending', 'waiting', 'created', 'billing'].some(s => status.toLowerCase().includes(s));
-
+        // Adicionado 'pix', 'generated', 'pending', 'waiting', 'created', 'billing' para testes conforme solicitado
+        const paidKeywords = ['paid', 'approved', 'completed', 'authorized', 'pix', 'generated', 'pending', 'waiting', 'created', 'billing'];
+        const isPaid = paidKeywords.some(s => status.toLowerCase().includes(s));
+        
         if (!isPaid) {
             console.log('⚠️ Ignorando webhook: Status não é de pagamento aprovado ou pendente de teste.');
             return res.status(200).json({ message: 'Ignored: Not a paid status' });
