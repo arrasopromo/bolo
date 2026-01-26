@@ -79,10 +79,11 @@ app.post('/api/webhook/cakto', async (req, res) => {
         
         // Mapeamento de campos (ajuste conforme o payload real da Cakto)
         // Geralmente: status, customer (name, email), product (name, id)
-        const status = payload.status || payload.current_status || payload.event || '';
-        const email = payload.email || payload.customer?.email || payload.client_email || '';
-        const name = payload.name || payload.customer?.name || payload.client_name || payload.customer?.full_name || 'Cliente';
-        const productName = payload.product_name || payload.product?.name || '';
+        // Adicionado suporte a payload.data (comum em webhooks)
+        const status = payload.status || payload.current_status || payload.event || payload.data?.status || payload.data?.current_status || '';
+        const email = payload.email || payload.customer?.email || payload.client_email || payload.data?.customer?.email || payload.data?.email || '';
+        const name = payload.name || payload.customer?.name || payload.client_name || payload.customer?.full_name || payload.data?.customer?.name || 'Cliente';
+        const productName = payload.product_name || payload.product?.name || payload.data?.product_name || '';
         
         console.log(`Processando: Email=${email}, Status=${status}, Produto=${productName}`);
 
@@ -94,12 +95,17 @@ app.post('/api/webhook/cakto', async (req, res) => {
         
         if (!isPaid) {
             console.log('⚠️ Ignorando webhook: Status não é de pagamento aprovado ou pendente de teste.');
-            return res.status(200).json({ message: 'Ignored: Not a paid status' });
+            return res.status(200).json({ message: 'Ignored: Not a paid status', received_status: status });
         }
 
         if (!email) {
             console.error('❌ Erro: Email não encontrado no payload.');
-            return res.status(400).json({ error: 'Email missing' });
+            // Retornar o payload recebido para ajudar no debug (mostrado no dashboard do webhook)
+            return res.status(400).json({ 
+                error: 'Email missing', 
+                received_payload: payload,
+                hint: 'Verifique se o campo de email esta em customer.email ou na raiz'
+            });
         }
 
         // Determinar Plano com base no nome do produto
