@@ -407,28 +407,7 @@
 
         </div>
 
-        <!-- NEW SECTION: Cost Classification -->
-        <div class="classification-container calculator-card" style="margin-top: 3rem; width: 100%; max-width: 550px;">
-            <h3 class="calc-title" style="font-size: 1.5rem; margin-bottom: 1rem;">
-                <i data-lucide="search" style="vertical-align: middle; margin-right: 5px; width: 24px; height: 24px;"></i> 
-                Consultar se é Fixo ou Variável
-            </h3>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <input type="text" id="costInput" placeholder="Ex: Farinha, Aluguel, Embalagem..." style="flex: 1; min-width: 200px;">
-                <button id="btnConsultar" class="btn-primary" style="padding: 0.8rem 1.5rem; justify-content: center;">
-                    Consultar
-                </button>
-            </div>
-            
-            <div id="consultLoading" style="display: none; text-align: center; margin-top: 1rem; color: var(--text-muted);">
-                <i data-lucide="loader-2" class="spin"></i> Verificando...
-            </div>
-
-            <div id="consultResult" style="margin-top: 1rem; display: none; padding: 1rem; border-radius: 8px; text-align: left;">
-                <strong id="resClass" style="font-size: 1.1rem; display: block; margin-bottom: 0.3rem;"></strong>
-                <span id="resDesc" style="color: #e0e0e0; font-size: 0.9rem;"></span>
-            </div>
-        </div>
+        <!-- NEW SECTION: Cost Classification REMOVED -->
 
         <!-- Info Modal -->
         <div id="infoModal" class="info-modal">
@@ -500,53 +479,7 @@
             }
         });
         
-        // Cost Classification Logic
-        document.getElementById('btnConsultar').addEventListener('click', async () => {
-            const item = document.getElementById('costInput').value.trim();
-            if (!item) return;
-
-            const loading = document.getElementById('consultLoading');
-            const resultDiv = document.getElementById('consultResult');
-            const resClass = document.getElementById('resClass');
-            const resDesc = document.getElementById('resDesc');
-            const btn = document.getElementById('btnConsultar');
-
-            loading.style.display = 'block';
-            resultDiv.style.display = 'none';
-            btn.disabled = true;
-
-            try {
-                const response = await fetch('/api/classificar-custo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ item })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    const { classificacao, explicacao } = data.data;
-                    
-                    // Style based on type
-                    const isFixed = classificacao.toLowerCase().includes('fixo');
-                    resultDiv.style.background = isFixed ? 'rgba(255, 68, 68, 0.2)' : 'rgba(76, 175, 80, 0.2)';
-                    resultDiv.style.border = isFixed ? '1px solid #ff4444' : '1px solid #4CAF50';
-                    resClass.style.color = isFixed ? '#ff8888' : '#88ff88';
-                    
-                    resClass.textContent = classificacao;
-                    resDesc.textContent = explicacao;
-                    resultDiv.style.display = 'block';
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Erro ao consultar.');
-            } finally {
-                loading.style.display = 'none';
-                btn.disabled = false;
-            }
-        });
+        // Cost Classification Logic REMOVED
 
         let metaFaturamento = 0;
 
@@ -600,10 +533,12 @@
             submitBtn.textContent = 'Analisando...';
 
             try {
+                const token = localStorage.getItem('bellecake_token');
                 const response = await fetch('/api/dicas-vendas', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
                         metaFaturamento: metaFaturamento,

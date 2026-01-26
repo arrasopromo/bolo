@@ -122,12 +122,22 @@
             top: 100%;
             left: 0;
             width: 100%;
-            background: var(--bg-cream);
+            background: var(--navbar-bg);
             padding: 1rem;
             flex-direction: column;
             gap: 0.5rem;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .mobile-menu-dropdown .nav-item {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .mobile-menu-dropdown .nav-item:hover,
+        .mobile-menu-dropdown .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
         }
 
         .mobile-menu-dropdown.open {
@@ -352,8 +362,14 @@
                 <a href="/membros">
                     <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="sidebar-logo">
                 </a>
-                <div id="sidebarUserName" style="color: rgba(255,255,255,0.9); margin-top: 1rem; font-weight: 600; font-size: 0.9rem;">Olá, Confeiteira</div>
             </div>
+            
+            <div style="padding: 0 1.5rem; margin-bottom: 1rem;">
+                <button onclick="openSaleModal()" style="width: 100%; background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); transition: all 0.2s;">
+                    <i data-lucide="plus-circle" style="width: 20px;"></i> NOVA VENDA
+                </button>
+            </div>
+
             <ul class="nav-menu">
                 <li class="nav-item active" onclick="switchView('resumo')">
                     <i data-lucide="layout-dashboard"></i> Resumo
@@ -378,6 +394,16 @@
         <!-- Main Content -->
         <main class="main-content">
             
+            <!-- Top User Bar -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 0.5rem 1rem; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                    <div style="width: 32px; height: 32px; background: #FFFBF7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--secondary-caramel);">
+                        <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <span id="topUserName" style="font-weight: 600; font-size: 0.95rem; color: var(--text-brown);">Olá</span>
+                </div>
+            </div>
+
             <!-- VIEW: RESUMO -->
             <section id="view-resumo" class="view-section active">
                 <div class="header-dash">
@@ -398,6 +424,10 @@
                     <div class="kpi-card">
                         <div class="kpi-title">Custo Variável</div>
                         <div class="kpi-value" id="totalVariableCost" style="color: #F44336;">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Custo Fixo (Mês)</div>
+                        <div class="kpi-value" id="totalFixedCostDash" style="color: #F44336;">R$ 0,00</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-title">Lucro Líquido</div>
@@ -451,19 +481,22 @@
 
             <!-- VIEW: CUSTOS -->
             <section id="view-custos" class="view-section">
-                <div class="header-dash">
+                <div class="header-dash" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <h1>Custos Fixos</h1>
+                    <div style="background: #FFF0F0; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #FFCDD2; color: #D32F2F; font-weight: 700; align-self: flex-start;">
+                        Total: <span id="viewCustosTotal">R$ 0,00</span>
+                    </div>
                 </div>
 
-                <!-- AI Classification Tool -->
-                <div class="classification-container calculator-card" style="margin-bottom: 2rem; width: 100%;">
-                    <h3 class="calc-title" style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-brown);">
-                        <i data-lucide="search" style="vertical-align: middle; margin-right: 5px;"></i> 
-                        Consultar Classificação de Custo (IA)
+                <!-- AI Classification Tool (Style matched to Equilibrio) -->
+                <div class="classification-container calculator-card" style="margin: 0 auto 2rem auto; max-width: 600px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-light); padding: 1.5rem; border-radius: 16px; background: white;">
+                    <h3 class="calc-title" style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--text-brown); font-weight: 700;">
+                        <i data-lucide="search" style="vertical-align: middle; margin-right: 5px; color: var(--primary-yellow);"></i> 
+                        Consultar se é custo variável ou fixo
                     </h3>
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <input type="text" id="costInput" placeholder="Ex: Bolo Chantilly Ninho e Nutella Aro 15" style="flex: 1; min-width: 200px; padding: 0.8rem; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text-brown);">
-                        <button id="btnConsultar" class="btn-primary" style="margin: 0; padding: 0.8rem 1.5rem; border-radius: 8px;">
+                        <input type="text" id="costInput" placeholder="Ex: Farinha, Aluguel, Embalagem..." style="flex: 1; min-width: 200px; padding: 0.8rem; border: 1px solid var(--border-light); border-radius: 8px; background: #FAFAFA; color: var(--text-brown); font-family: inherit; font-size: 0.95rem;">
+                <button id="btnConsultar" class="btn-submit" style="margin: 0; padding: 0.8rem 1.5rem; border-radius: 8px; width: auto; background: var(--primary-yellow); color: var(--seal-brown); font-weight: 600;">
                             Consultar
                         </button>
                     </div>
@@ -479,6 +512,7 @@
                 <div class="form-card">
                     <h3 style="margin-top:0; margin-bottom: 1.5rem;">Novo Custo Fixo</h3>
                     <form id="fixedCostForm">
+                        <input type="hidden" id="editCostId">
                         <div class="form-group">
                             <label>Descrição do Custo</label>
                             <input type="text" id="costName" placeholder="Ex: Aluguel, Internet, Luz" required>
@@ -548,7 +582,20 @@
                 </div>
 
                 <div style="margin-top: 3rem;">
-                    <h3 style="margin-bottom: 1.5rem;">Custos deste Mês</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="margin: 0;">Custos deste Mês</h3>
+                        <div id="bulkActions" style="display: none; gap: 10px;">
+                            <button onclick="deleteSelectedCosts()" style="background: #FFCDD2; color: #D32F2F; border: 1px solid #EF9A9A; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                <i data-lucide="trash-2" style="width: 16px; height: 16px; vertical-align: middle;"></i> Remover Selecionados
+                            </button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: inline-flex; align-items: center; cursor: pointer; font-size: 0.9rem; color: #666;">
+                            <input type="checkbox" id="selectAllCosts" onchange="toggleSelectAllCosts()" style="margin-right: 8px;">
+                            Selecionar Todos
+                        </label>
+                    </div>
                     <div id="fixedCostsList" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
                         <!-- Populated by JS -->
                     </div>
@@ -564,6 +611,7 @@
                 <div class="form-card">
                     <h3 style="margin-top:0; margin-bottom: 1.5rem;">Novo Produto</h3>
                     <form id="productForm">
+                        <input type="hidden" id="editProductId">
                         <div class="form-group">
                             <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; background: #FFFBF7; padding: 0.8rem; border-radius: 8px; border: 1px dashed #CD7A3E;">
                                 💡 <strong>Dica:</strong> Cadastre o nome completo (Sabor + Tamanho) caso o preço varie.<br>
@@ -585,7 +633,20 @@
                 </div>
                 
                 <div style="margin-top: 3rem;">
-                    <h3 style="margin-bottom: 1.5rem;">Produtos Cadastrados</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="margin: 0;">Produtos Cadastrados</h3>
+                        <div id="productBulkActions" style="display: none; gap: 10px;">
+                            <button onclick="deleteSelectedProducts()" style="background: #FFCDD2; color: #D32F2F; border: 1px solid #EF9A9A; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                <i data-lucide="trash-2" style="width: 16px; height: 16px; vertical-align: middle;"></i> Remover Selecionados
+                            </button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: inline-flex; align-items: center; cursor: pointer; font-size: 0.9rem; color: #666;">
+                            <input type="checkbox" id="selectAllProducts" onchange="toggleSelectAllProducts()" style="margin-right: 8px;">
+                            Selecionar Todos
+                        </label>
+                    </div>
                     <div id="productsList" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
                         <!-- Populated by JS -->
                     </div>
@@ -596,38 +657,24 @@
             <section id="view-vendas" class="view-section">
                 <div class="header-dash">
                     <h1>Registro de Vendas</h1>
+                    <select id="salesPeriodFilter" onchange="loadRecentSales()" style="padding: 0.6rem; border-radius: 8px; border: 1px solid #ddd; background: white;">
+                        <option value="today">Hoje</option>
+                        <option value="yesterday">Ontem</option>
+                        <option value="7days">Últimos 7 dias</option>
+                        <option value="30days" selected>Últimos 30 dias</option>
+                        <option value="all">Todo o período</option>
+                    </select>
                 </div>
 
-                <div class="form-card">
-                    <h3 style="margin-top:0; margin-bottom: 1.5rem;">Nova Venda</h3>
-                    <form id="saleForm">
-                        <div class="form-group">
-                            <label>Produto</label>
-                            <select id="productSelect" required>
-                                <option value="">Carregando...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Quantidade</label>
-                            <input type="number" id="quantity" min="1" value="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Data</label>
-                            <input type="date" id="saleDate" required>
-                        </div>
-                        <button type="submit" class="btn-submit" style="background: #4CAF50;">Registrar Venda</button>
-                    </form>
-                </div>
-
-                <div style="margin-top: 3rem;">
-                    <h3 style="margin-bottom: 1.5rem;">Últimas Vendas</h3>
-                    <div class="table-responsive">
+                <div style="margin-top: 1rem;">
+                    <div class="table-responsive" style="background: white; padding: 1rem; border-radius: 16px; border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
                         <table style="width: 100%; border-collapse: collapse;">
-                            <thead style="background: #f9f9f9; border-bottom: 2px solid #eee;">
+                            <thead style="background: #FFFBF7; border-bottom: 2px solid #eee;">
                                 <tr>
                                     <th style="padding: 1rem; text-align: left;">Data</th>
                                     <th style="padding: 1rem; text-align: left;">Produto</th>
                                     <th style="padding: 1rem; text-align: left;">Qtd</th>
+                                    <th style="padding: 1rem; text-align: left;">Método</th>
                                     <th style="padding: 1rem; text-align: left;">Valor Total</th>
                                 </tr>
                             </thead>
@@ -641,6 +688,93 @@
 
         </main>
     </div>
+
+    <!-- New Sale Modal -->
+    <div id="newSaleModal" class="modal-overlay">
+        <div class="modal-content form-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0;">Nova Venda</h3>
+                <button onclick="closeSaleModal()" style="background: none; border: none; cursor: pointer; color: #666;">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; text-align: center;">
+                <button type="button" id="voiceRecordBtn" onclick="toggleRecording()" style="background: var(--card-white); border: 1px solid var(--primary-yellow); color: var(--text-brown); padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                    <i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz
+                </button>
+                <div id="voiceStatus" style="margin-top: 0.5rem; font-size: 0.85rem; color: #666; font-style: italic; display: none;"></div>
+                <style>
+                    .recording { animation: pulse 1.5s infinite; }
+                    @keyframes pulse {
+                        0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+                        70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+                        100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+                    }
+                </style>
+            </div>
+            
+            <form id="saleForm">
+                <div class="form-group">
+                    <label>Produto</label>
+                    <select id="productSelect" required>
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantidade</label>
+                    <input type="number" id="quantity" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Método de Pagamento</label>
+                    <select id="paymentMethod" required>
+                        <option value="pix">Pix</option>
+                        <option value="credit">Crédito</option>
+                        <option value="debit">Débito</option>
+                        <option value="cash">Dinheiro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="saleDate" required>
+                </div>
+                <button type="submit" class="btn-submit" style="background: #4CAF50;">Registrar Venda</button>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.open .modal-content {
+            transform: translateY(0);
+        }
+    </style>
 
     <script>
         lucide.createIcons();
@@ -656,7 +790,7 @@
         const authToken = localStorage.getItem('bellecake_token');
         if (!authToken) {
             console.warn('No token found');
-            // window.location.href = '/membros';
+            window.location.href = '/membros';
         }
 
         // Wrapper for authenticated requests
@@ -682,9 +816,9 @@
                 const res = await authFetch('/api/user/me');
                 if (res.ok) {
                     const user = await res.json();
-                    const sidebarName = document.getElementById('sidebarUserName');
-                    if (sidebarName && user.name) {
-                        sidebarName.textContent = user.name.split(' ')[0];
+                    const topName = document.getElementById('topUserName');
+                    if (topName && user.name) {
+                        topName.textContent = 'Olá, ' + user.name.split(' ')[0];
                     }
                 }
             } catch (err) {
@@ -754,15 +888,33 @@
                 }
                 products.forEach(p => {
                     container.innerHTML += `
-                        <div style="background: white; padding: 1.2rem; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.5rem;">${p.name}</div>
-                            <div style="display:flex; justify-content:space-between; font-size: 0.9rem;">
-                                <span style="color: #666;">Custo: R$ ${p.variableCost.toFixed(2)}</span>
-                                <span style="color: #4CAF50; font-weight:600;">Venda: R$ ${p.salePrice.toFixed(2)}</span>
+                        <div style="background: white; padding: 0.8rem; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); position: relative; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div style="position: absolute; top: 8px; left: 8px;">
+                                <input type="checkbox" class="product-checkbox" value="${p._id}" onchange="updateProductBulkActions()">
+                            </div>
+                            <div style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px;">
+                                <button onclick="editProduct('${p._id}', '${p.name.replace(/'/g, "\\'")}', ${p.variableCost}, ${p.salePrice})" style="background: none; border: none; color: #CD7A3E; cursor: pointer; padding: 4px;" title="Editar Produto">
+                                    <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
+                                </button>
+                                <button onclick="deleteProduct('${p._id}')" style="background: none; border: none; color: #999; cursor: pointer; padding: 4px;" title="Remover Produto">
+                                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.5rem; padding-right: 60px; padding-left: 25px; line-height: 1.2; font-size: 0.95rem;">${p.name}</div>
+                            <div style="display:flex; justify-content:space-between; font-size: 0.85rem; padding-left: 25px; align-items: flex-end;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #888; font-size: 0.75rem;">Custo</span>
+                                    <span style="color: #666; font-weight: 600;">R$ ${p.variableCost.toFixed(2)}</span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; text-align: right;">
+                                    <span style="color: #888; font-size: 0.75rem;">Venda</span>
+                                    <span style="color: #4CAF50; font-weight:700;">R$ ${p.salePrice.toFixed(2)}</span>
+                                </div>
                             </div>
                         </div>
                     `;
                 });
+                lucide.createIcons();
             } catch (error) {
                 console.error('Error loading products list:', error);
             }
@@ -771,26 +923,35 @@
         // Load Recent Sales
         async function loadRecentSales() {
             try {
-                const res = await authFetch('/api/sales?period=30days'); 
+                const period = document.getElementById('salesPeriodFilter').value;
+                const res = await authFetch(`/api/sales?period=${period}`); 
                 const sales = await res.json();
-                sales.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // If "all" is selected or we want specific sorting
+                // The backend sorts by date desc already
                 
                 const tbody = document.getElementById('salesTableBody');
                 tbody.innerHTML = '';
                 
                 if(sales.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="padding:1rem; text-align:center; color:#888;">Nenhuma venda recente.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding:1rem; text-align:center; color:#888;">Nenhuma venda encontrada neste período.</td></tr>';
                     return;
                 }
 
-                sales.slice(0, 15).forEach(s => { 
+                sales.forEach(s => { 
                     const productName = s.product ? s.product.name : 'Produto removido';
+                    const paymentMap = { pix: 'Pix', credit: 'Crédito', debit: 'Débito', cash: 'Dinheiro' };
                     tbody.innerHTML += `
                         <tr style="border-bottom: 1px solid #eee;">
                             <td style="padding: 1rem;">${new Date(s.date).toLocaleDateString()}</td>
-                            <td style="padding: 1rem;">${productName}</td>
+                            <td style="padding: 1rem; font-weight: 500;">${productName}</td>
                             <td style="padding: 1rem;">${s.quantity}</td>
-                            <td style="padding: 1rem;">R$ ${s.totalAmount.toFixed(2)}</td>
+                            <td style="padding: 1rem;">
+                                <span style="background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">
+                                    ${paymentMap[s.paymentMethod] || s.paymentMethod}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: #4CAF50; font-weight: 600;">R$ ${s.totalAmount.toFixed(2)}</td>
                         </tr>
                     `;
                 });
@@ -799,30 +960,371 @@
             }
         }
 
+        // Modal Logic
+        function openSaleModal() {
+            loadProducts(); // Refresh products
+            document.getElementById('saleDate').valueAsDate = new Date();
+            document.getElementById('newSaleModal').classList.add('open');
+            resetVoiceUI();
+        }
+
+        function closeSaleModal() {
+            document.getElementById('newSaleModal').classList.remove('open');
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                stopRecording();
+            }
+        }
+
+        // --- Voice Recording Logic ---
+        let mediaRecorder;
+        let audioChunks = [];
+
+        function resetVoiceUI() {
+            const btn = document.getElementById('voiceRecordBtn');
+            const status = document.getElementById('voiceStatus');
+            if (btn) {
+                btn.classList.remove('recording');
+                btn.innerHTML = '<i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz';
+            }
+            if (status) {
+                status.style.display = 'none';
+                status.innerText = '';
+            }
+            lucide.createIcons();
+        }
+
+        async function toggleRecording() {
+            const btn = document.getElementById('voiceRecordBtn');
+            const status = document.getElementById('voiceStatus');
+
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                // Start Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        await processAudio(audioBlob);
+                        stream.getTracks().forEach(track => track.stop()); // Stop mic
+                    };
+
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<i data-lucide="square" style="width: 18px; height: 18px;"></i> Parar Gravação';
+                    btn.style.background = '#F44336';
+                    btn.style.color = 'white';
+                    status.style.display = 'block';
+                    status.innerText = 'Gravando... Fale os detalhes da venda.';
+                    status.style.color = '#F44336';
+                    lucide.createIcons();
+
+                } catch (err) {
+                    console.error('Error accessing microphone:', err);
+                    alert('Erro ao acessar microfone. Verifique as permissões.');
+                }
+            } else {
+                // Stop Recording
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                btn.innerHTML = '<i data-lucide="loader-2" style="width: 18px; height: 18px; animation: spin 1s linear infinite;"></i> Processando...';
+                btn.style.background = '#eee';
+                btn.style.color = '#666';
+                status.innerText = 'Transcrevendo e analisando...';
+                status.style.color = '#666';
+                lucide.createIcons();
+            }
+        }
+
+        async function processAudio(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.wav');
+
+            try {
+                const res = await authFetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {} // Let browser set boundary
+                });
+
+                if (!res.ok) throw new Error('Transcription failed');
+
+                const data = await res.json();
+                console.log('Transcription result:', data);
+
+                fillFormFromVoice(data.parsedData);
+                
+                const status = document.getElementById('voiceStatus');
+                status.innerText = `Entendido: "${data.text}"`;
+                status.style.color = '#4CAF50';
+                
+                // Reset button
+                const btn = document.getElementById('voiceRecordBtn');
+                btn.innerHTML = '<i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz';
+                btn.style.background = ''; // Reset to default CSS
+                btn.style.color = '';
+                lucide.createIcons();
+
+            } catch (err) {
+                console.error('Processing error:', err);
+                const status = document.getElementById('voiceStatus');
+                status.innerText = 'Erro ao processar áudio.';
+                status.style.color = '#F44336';
+                
+                const btn = document.getElementById('voiceRecordBtn');
+                btn.innerHTML = '<i data-lucide="mic" style="width: 18px; height: 18px;"></i> Tentar Novamente';
+                btn.style.background = '';
+                btn.style.color = '';
+                lucide.createIcons();
+            }
+        }
+
+        function fillFormFromVoice(data) {
+            if (!data) return;
+
+            // 1. Product
+            const select = document.getElementById('productSelect');
+            if (data.productName) {
+                // Fuzzy match or exact match
+                // API tries to match exact name from list we sent
+                // We'll iterate options to find best match
+                let found = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text.includes(data.productName)) {
+                        select.selectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) console.warn('Product not found in list:', data.productName);
+            }
+
+            // 2. Quantity
+            if (data.quantity) {
+                document.getElementById('saleQuantity').value = data.quantity;
+            }
+
+            // 3. Payment Method
+            if (data.paymentMethod) {
+                // Map API "pix", "credit", "debit", "cash" to select values if they differ
+                // Current HTML select values are likely lower case
+                const methodSelect = document.getElementById('paymentMethod');
+                if (methodSelect) {
+                    methodSelect.value = data.paymentMethod.toLowerCase();
+                }
+            }
+
+            // 4. Date
+            if (data.date) {
+                document.getElementById('saleDate').value = data.date;
+            }
+        }
+
+
+        // Close modal on outside click
+        document.getElementById('newSaleModal').addEventListener('click', (e) => {
+            if (e.target.id === 'newSaleModal') closeSaleModal();
+        });
+
         // Load Fixed Costs
         async function loadFixedCosts() {
             try {
                 const res = await authFetch('/api/fixed-costs?period=this_month');
                 const costs = await res.json();
+                
+                // Sort by amount (descending) -> implies percentage descending
+                costs.sort((a, b) => b.amount - a.amount);
+
                 const container = document.getElementById('fixedCostsList');
+                const totalEl = document.getElementById('viewCustosTotal');
+                
                 container.innerHTML = '';
+                
+                let total = 0;
+                costs.forEach(c => total += c.amount);
+
                 if(costs.length === 0) {
                     container.innerHTML = '<div style="color:#888;">Nenhum custo registrado neste mês.</div>';
+                    if(totalEl) totalEl.innerText = 'R$ 0,00';
                     return;
                 }
+                
                 costs.forEach(c => {
+                    // Ensure ID is safe string
+                    const safeId = c._id || '';
+                    if (!safeId) console.error('Cost without ID:', c);
+
+                    const percent = total > 0 ? ((c.amount / total) * 100).toFixed(1) : 0;
+
                     container.innerHTML += `
-                        <div style="background: white; padding: 1.2rem; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.5rem;">${c.name}</div>
-                            <div style="display:flex; justify-content:space-between; font-size: 0.9rem;">
-                                <span style="color: #666;">Data: ${new Date(c.date).toLocaleDateString()}</span>
-                                <span style="color: #F44336; font-weight:600;">R$ ${c.amount.toFixed(2)}</span>
+                        <div style="background: white; padding: 0.8rem; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); position: relative; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div style="position: absolute; top: 8px; left: 8px;">
+                                <input type="checkbox" class="cost-checkbox" value="${safeId}" onchange="updateBulkActions()">
+                            </div>
+                            <div style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px;">
+                                <button onclick="editFixedCost('${safeId}', '${c.name.replace(/'/g, "\\'")}', ${c.amount}, '${c.recurrenceType}', ${c.installments || 1})" style="background: none; border: none; color: #CD7A3E; cursor: pointer; padding: 4px;" title="Editar Custo">
+                                    <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
+                                </button>
+                                <button onclick="deleteFixedCost('${safeId}')" style="background: none; border: none; color: #999; cursor: pointer; padding: 4px;" title="Remover Custo">
+                                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.5rem; padding-right: 60px; padding-left: 25px; word-break: break-word; line-height: 1.2; font-size: 0.95rem;">${c.name}</div>
+                            <div style="display:flex; justify-content:space-between; font-size: 0.85rem; padding-left: 25px; align-items: flex-end;">
+                                <span style="color: #666; font-size: 0.8rem;">${new Date(c.date).toLocaleDateString()}</span>
+                                <div style="text-align: right;">
+                                    <span style="color: #F44336; font-weight:600; display: block; font-size: 1rem;">R$ ${c.amount.toFixed(2)}</span>
+                                    <span style="font-size: 0.75rem; color: #999;">${percent}% do total</span>
+                                </div>
                             </div>
                         </div>
                     `;
                 });
+                
+                if(totalEl) totalEl.innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                lucide.createIcons();
+                
             } catch (error) {
                 console.error('Error loading fixed costs:', error);
+            }
+        }
+
+        // Bulk Actions Logic for Products
+        function toggleSelectAllProducts() {
+            const checked = document.getElementById('selectAllProducts').checked;
+            document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = checked);
+            updateProductBulkActions();
+        }
+
+        function updateProductBulkActions() {
+            const count = document.querySelectorAll('.product-checkbox:checked').length;
+            const actionDiv = document.getElementById('productBulkActions');
+            if (count > 0) {
+                actionDiv.style.display = 'flex';
+                actionDiv.querySelector('button').innerHTML = `<i data-lucide="trash-2" style="width: 16px; height: 16px; vertical-align: middle;"></i> Remover Selecionados (${count})`;
+                lucide.createIcons();
+            } else {
+                actionDiv.style.display = 'none';
+            }
+        }
+
+        async function deleteSelectedProducts() {
+            const selected = Array.from(document.querySelectorAll('.product-checkbox:checked')).map(cb => cb.value);
+            if (selected.length === 0) return;
+            
+            if (!confirm(`Tem certeza que deseja remover ${selected.length} produtos selecionados?`)) return;
+
+            let successCount = 0;
+            const btn = document.querySelector('#productBulkActions button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Removendo...';
+            btn.disabled = true;
+
+            try {
+                for (const id of selected) {
+                    try {
+                        const res = await authFetch(`/api/products/${id}`, { method: 'DELETE' });
+                        if (res.ok) successCount++;
+                    } catch (e) {
+                        console.error('Failed to delete product', id, e);
+                    }
+                }
+                alert(`${successCount} produtos removidos com sucesso!`);
+                loadProductsList();
+                loadProducts(); // Refresh select
+                document.getElementById('selectAllProducts').checked = false;
+            } catch (err) {
+                alert('Erro ao processar remoção em massa.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Bulk Actions Logic for Costs
+        function toggleSelectAllCosts() {
+            const checked = document.getElementById('selectAllCosts').checked;
+            document.querySelectorAll('.cost-checkbox').forEach(cb => cb.checked = checked);
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const count = document.querySelectorAll('.cost-checkbox:checked').length;
+            const actionDiv = document.getElementById('bulkActions');
+            if (count > 0) {
+                actionDiv.style.display = 'flex';
+                actionDiv.querySelector('button').innerHTML = `<i data-lucide="trash-2" style="width: 16px; height: 16px; vertical-align: middle;"></i> Remover Selecionados (${count})`;
+                lucide.createIcons();
+            } else {
+                actionDiv.style.display = 'none';
+            }
+        }
+
+        async function deleteSelectedCosts() {
+            const selected = Array.from(document.querySelectorAll('.cost-checkbox:checked')).map(cb => cb.value);
+            if (selected.length === 0) return;
+            
+            if (!confirm(`Tem certeza que deseja remover ${selected.length} custos selecionados?`)) return;
+
+            // Simple loop for now (could be optimized with bulk API)
+            let successCount = 0;
+            const btn = document.querySelector('#bulkActions button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Removendo...';
+            btn.disabled = true;
+
+            try {
+                // Execute sequentially to avoid overwhelming if many
+                for (const id of selected) {
+                    try {
+                        const res = await authFetch(`/api/fixed-costs/${id}`, { method: 'DELETE' });
+                        if (res.ok) successCount++;
+                    } catch (e) {
+                        console.error('Failed to delete', id, e);
+                    }
+                }
+                alert(`${successCount} custos removidos com sucesso!`);
+                loadFixedCosts();
+                loadDashboard();
+                document.getElementById('selectAllCosts').checked = false;
+            } catch (err) {
+                alert('Erro ao processar remoção em massa.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Delete Fixed Cost
+        async function deleteFixedCost(id) {
+            console.log('Deleting cost ID:', id);
+            if (!id) {
+                alert('Erro: ID do custo inválido.');
+                return;
+            }
+            if (!confirm('Tem certeza que deseja remover este custo fixo?')) return;
+            
+            try {
+                const res = await authFetch(`/api/fixed-costs/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (res.ok) {
+                    loadFixedCosts();
+                    loadDashboard(); // Update dashboard totals too
+                } else {
+                    const data = await res.json();
+                    console.error('Delete error:', data);
+                    alert('Erro ao remover custo: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Error deleting cost:', error);
+                alert('Erro ao processar remoção.');
             }
         }
 
@@ -838,6 +1340,7 @@
                 document.getElementById('totalSales').innerText = `R$ ${stats.totalRevenue.toFixed(2)}`;
                 // document.getElementById('totalCost').innerText = `R$ ${stats.totalCost.toFixed(2)}`;
                 document.getElementById('totalVariableCost').innerText = `R$ ${stats.totalVariableCost.toFixed(2)}`;
+                document.getElementById('totalFixedCostDash').innerText = `R$ ${stats.totalFixedCost.toFixed(2)}`;
                 document.getElementById('totalProfit').innerText = `R$ ${stats.netProfit.toFixed(2)}`;
                 document.getElementById('ticketAvg').innerText = `R$ ${stats.ticketAverage.toFixed(2)}`;
                 document.getElementById('totalItems').innerText = stats.salesCount;
@@ -873,7 +1376,7 @@
             });
         }
 
-        // Register Product
+        // Register Product (Create/Update)
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
@@ -881,6 +1384,7 @@
             btn.innerText = 'Salvando...';
             btn.disabled = true;
 
+            const editId = document.getElementById('editProductId').value;
             const data = {
                 name: document.getElementById('prodName').value,
                 variableCost: parseFloat(document.getElementById('prodCost').value),
@@ -888,22 +1392,65 @@
             };
             
             try {
-                await authFetch('/api/products', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
+                let res;
+                if (editId) {
+                    res = await authFetch(`/api/products/${editId}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    res = await authFetch('/api/products', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                }
                 
-                alert('Produto cadastrado com sucesso!');
+                if (!res.ok) throw new Error('Failed');
+
+                alert(editId ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
                 e.target.reset();
+                document.getElementById('editProductId').value = '';
+                btn.innerText = 'Cadastrar Produto';
                 loadProductsList();
+                loadProducts();
             } catch (error) {
-                alert('Erro ao cadastrar produto');
+                alert('Erro ao salvar produto');
             } finally {
-                btn.innerText = originalText;
                 btn.disabled = false;
+                if (!document.getElementById('editProductId').value) btn.innerText = 'Cadastrar Produto';
             }
         });
+
+        function editProduct(id, name, cost, price) {
+            document.getElementById('editProductId').value = id;
+            document.getElementById('prodName').value = name;
+            document.getElementById('prodCost').value = cost;
+            document.getElementById('prodPrice').value = price;
+            
+            const btn = document.querySelector('#productForm button[type="submit"]');
+            btn.innerText = 'Atualizar Produto';
+            
+            document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Tem certeza que deseja remover este produto?')) return;
+            try {
+                const res = await authFetch(`/api/products/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Produto removido com sucesso!');
+                    loadProductsList();
+                    loadProducts(); // refresh select
+                } else {
+                    alert('Erro ao remover produto.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao processar remoção.');
+            }
+        }
 
         // Toggle Installments Input
         function toggleInstallments() {
@@ -959,7 +1506,7 @@
             }
         });
 
-        // Register Fixed Cost
+        // Register Fixed Cost (Create/Update)
         document.getElementById('fixedCostForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
@@ -967,6 +1514,7 @@
             btn.innerText = 'Salvando...';
             btn.disabled = true;
 
+            const editId = document.getElementById('editCostId').value;
             const recurrenceType = document.querySelector('input[name="recurrenceType"]:checked').value;
             const installments = recurrenceType === 'installment' ? 
                 parseInt(document.getElementById('costInstallments').value) : 1;
@@ -980,24 +1528,58 @@
             };
             
             try {
-                await authFetch('/api/fixed-costs', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
+                let res;
+                if (editId) {
+                    res = await authFetch(`/api/fixed-costs/${editId}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    res = await authFetch('/api/fixed-costs', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                }
                 
-                alert('Custo registrado com sucesso!');
+                if (!res.ok) throw new Error('Failed');
+
+                alert(editId ? 'Custo atualizado!' : 'Custo registrado!');
                 e.target.reset();
+                document.getElementById('editCostId').value = '';
+                btn.innerText = 'Registrar Custo';
+
                 document.querySelector('input[name="recurrenceType"][value="monthly"]').checked = true;
                 toggleInstallments();
                 loadFixedCosts();
+                loadDashboard();
             } catch (error) {
-                alert('Erro ao registrar custo');
+                alert('Erro ao salvar custo');
             } finally {
-                btn.innerText = originalText;
                 btn.disabled = false;
+                if (!document.getElementById('editCostId').value) btn.innerText = 'Registrar Custo';
             }
         });
+
+        function editFixedCost(id, name, amount, type, installments) {
+            document.getElementById('editCostId').value = id;
+            document.getElementById('costName').value = name;
+            document.getElementById('costAmount').value = amount;
+            
+            const radio = document.querySelector(`input[name="recurrenceType"][value="${type}"]`);
+            if (radio) radio.checked = true;
+            
+            if (type === 'installment') {
+                document.getElementById('costInstallments').value = installments;
+            }
+            toggleInstallments();
+
+            const btn = document.querySelector('#fixedCostForm button[type="submit"]');
+            btn.innerText = 'Atualizar Custo';
+            
+            document.getElementById('fixedCostForm').scrollIntoView({ behavior: 'smooth' });
+        }
 
         // Register Sale
         document.getElementById('saleForm').addEventListener('submit', async (e) => {

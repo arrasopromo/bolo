@@ -88,8 +88,8 @@ app.post('/api/webhook/cakto', async (req, res) => {
 
         // Validar se é uma compra aprovada/paga
         // Aceita 'paid', 'approved', 'completed', etc.
-        // Adicionado 'pix', 'generated', 'pending', 'waiting' para testes conforme solicitado
-        const isPaid = ['paid', 'approved', 'completed', 'authorized', 'pix', 'generated', 'pending', 'waiting'].some(s => status.toLowerCase().includes(s));
+        // Adicionado 'pix', 'generated', 'pending', 'waiting', 'created' para testes conforme solicitado
+        const isPaid = ['paid', 'approved', 'completed', 'authorized', 'pix', 'generated', 'pending', 'waiting', 'created', 'billing'].some(s => status.toLowerCase().includes(s));
 
         if (!isPaid) {
             console.log('⚠️ Ignorando webhook: Status não é de pagamento aprovado ou pendente de teste.');
@@ -187,6 +187,31 @@ app.get('/fluxo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'fluxo.html'));
 });
 
+// --- Dev Login Route (Localhost Support) ---
+app.get('/dev-login', async (req, res) => {
+    try {
+        const email = 'admin@bellecake.com';
+        let user = await User.findOne({ email });
+        
+        if (!user) {
+            user = new User({
+                name: 'Admin Teste',
+                email,
+                plan: 'complete',
+                token: 'dev-token-' + Date.now(),
+                status: 'active',
+                subscriptionStatus: 'active'
+            });
+            await user.save();
+        }
+        
+        res.redirect(`/membros?token=${user.token}`);
+    } catch (err) {
+        console.error('Erro no login de dev:', err);
+        res.status(500).send('Erro ao criar usuário de teste');
+    }
+});
+
 // Get current user info
 app.get('/api/user/me', async (req, res) => {
     try {
@@ -198,6 +223,57 @@ app.get('/api/user/me', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: 'Erro ao buscar dados do usuário' });
+    }
+});
+
+const fs = require('fs');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+
+// --- Voice Transcription Route ---
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
+
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        
+        // 1. Transcribe with Whisper
+        const transcription = await openai.audio.transcriptions.create({
+            file: fs.createReadStream(req.file.path),
+            model: "whisper-1",
+            language: "pt",
+        });
+
+        const text = transcription.text;
+        
+        // 2. Parse intent with GPT
+        // We need products to match names
+        const products = await Product.find({ user: req.user._id }).select('name');
+        const productNames = products.map(p => p.name).join(', ');
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: `You are a sales assistant. Extract data from the text. 
+                Available products: ${productNames}. 
+                Return JSON only: { "productName": string (match exactly one from list if possible, else null), "quantity": number, "paymentMethod": string (pix, credit, debit, cash), "date": string (YYYY-MM-DD) }. 
+                Default date to today if not specified. Default quantity to 1.` },
+                { role: "user", content: text }
+            ],
+            response_format: { type: "json_object" }
+        });
+
+        const parsedData = JSON.parse(completion.choices[0].message.content);
+
+        // Cleanup file
+        fs.unlinkSync(req.file.path);
+
+        res.json({ text, parsedData });
+
+    } catch (err) {
+        console.error('Transcription error:', err);
+        res.status(500).json({ error: 'Erro na transcrição' });
     }
 });
 
@@ -232,6 +308,35 @@ app.post('/api/products', async (req, res) => {
     }
 });
 
+// Update a product
+app.put('/api/products/:id', async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const { name, variableCost, salePrice } = req.body;
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id },
+            { name, variableCost, salePrice },
+            { new: true }
+        );
+        if (!updatedProduct) return res.status(404).json({ error: 'Produto não encontrado' });
+        res.json(updatedProduct);
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao atualizar produto' });
+    }
+});
+
+// Delete a product
+app.delete('/api/products/:id', async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const deletedProduct = await Product.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+        if (!deletedProduct) return res.status(404).json({ error: 'Produto não encontrado' });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao remover produto' });
+    }
+});
+
 // Get sales with filters
 app.get('/api/sales', async (req, res) => {
     try {
@@ -258,6 +363,8 @@ app.get('/api/sales', async (req, res) => {
             const start = new Date(now);
             start.setDate(start.getDate() - 30);
             query.date = { $gte: start };
+        } else if (period === 'all') {
+            // No date filter
         }
         
         const sales = await Sale.find(query).populate('product').sort({ date: -1 });
@@ -355,6 +462,32 @@ app.post('/api/fixed-costs', async (req, res) => {
         res.json(newCost);
     } catch (err) {
         res.status(500).json({ error: 'Erro ao salvar custo fixo' });
+    }
+});
+
+app.put('/api/fixed-costs/:id', async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const { name, amount, date, recurrenceType, installments } = req.body;
+        const updatedCost = await FixedCost.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id },
+            { name, amount, date, recurrenceType, installments },
+            { new: true }
+        );
+        if (!updatedCost) return res.status(404).json({ error: 'Custo não encontrado' });
+        res.json(updatedCost);
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao atualizar custo fixo' });
+    }
+});
+
+app.delete('/api/fixed-costs/:id', async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        await FixedCost.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao remover custo fixo' });
     }
 });
 

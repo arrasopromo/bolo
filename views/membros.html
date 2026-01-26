@@ -40,6 +40,9 @@
             text-align: center;
             margin-bottom: 3rem;
         }
+        .main-title {
+            text-shadow: none !important;
+        }
         .user-badge {
             background: var(--card-white);
             border: 1px solid var(--primary-yellow);
@@ -242,7 +245,7 @@
                     <div style="color: #4CAF50; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase;">Gestão Financeira</div>
                     <h3 class="card-title">Fluxo de Caixa</h3>
                     <p class="card-desc">Controle suas vendas diárias, cadastre produtos e visualize seus lucros com gráficos detalhados.</p>
-                    <a href="/fluxo" class="access-btn" style="background: #4CAF50; color: white;">
+                    <a href="/fluxo" id="btn-fluxo" class="access-btn" style="background: #4CAF50; color: white;">
                         <i data-lucide="bar-chart-2"></i> ACESSAR PAINEL
                     </a>
                 </div>
@@ -271,6 +274,8 @@
     <script src="/js/main.js"></script>
     <script>
         lucide.createIcons();
+        
+        // Dev Login Removed as per user request
 
         // Check for token in URL (Login via Link/Webhook)
         document.addEventListener('DOMContentLoaded', async () => {
@@ -278,14 +283,58 @@
             const token = urlParams.get('token');
 
             if (token) {
+                console.log('Token encontrado na URL:', token);
                 // Save token
                 localStorage.setItem('bellecake_token', token);
                 
-                // Clean URL
-                window.history.replaceState({}, document.title, window.location.pathname);
+                // Show success message
+                const header = document.querySelector('.member-header');
+                if (header) {
+                    const msg = document.createElement('div');
+                    msg.style.position = 'fixed';
+                    msg.style.top = '20px';
+                    msg.style.right = '20px';
+                    msg.style.background = '#FFFFFF';
+                    msg.style.color = '#4CAF50';
+                    msg.style.padding = '12px 20px';
+                    msg.style.borderRadius = '8px';
+                    msg.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    msg.style.display = 'flex';
+                    msg.style.alignItems = 'center';
+                    msg.style.gap = '10px';
+                    msg.style.zIndex = '1000';
+                    msg.style.borderLeft = '4px solid #4CAF50';
+                    msg.style.animation = 'slideIn 0.3s ease-out';
+                    
+                    msg.innerHTML = '<i data-lucide="check-circle-2" style="width: 20px;"></i> <span style="font-weight: 600; font-size: 0.9rem;">Login realizado com sucesso!</span>';
+                    
+                    // Add animation keyframes if not exists
+                    if (!document.getElementById('toast-style')) {
+                        const style = document.createElement('style');
+                        style.id = 'toast-style';
+                        style.innerHTML = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+                        document.head.appendChild(style);
+                    }
+
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 4000);
+                    setTimeout(() => lucide.createIcons(), 100);
+                }
+
+                // Clean URL (Wait a bit so user sees it worked? No, clean immediately for security, but maybe logic relies on it?)
+                // window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            const storedToken = localStorage.getItem('bellecake_token');
+            
+            // Update Fluxo Link with Token immediately if available
+            if (storedToken) {
+                const btnFluxo = document.getElementById('btn-fluxo');
+                if (btnFluxo) {
+                    btnFluxo.href = `/fluxo?token=${storedToken}`;
+                }
             }
 
-            const storedToken = localStorage.getItem('bellecake_token');
             if (storedToken) {
                 try {
                     const res = await fetch('/api/user/me', {
