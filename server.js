@@ -7,6 +7,7 @@ const User = require('./models/User');
 const Product = require('./models/Product');
 const Sale = require('./models/Sale');
 const FixedCost = require('./models/FixedCost');
+const FinancialStrategy = require('./models/FinancialStrategy');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -288,13 +289,57 @@ app.get('/dev-login', async (req, res) => {
 app.get('/api/user/me', async (req, res) => {
     try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+
+        // Calculate total sales for the current month
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+        const sales = await Sale.find({
+            user: req.user._id,
+            date: { $gte: startOfMonth, $lte: endOfMonth }
+        });
+
+        const totalSales = sales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
+
         res.json({
             name: req.user.name,
             email: req.user.email,
-            plan: req.user.plan
+            plan: req.user.plan,
+            breakEvenPoint: req.user.breakEvenPoint,
+            totalSales: totalSales, // Add totalSales to response
+            breakEvenData: {
+                fixedCosts: req.user.fixedCostsInput,
+                avgRevenue: req.user.avgRevenueInput,
+                avgVariableCost: req.user.avgVariableCostInput,
+                calculatedAt: req.user.breakEvenCalculatedAt
+            }
         });
     } catch (err) {
+        console.error('Error fetching user info:', err);
         res.status(500).json({ error: 'Erro ao buscar dados do usuário' });
+    }
+});
+
+// Save Break-even Calculation
+app.post('/api/break-even', async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        
+        const { breakEvenPoint, fixedCosts, avgRevenue, avgVariableCost } = req.body;
+        
+        req.user.breakEvenPoint = breakEvenPoint;
+        req.user.fixedCostsInput = fixedCosts;
+        req.user.avgRevenueInput = avgRevenue;
+        req.user.avgVariableCostInput = avgVariableCost;
+        req.user.breakEvenCalculatedAt = new Date();
+        
+        await req.user.save();
+        
+        res.json({ success: true, message: 'Cálculo salvo com sucesso!' });
+    } catch (err) {
+        console.error('Error saving break-even:', err);
+        res.status(500).json({ error: 'Erro ao salvar cálculo' });
     }
 });
 
@@ -567,12 +612,30 @@ app.delete('/api/fixed-costs/:id', async (req, res) => {
 app.get('/api/dashboard-stats', async (req, res) => {
     try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-        const { period } = req.query; // today, yesterday, 7days, 30days
+        const { period, startDate, endDate, productId } = req.query; 
+        
+        console.log(`📊 Dashboard Stats Request: User=${req.user.email}, Period=${period}, Start=${startDate}, End=${endDate}, Product=${productId}`);
+
         const now = new Date();
         let start, end;
 
         // Determine date range
-        if (period === 'today') {
+        if (startDate && endDate) {
+            // Custom Range - Parse manually to ensure Local Time (Server/User Time)
+            // startDate format: YYYY-MM-DD
+            if (startDate.includes('-')) {
+                const [sYear, sMonth, sDay] = startDate.split('-').map(Number);
+                start = new Date(sYear, sMonth - 1, sDay, 0, 0, 0, 0);
+                
+                const [eYear, eMonth, eDay] = endDate.split('-').map(Number);
+                end = new Date(eYear, eMonth - 1, eDay, 23, 59, 59, 999);
+            } else {
+                // Fallback for other formats
+                start = new Date(startDate);
+                end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+            }
+        } else if (period === 'today') {
             start = new Date(now.setHours(0,0,0,0));
             end = new Date(now.setHours(23,59,59,999));
         } else if (period === 'yesterday') {
@@ -584,78 +647,81 @@ app.get('/api/dashboard-stats', async (req, res) => {
             start = new Date(now);
             start.setDate(start.getDate() - 7);
             end = new Date();
+            end.setHours(23, 59, 59, 999);
         } else if (period === '30days') {
             start = new Date(now);
             start.setDate(start.getDate() - 30);
             end = new Date();
+            end.setHours(23, 59, 59, 999);
+        } else if (period === 'thismonth') {
+            // Added support for "This Month"
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
         } else {
             // Default to 30 days
             start = new Date(now);
             start.setDate(start.getDate() - 30);
             end = new Date();
+            end.setHours(23, 59, 59, 999);
         }
 
         const dateQuery = { date: { $gte: start, $lte: end }, user: req.user._id };
+        
+        // Product Filter
+        if (productId && productId !== 'all') {
+            // Ensure productId is valid before querying
+            if (productId.match(/^[0-9a-fA-F]{24}$/)) {
+                dateQuery.product = productId;
+            } else {
+                console.warn(`⚠️ Invalid productId received: ${productId}`);
+            }
+        }
 
         // Fetch Sales
         const sales = await Sale.find(dateQuery).populate('product');
+        console.log(`Found ${sales.length} sales for query.`);
         
         // Fetch Fixed Costs (Handle recurrence)
-        const allFixedCosts = await FixedCost.find({ user: req.user._id });
+        // Note: If filtering by product, Fixed Costs are typically 0 or global.
+        // We will return 0 for fixed costs if a specific product is selected to show "Contribution Margin"
         let totalFixedCost = 0;
-
-        // Helper to check if a date is in range
-        const isDateInRange = (d, s, e) => d >= s && d <= e;
-
-        // Calculate fixed costs for the period
-        // We iterate through each day of the period (or check overlap logic)
-        // Since we need an aggregate sum, we can sum up applicable costs for the period.
         
-        // Strategy: 
-        // For 'monthly': If the cost start date is before or within the period, 
-        // and the recurrence day falls within the period, add it.
-        // For 'installment': Same, but check if within installment limit.
-        
-        // Simpler approach for "Period View":
-        // Iterate through every day in the query range.
-        // For each day, check which costs are "due".
-        
-        const loopStart = new Date(start);
-        const loopEnd = new Date(end);
-        
-        for (let d = new Date(loopStart); d <= loopEnd; d.setDate(d.getDate() + 1)) {
-            const currentDay = d.getDate();
-            const currentMonth = d.getMonth();
-            const currentYear = d.getFullYear();
+        if (!productId || productId === 'all') {
+            const allFixedCosts = await FixedCost.find({ user: req.user._id });
             
-            allFixedCosts.forEach(cost => {
-                const costDate = new Date(cost.date);
-                const costStartDay = costDate.getDate();
+            // Calculate fixed costs for the period
+            const loopStart = new Date(start);
+            const loopEnd = new Date(end);
+            
+            // Optimization: If range > 365 days, maybe warn? But for now simple loop.
+            for (let d = new Date(loopStart); d <= loopEnd; d.setDate(d.getDate() + 1)) {
+                const currentDay = d.getDate();
+                const currentMonth = d.getMonth();
+                const currentYear = d.getFullYear();
                 
-                // Check if cost is active (started before or on this day)
-                if (d < costDate) return;
+                allFixedCosts.forEach(cost => {
+                    const costDate = new Date(cost.date);
+                    
+                    // Check if cost is active (started before or on this day)
+                    if (d < costDate) return;
 
-                // Check if it's the "due day" (simplified: same day of month)
-                // Handle edge case: if costStartDay > days in current month (e.g., 31st in Feb), use last day?
-                // For simplicity, strict day matching or 28th for >28.
-                let dueDay = costStartDay;
-                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                if (dueDay > daysInMonth) dueDay = daysInMonth;
-                
-                if (currentDay === dueDay) {
-                     if (cost.recurrenceType === 'monthly') {
-                         totalFixedCost += cost.amount;
-                     } else if (cost.recurrenceType === 'installment') {
-                         // Check if within installment count
-                         // Calculate months difference correctly
-                         const monthsDiff = (currentYear - costDate.getFullYear()) * 12 + (currentMonth - costDate.getMonth());
-                         if (monthsDiff >= 0 && monthsDiff < cost.installments) {
-                             totalFixedCost += cost.amount;
-                         }
-                     }
-                 }
-             });
-         }
+                    let dueDay = costDate.getDate();
+                    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                    if (dueDay > daysInMonth) dueDay = daysInMonth;
+                    
+                    if (currentDay === dueDay) {
+                        if (cost.recurrenceType === 'monthly') {
+                            totalFixedCost += cost.amount;
+                        } else if (cost.recurrenceType === 'installment') {
+                            const monthsDiff = (currentYear - costDate.getFullYear()) * 12 + (currentMonth - costDate.getMonth());
+                            if (monthsDiff >= 0 && monthsDiff < cost.installments) {
+                                totalFixedCost += cost.amount;
+                            }
+                        }
+                    }
+                });
+            }
+        }
 
         // Aggregations
         let totalRevenue = 0;
@@ -666,8 +732,11 @@ app.get('/api/dashboard-stats', async (req, res) => {
         let productStats = {};
 
         sales.forEach(sale => {
-            totalRevenue += sale.totalAmount;
-            totalVariableCost += sale.totalCost;
+            const amount = sale.totalAmount || 0;
+            const variableCost = sale.totalCost || 0;
+
+            totalRevenue += amount;
+            totalVariableCost += variableCost;
             
             // Payment Method
             const method = sale.paymentMethod || 'pix';
@@ -680,7 +749,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
             if (!salesByDay[dayKey]) {
                 salesByDay[dayKey] = { revenue: 0, count: 0 };
             }
-            salesByDay[dayKey].revenue += sale.totalAmount;
+            salesByDay[dayKey].revenue += amount;
             salesByDay[dayKey].count += 1;
 
             // Product Aggregation
@@ -691,7 +760,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
                     productStats[pId] = { name: pName, quantity: 0, revenue: 0 };
                 }
                 productStats[pId].quantity += sale.quantity;
-                productStats[pId].revenue += sale.totalAmount;
+                productStats[pId].revenue += amount;
             }
         });
         
@@ -765,46 +834,62 @@ app.post('/api/dicas-vendas', async (req, res) => {
         const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
         const metaFormatted = formatter.format(metaFaturamento);
         const vendasFormatted = formatter.format(vendasAtuais);
-        const faltamFormatted = formatter.format(faltam);
+        const faltamFormatted = formatter.format(Math.max(0, faltam));
 
-        // Se já bateu a meta
+        // Determinar cenário e buscar estratégias
+        let scenario = 'below_break_even';
+        let goalText = `Faltam faturar: ${faltamFormatted} para atingir o ponto de equilíbrio.`;
+        let systemRole = "Você é um consultor especialista em recuperação financeira e vendas para confeitarias.";
+        
         if (faltam <= 0) {
-            return res.json({
-                success: true,
-                message: "Parabéns! Você já atingiu (ou superou) seu ponto de equilíbrio este mês! 🎉 Todo valor que entrar agora gera lucro. Continue assim!"
-            });
+            scenario = 'above_break_even';
+            goalText = `A meta foi atingida! O faturamento atual é ${vendasFormatted} (acima da meta de ${metaFormatted}). O objetivo agora é lucrar mais e crescer.`;
+            systemRole = "Você é um consultor especialista em expansão de negócios e gestão de lucros para confeitarias.";
         }
 
-        // Se ainda faltam vendas
+        // Buscar estratégias no "Mini-DB"
+        const strategies = await FinancialStrategy.find({ scenario });
+        
+        // Selecionar 2 aleatórias para dar variedade ao contexto
+        const selectedStrategies = strategies.sort(() => 0.5 - Math.random()).slice(0, 2);
+        
+        const strategiesText = selectedStrategies.map(s => `- ${s.title}: ${s.content} (Fonte: ${s.source})`).join('\n');
+
         const prompt = `
-            Você é um consultor especialista em confeitaria e vendas de bolos e doces.
-            
             Contexto do usuário:
             - Meta de Faturamento (Ponto de Equilíbrio): ${metaFormatted} por mês.
             - Vendas realizadas até hoje (dia ${hoje.getDate()}): ${vendasFormatted}.
-            - Faltam faturar: ${faltamFormatted}.
+            - ${goalText}
             - Dias restantes no mês: ${diasRestantes} dias.
             
+            Base de Conhecimento (Estratégias Recomendadas para este cenário):
+            ${strategiesText}
+            
             Ação:
-            Dê uma dica curta, prática e motivacional (máximo 2 parágrafos) de como o usuário pode conseguir faturar esses ${faltamFormatted} restantes nos próximos ${diasRestantes} dias.
-            Sugira uma ação rápida (ex: kit promocional, oferta de docinhos, contato com clientes antigos).
-            Seja amigável e direto. Use emojis.
+            Com base no contexto e usando a Base de Conhecimento como inspiração (mas adaptando para a realidade de uma confeiteira), dê uma dica curta, prática e valiosa (máximo 2 parágrafos).
+            
+            ${scenario === 'below_break_even' 
+                ? 'Foque em ações rápidas para gerar caixa imediato.' 
+                : 'Foque em reinvestimento, reserva de emergência ou fidelização.'}
+            
+            Seja amigável, direto e use emojis.
         `;
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
-                { role: "system", content: "Você é um assistente útil e motivador para confeiteiras empreendedoras." },
+                { role: "system", content: systemRole },
                 { role: "user", content: prompt }
             ],
-            max_tokens: 250,
+            max_tokens: 300,
         });
 
         const dica = completion.choices[0].message.content;
 
         res.json({
             success: true,
-            message: dica
+            message: dica,
+            strategiesUsed: selectedStrategies // Optional: return raw strategies if frontend wants to show them
         });
 
     } catch (error) {

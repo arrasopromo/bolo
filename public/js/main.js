@@ -273,3 +273,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// CTA Timer Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const timerElement = document.getElementById('ctaTimer');
+    if (!timerElement) return;
+
+    // Set initial duration (15 minutes)
+    let duration = 15 * 60;
+    
+    // Check if there's a stored timestamp
+    const savedEndTime = localStorage.getItem('ctaTimerEnd');
+    const now = Date.now();
+
+    if (savedEndTime && now < parseInt(savedEndTime)) {
+        duration = Math.floor((parseInt(savedEndTime) - now) / 1000);
+    } else {
+        // Set new end time
+        localStorage.setItem('ctaTimerEnd', (now + duration * 1000).toString());
+    }
+
+    function updateTimer() {
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (duration > 0) {
+            duration--;
+        } else {
+            // Loop timer for constant urgency
+            duration = 15 * 60; 
+            localStorage.setItem('ctaTimerEnd', (Date.now() + duration * 1000).toString());
+        }
+    }
+
+    // Initial call
+    updateTimer();
+    // Update every second
+    setInterval(updateTimer, 1000);
+});

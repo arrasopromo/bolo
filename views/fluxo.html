@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -16,6 +19,7 @@
             --border-light: #E5E5E5;
             --primary-yellow: #FFC107;
             --secondary-caramel: #CD7A3E;
+            --navbar-bg: #32221D; /* Added for menu consistency */
         }
 
         body {
@@ -24,6 +28,83 @@
             margin: 0;
             overflow-x: hidden;
             font-family: 'Inter', sans-serif;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Date Range Input Customization */
+        .date-range-container {
+            position: relative;
+        }
+        
+        /* Ensure Flatpickr's input inherits our styles and make it important to override defaults */
+        .date-range-input,
+        .flatpickr-input {
+            width: 100% !important;
+            padding: 0.8rem 0.8rem 0.8rem 2.8rem !important; /* Extra padding for icon */
+            border-radius: 8px !important;
+            border: 1px solid #E5E5E5 !important;
+            font-family: 'Inter', sans-serif !important;
+            background: #FFFFFF !important;
+            cursor: pointer !important;
+            font-size: 0.95rem !important;
+            color: var(--text-brown) !important;
+            box-shadow: none !important;
+            height: 46px !important; /* Fixed height to match button */
+            box-sizing: border-box !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .date-range-input:focus,
+        .flatpickr-input:focus {
+            border-color: var(--secondary-caramel) !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(205, 122, 62, 0.1) !important;
+        }
+
+        /* Calendar Icon Positioning */
+        .date-range-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #999;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Improved Period Presets */
+        .period-preset {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #E5E5E5;
+            background: #FFFFFF;
+            border-radius: 8px; /* Slightly less rounded for a cleaner look */
+            cursor: pointer;
+            font-weight: 600;
+            color: #777;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .period-preset:hover {
+            background: #F9F9F9;
+            color: var(--secondary-caramel);
+            border-color: var(--secondary-caramel);
+            transform: translateY(-1px);
+        }
+        .period-preset.active {
+            background: var(--secondary-caramel);
+            color: white;
+            border-color: var(--secondary-caramel);
+            box-shadow: 0 4px 12px rgba(205, 122, 62, 0.25);
         }
 
         /* Layout Structure */
@@ -35,7 +116,7 @@
         /* Sidebar (Desktop) */
         .sidebar {
             width: 260px;
-            background: var(--navbar-bg); /* Match index menu exactly */
+            background: #73401F; /* Explicitly set to requested color */
             color: #FFFFFF;
             display: flex;
             flex-direction: column;
@@ -97,23 +178,30 @@
         /* Mobile Header */
         .mobile-header {
             display: none;
-            background: var(--bg-cream);
-            color: var(--text-brown);
-            padding: 1rem 1.5rem;
-            justify-content: space-between;
+            background-color: #73401F !important;
+            color: #FFFFFF;
+            height: 80px; /* Fixed height matching index */
+            padding: 0 1.5rem;
+            justify-content: flex-end; /* Logo is absolute, so align other items to right */
             align-items: center;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(0,0,0,0.08);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            z-index: 9999;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            overflow: visible !important; /* Allow logo to hang */
         }
 
         .mobile-logo {
-            height: 40px;
+            position: absolute;
+            height: 120px; /* Large logo */
             width: auto;
+            top: -15px;
+            left: 15px;
+            filter: brightness(0) invert(1);
+            z-index: 10000;
         }
 
         .mobile-menu-dropdown {
@@ -122,12 +210,13 @@
             top: 100%;
             left: 0;
             width: 100%;
-            background: var(--navbar-bg);
+            background-color: #73401F !important; /* Updated color */
             padding: 1rem;
             flex-direction: column;
             gap: 0.5rem;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             border-bottom: 1px solid rgba(0,0,0,0.08);
+            z-index: 10000;
         }
 
         .mobile-menu-dropdown .nav-item {
@@ -297,7 +386,7 @@
             .main-content {
                 margin-left: 0;
                 padding: 1.5rem;
-                padding-top: 90px; /* Space for header */
+                padding-top: 75px; /* Space for header */
                 border-radius: 0;
                 background: var(--bg-cream); /* Revert to cream on mobile for seamless feel */
             }
@@ -324,18 +413,139 @@
             .header-dash select { width: 100%; }
             .form-card { padding: 1.5rem; }
         }
+
+        /* Filters Responsiveness */
+        .filters-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            width: 100%;
+            margin-top: 1.5rem;
+            align-items: flex-end;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-date {
+            flex: 2;
+            min-width: 300px;
+        }
+
+        .filter-btn-container {
+            flex: 0 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .filters-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1rem;
+            }
+            .filter-item, .filter-date, .filter-btn-container {
+                width: 100%;
+                min-width: 0;
+                flex: none;
+            }
+            .filter-btn-container button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            /* Adjust Period Presets for Mobile */
+            .period-preset {
+                flex: 1;
+                text-align: center;
+                padding: 0.8rem 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Mobile Sales Table as Cards */
+        @media (max-width: 768px) {
+            /* KPI Grid & Chart Section Mobile Optimizations */
+            .kpi-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            .kpi-card {
+                padding: 1.2rem;
+            }
+            .chart-section {
+                padding: 1rem;
+                overflow-x: hidden; /* Prevent horizontal scroll */
+            }
+
+            table { min-width: 0 !important; } /* Override default min-width */
+            #salesTable thead { display: none; }
+            
+            #salesTable tbody tr {
+                display: block;
+                background: white;
+                margin-bottom: 1rem;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            
+            #salesTable tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.8rem 1rem;
+                border-bottom: 1px solid #f5f5f5;
+                text-align: right;
+            }
+
+            #salesTable tbody td .cell-content {
+                text-align: right;
+                font-weight: 500;
+            }
+            
+            #salesTable tbody td:last-child { border-bottom: none; }
+            
+            #salesTable tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #888;
+                text-align: left;
+                font-size: 0.85rem;
+                text-transform: uppercase;
+            }
+        }
+
+        /* Fix Mobile Menu Background & Visibility */
+        .mobile-menu-dropdown {
+            background-color: var(--navbar-bg) !important;
+            z-index: 2000;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
     </style>
 </head>
 <body>
 
     <!-- Mobile Header -->
     <header class="mobile-header">
-        <a href="/membros">
-            <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake" class="mobile-logo">
+        <a href="/fluxo">
+            <img src="/images/LOGO%20BELLE%20CAKE.png" alt="Belle Cake" class="mobile-logo">
         </a>
-        <button id="mobileMenuBtn" style="background:none; border:none; color:var(--text-brown); cursor: pointer;">
-            <i data-lucide="menu" size="28"></i>
-        </button>
+        <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+            <button onclick="document.getElementById('newSaleModal').style.display='flex'" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Nova Venda
+            </button>
+            <button id="mobileMenuBtn" style="background:none; border:none; color:#FFFFFF; cursor: pointer;">
+                <i data-lucide="menu" size="28"></i>
+            </button>
+        </div>
         <div class="mobile-menu-dropdown" id="mobileMenuDropdown">
             <div class="nav-item active" onclick="switchView('resumo')">
                 <i data-lucide="layout-dashboard"></i> Resumo
@@ -359,8 +569,8 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo-container">
-                <a href="/membros">
-                    <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="sidebar-logo">
+                <a href="/fluxo">
+                    <img src="/images/LOGO%20BELLE%20CAKE.png" alt="Belle Cake Logo" class="sidebar-logo">
                 </a>
             </div>
             
@@ -406,14 +616,82 @@
 
             <!-- VIEW: RESUMO -->
             <section id="view-resumo" class="view-section active">
-                <div class="header-dash">
-                    <h1>Resumo Financeiro</h1>
-                    <select id="periodFilter" style="padding: 0.6rem; border-radius: 8px; border: 1px solid #ddd; background: white;">
-                        <option value="today">Hoje</option>
-                        <option value="yesterday">Ontem</option>
-                        <option value="7days">Últimos 7 dias</option>
-                        <option value="30days">Últimos 30 dias</option>
-                    </select>
+                <div class="header-dash" style="flex-direction: column; align-items: flex-start; margin-bottom: 2rem;">
+                    <h1 style="margin-bottom: 1rem;">Resumo Financeiro</h1>
+
+                    <!-- Meta / Break-Even Section Removed (Duplicate) -->
+                    
+                    <div class="filters-wrapper">
+                        
+                        <!-- Filter by Product -->
+                        <div class="filter-item">
+                            <label for="filterProduct" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por produto</label>
+                            <div style="position: relative;">
+                                <i data-lucide="package" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999;"></i>
+                                <select id="filterProduct" style="width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 8px; border: 1px solid #ddd; background: white; font-family: 'Inter', sans-serif; appearance: none; cursor: pointer;">
+                                    <option value="all">Todos produtos</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                                <i data-lucide="chevron-down" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999; pointer-events: none;"></i>
+                            </div>
+                        </div>
+
+                        <!-- Filter by Date (Range) -->
+                        <div class="filter-date">
+                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por data</label>
+                             <div class="date-range-container">
+                                <i data-lucide="calendar" class="date-range-icon"></i>
+                                <input type="text" id="filterDateRange" class="date-range-input" placeholder="Selecione o período...">
+                             </div>
+                        </div>
+
+                        <!-- Filter Button -->
+                        <div class="filter-btn-container">
+                            <button id="btnApplyFilters" style="padding: 0.8rem 1.5rem; background: var(--secondary-caramel); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; height: 46px;">
+                                <i data-lucide="filter" style="width: 18px;"></i>
+                                Filtrar
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <div id="dashboardLoading" style="display:none; text-align:center; padding: 2rem; width: 100%;">
+                         <div style="display: inline-block; animation: spin 1s linear infinite;">
+                             <i data-lucide="loader-2" style="width: 24px; height: 24px; color: var(--secondary-caramel);"></i>
+                         </div>
+                         <p style="color: #888; margin-top: 0.5rem;">Atualizando dados...</p>
+                    </div>
+                    
+                    <!-- Quick Presets -->
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                        <button class="period-preset" data-period="today">Hoje</button>
+                        <button class="period-preset" data-period="yesterday">Ontem</button>
+                        <button class="period-preset" data-period="7days">7 Dias</button>
+                        <button class="period-preset active" data-period="thismonth">Este Mês</button>
+                        <button class="period-preset" data-period="30days">Últimos 30 dias</button>
+                    </div>
+                </div>
+
+                <!-- Break-even Goal Card (Hidden by default until data is loaded) -->
+                <div id="breakEvenGoalCard" style="display: none; background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-light); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-brown);">Meta de Ponto de Equilíbrio</h3>
+                            <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">Quanto falta para cobrir todos os custos do mês.</p>
+                        </div>
+                        <div style="background: #E8F5E9; color: #2E7D32; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                            Meta: <span id="beGoalValue">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #F5F5F5; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 0.8rem;">
+                        <div id="beProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FFC107, #CD7A3E); border-radius: 6px; transition: width 1s ease;"></div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500;">
+                        <span>Vendido: <span id="beCurrentValue" style="color: var(--secondary-caramel);">R$ 0,00</span></span>
+                        <span id="bePercentage">0%</span>
+                    </div>
                 </div>
 
                 <div class="kpi-grid">
@@ -482,7 +760,12 @@
             <!-- VIEW: CUSTOS -->
             <section id="view-custos" class="view-section">
                 <div class="header-dash" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                    <h1>Custos Fixos</h1>
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <h1>Custos Fixos</h1>
+                        <button onclick="openCostsChartModal()" style="background: var(--card-white); border: 1px solid var(--border-light); color: var(--text-brown); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                            <i data-lucide="pie-chart" style="width: 18px; height: 18px; color: var(--secondary-caramel);"></i> Ver gráfico
+                        </button>
+                    </div>
                     <div style="background: #FFF0F0; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #FFCDD2; color: #D32F2F; font-weight: 700; align-self: flex-start;">
                         Total: <span id="viewCustosTotal">R$ 0,00</span>
                     </div>
@@ -668,7 +951,7 @@
 
                 <div style="margin-top: 1rem;">
                     <div class="table-responsive" style="background: white; padding: 1rem; border-radius: 16px; border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
-                        <table style="width: 100%; border-collapse: collapse;">
+                        <table id="salesTable" style="width: 100%; border-collapse: collapse;">
                             <thead style="background: #FFFBF7; border-bottom: 2px solid #eee;">
                                 <tr>
                                     <th style="padding: 1rem; text-align: left;">Data</th>
@@ -810,15 +1093,86 @@
             return res;
         }
 
+        // Global User Data
+        let currentUserData = null;
+
         // Load User Info
         async function loadUserInfo() {
             try {
                 const res = await authFetch('/api/user/me');
                 if (res.ok) {
                     const user = await res.json();
+                    currentUserData = user; // Store globally
                     const topName = document.getElementById('topUserName');
                     if (topName && user.name) {
                         topName.textContent = 'Olá, ' + user.name.split(' ')[0];
+                    }
+
+                    // Update Meta Section (Merged into Break-Even Card below filter)
+                    const breakEvenCard = document.getElementById('breakEvenGoalCard');
+                    if (breakEvenCard) {
+                        if (user.breakEvenPoint && user.breakEvenPoint > 0) {
+                            // Calculate Progress
+                            const totalVendido = user.totalSales || 0;
+                            const meta = user.breakEvenPoint;
+                            const percent = Math.round((totalVendido / meta) * 100);
+                            const barWidth = Math.min(percent, 100);
+                            const isOver = percent > 100;
+
+                            breakEvenCard.style.display = 'block';
+                            breakEvenCard.innerHTML = `
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                    <div>
+                                        <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-brown);">Meta de Ponto de Equilíbrio</h3>
+                                        <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">Quanto falta para cobrir todos os custos do mês.</p>
+                                    </div>
+                                    <div style="background: #E8F5E9; color: #2E7D32; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                                        Meta: <span id="beGoalValue">${meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: #F5F5F5; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 0.8rem; border: 1px solid rgba(0,0,0,0.05); position: relative;">
+                                    <div id="beProgressBar" style="width: ${barWidth}%; height: 100%; background: linear-gradient(90deg, #FFC107, #CD7A3E); border-radius: 6px; transition: width 1s ease; position: relative; overflow: hidden;">
+                                        ${isOver ? '<div style="position: absolute; right: 0; top: 0; bottom: 0; width: 20px; background: rgba(255,255,255,0.3); animation: shine 1.5s infinite;"></div>' : ''}
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500;">
+                                    <span style="color: var(--secondary-caramel);">Vendido: <span id="beCurrentValue">${totalVendido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></span>
+                                    <span style="color: #666;"><span id="bePercentage">${percent}%</span> Concluído</span>
+                                </div>
+                                ${isOver ? `
+                                    <div style="margin-top: 12px; background: #E8F5E9; color: #2E7D32; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px; border: 1px solid #C8E6C9;">
+                                        <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>
+                                        PARABÉNS! VOCÊ JÁ PASSOU DA META!
+                                    </div>
+                                ` : ''}
+                                <style>
+                                    @keyframes shine {
+                                        0% { transform: translateX(-100%) skewX(-15deg); }
+                                        100% { transform: translateX(200%) skewX(-15deg); }
+                                    }
+                                </style>
+                            `;
+                        } else {
+                            // Show "Set Goal" CTA if no goal set
+                             breakEvenCard.style.display = 'block';
+                             breakEvenCard.innerHTML = `
+                                <div style="background: #E8F5E9; border: 1px solid #C8E6C9; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer;" onclick="window.location.href='/equilibrio'">
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <div style="background: #4CAF50; color: white; padding: 12px; border-radius: 50%;">
+                                            <i data-lucide="calculator" style="width: 24px; height: 24px;"></i>
+                                        </div>
+                                        <div>
+                                            <h3 style="margin: 0; font-size: 1.1rem; color: #2E7D32;">Defina sua Meta</h3>
+                                            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #388E3C;">Calcule seu ponto de equilíbrio para acompanhar o progresso.</p>
+                                        </div>
+                                    </div>
+                                    <i data-lucide="chevron-right" style="color: #388E3C;"></i>
+                                </div>
+                            `;
+                        }
+                        lucide.createIcons();
                     }
                 }
             } catch (err) {
@@ -853,23 +1207,47 @@
             }
         }
 
-        // Mobile Menu Toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-            document.getElementById('mobileMenuDropdown').classList.toggle('open');
-        });
-
         // --- Data Logic ---
 
-        // Load Products for Select
+        // Helper for Local Date YYYY-MM-DD
+        function formatDateLocal(date) {
+            if (!date) return '';
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Load Products for Selects (Modal & Filter)
         async function loadProducts() {
             try {
+                console.log('Loading products...');
                 const res = await authFetch('/api/products');
+                if (!res.ok) throw new Error('Failed to fetch products');
                 const products = await res.json();
-                const select = document.getElementById('productSelect');
-                select.innerHTML = '<option value="">Selecione um produto</option>';
-                products.forEach(p => {
-                    select.innerHTML += `<option value="${p._id}">${p.name} - R$ ${p.salePrice.toFixed(2)}</option>`;
-                });
+                console.log('Products loaded:', products.length);
+                
+                // 1. Modal Select
+                const selectModal = document.getElementById('productSelect');
+                if (selectModal) {
+                    selectModal.innerHTML = '<option value="">Selecione um produto</option>';
+                    products.forEach(p => {
+                        selectModal.innerHTML += `<option value="${p._id}">${p.name} - R$ ${p.salePrice.toFixed(2)}</option>`;
+                    });
+                }
+
+                // 2. Filter Select (Dashboard)
+                const selectFilter = document.getElementById('filterProduct');
+                if (selectFilter) {
+                    // Save current selection if any
+                    const currentVal = selectFilter.value;
+                    selectFilter.innerHTML = '<option value="all">Todos produtos</option>';
+                    products.forEach(p => {
+                        selectFilter.innerHTML += `<option value="${p._id}">${p.name}</option>`;
+                    });
+                    if (currentVal) selectFilter.value = currentVal;
+                }
+
             } catch (error) {
                 console.error('Error loading products:', error);
             }
@@ -943,15 +1321,15 @@
                     const paymentMap = { pix: 'Pix', credit: 'Crédito', debit: 'Débito', cash: 'Dinheiro' };
                     tbody.innerHTML += `
                         <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 1rem;">${new Date(s.date).toLocaleDateString()}</td>
-                            <td style="padding: 1rem; font-weight: 500;">${productName}</td>
-                            <td style="padding: 1rem;">${s.quantity}</td>
-                            <td style="padding: 1rem;">
-                                <span style="background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">
+                            <td data-label="Data" style="padding: 1rem;"><span class="cell-content">${new Date(s.date).toLocaleDateString()}</span></td>
+                            <td data-label="Produto" style="padding: 1rem; font-weight: 500;"><span class="cell-content">${productName}</span></td>
+                            <td data-label="Qtd" style="padding: 1rem;"><span class="cell-content">${s.quantity}</span></td>
+                            <td data-label="Pagamento" style="padding: 1rem;">
+                                <span class="cell-content" style="background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">
                                     ${paymentMap[s.paymentMethod] || s.paymentMethod}
                                 </span>
                             </td>
-                            <td style="padding: 1rem; color: #4CAF50; font-weight: 600;">R$ ${s.totalAmount.toFixed(2)}</td>
+                            <td data-label="Valor" style="padding: 1rem; color: #4CAF50; font-weight: 600;"><span class="cell-content">R$ ${s.totalAmount.toFixed(2)}</span></td>
                         </tr>
                     `;
                 });
@@ -1162,7 +1540,7 @@
                     const percent = total > 0 ? ((c.amount / total) * 100).toFixed(1) : 0;
 
                     container.innerHTML += `
-                        <div style="background: white; padding: 0.8rem; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); position: relative; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div style="background: white; padding: 0.5rem 0.8rem; border-radius: 10px; border: 1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.02); position: relative; display: flex; flex-direction: column; justify-content: center; min-height: 60px;">
                             <div style="position: absolute; top: 8px; left: 8px;">
                                 <input type="checkbox" class="cost-checkbox" value="${safeId}" onchange="updateBulkActions()">
                             </div>
@@ -1174,12 +1552,12 @@
                                     <i data-lucide="x" style="width: 16px; height: 16px;"></i>
                                 </button>
                             </div>
-                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.5rem; padding-right: 60px; padding-left: 25px; word-break: break-word; line-height: 1.2; font-size: 0.95rem;">${c.name}</div>
+                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.2rem; padding-right: 60px; padding-left: 25px; word-break: break-word; line-height: 1.1; font-size: 0.9rem;">${c.name}</div>
                             <div style="display:flex; justify-content:space-between; font-size: 0.85rem; padding-left: 25px; align-items: flex-end;">
-                                <span style="color: #666; font-size: 0.8rem;">${new Date(c.date).toLocaleDateString()}</span>
+                                <span style="color: #666; font-size: 0.75rem;">${new Date(c.date).toLocaleDateString()}</span>
                                 <div style="text-align: right;">
-                                    <span style="color: #F44336; font-weight:600; display: block; font-size: 1rem;">R$ ${c.amount.toFixed(2)}</span>
-                                    <span style="font-size: 0.75rem; color: #999;">${percent}% do total</span>
+                                    <span style="color: #F44336; font-weight:600; display: block; font-size: 0.95rem;">R$ ${c.amount.toFixed(2)}</span>
+                                    <span style="font-size: 0.7rem; color: #999;">${percent}% do total</span>
                                 </div>
                             </div>
                         </div>
@@ -1328,31 +1706,168 @@
             }
         }
 
+        // --- Date Filter Logic ---
+        let datePicker;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile Menu Toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenuDropdown = document.getElementById('mobileMenuDropdown');
+            if(mobileMenuBtn && mobileMenuDropdown) {
+                mobileMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent bubbling
+                    mobileMenuDropdown.classList.toggle('open');
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (mobileMenuDropdown.classList.contains('open') && 
+                        !mobileMenuBtn.contains(e.target) && 
+                        !mobileMenuDropdown.contains(e.target)) {
+                        mobileMenuDropdown.classList.remove('open');
+                    }
+                });
+            }
+
+            // Init Flatpickr
+            datePicker = flatpickr("#filterDateRange", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                locale: "pt",
+                altInput: true,
+                altFormat: "d/m/Y",
+                onChange: function(selectedDates, dateStr, instance) {
+                    // Auto-filter when range is selected (wait for both dates if range)
+                    if (selectedDates.length === 2 || (selectedDates.length === 1 && instance.config.mode !== 'range')) {
+                        loadDashboard();
+                    }
+                }
+            });
+
+            // Product Filter Auto-update
+            const productFilter = document.getElementById('filterProduct');
+            if(productFilter) {
+                productFilter.addEventListener('change', loadDashboard);
+            }
+
+            // Set default to "This Month"
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            datePicker.setDate([firstDay, today]);
+            
+            // Initial Load
+            loadProducts(); // Load products for filter
+            loadDashboard();
+        });
+
+        // Apply Filters Button
+        const btnApply = document.getElementById('btnApplyFilters');
+        if(btnApply) btnApply.addEventListener('click', loadDashboard);
+
+        // Period Presets
+        document.querySelectorAll('.period-preset').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Update active class
+                document.querySelectorAll('.period-preset').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+
+                const period = e.target.dataset.period;
+                const end = new Date(); // Current time
+                let start = new Date();
+
+                if (period === 'today') {
+                    // Start of day to End of day
+                    start = new Date(); 
+                    start.setHours(0,0,0,0);
+                    // Fixed: end was const, causing assignment error
+                    end.setHours(23,59,59,999);
+                } else if (period === 'yesterday') {
+                    start.setDate(end.getDate() - 1);
+                    start.setHours(0,0,0,0);
+                    end.setDate(end.getDate() - 1);
+                    end.setHours(23,59,59,999);
+                } else if (period === '7days') {
+                    start.setDate(end.getDate() - 6); // 7 days including today
+                    start.setHours(0,0,0,0);
+                } else if (period === '30days') {
+                    start.setDate(end.getDate() - 29); // 30 days including today
+                    start.setHours(0,0,0,0);
+                } else if (period === 'thismonth') {
+                    start = new Date(end.getFullYear(), end.getMonth(), 1);
+                }
+
+                // Set dates in picker (handles visual + state)
+                if(datePicker) {
+                    datePicker.setDate([start, end]);
+                } else {
+                    console.error('DatePicker not initialized');
+                }
+                
+                // Trigger dashboard reload immediately
+                loadDashboard();
+            });
+        });
+
+        function formatDateLocal(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         // Load Dashboard Data
         async function loadDashboard() {
+            const loader = document.getElementById('dashboardLoading');
             try {
-                const period = document.getElementById('periodFilter').value;
-                const res = await authFetch(`/api/dashboard-stats?period=${period}`);
+                if(loader) loader.style.display = 'block';
+                // Get Product
+                const productSelect = document.getElementById('filterProduct');
+                const productId = productSelect ? productSelect.value : 'all';
+
+                // Get Dates from Flatpickr
+                const selectedDates = datePicker ? datePicker.selectedDates : [];
+                let query = '';
+                
+                if (selectedDates.length > 0) {
+                    const start = formatDateLocal(selectedDates[0]);
+                    const end = selectedDates.length > 1 ? formatDateLocal(selectedDates[1]) : start;
+                    
+                    query = `?startDate=${start}&endDate=${end}`;
+                } else {
+                    query = `?period=thismonth`; 
+                }
+
+                if (productId && productId !== 'all') {
+                    query += `&productId=${productId}`;
+                }
+
+                console.log('Loading Dashboard with query:', query);
+
+                const res = await authFetch(`/api/dashboard-stats${query}`);
+                if (!res.ok) throw new Error('Falha ao carregar dados: ' + res.status);
+                
                 const data = await res.json();
                 
                 const stats = data.summary;
 
-                document.getElementById('totalSales').innerText = `R$ ${stats.totalRevenue.toFixed(2)}`;
-                // document.getElementById('totalCost').innerText = `R$ ${stats.totalCost.toFixed(2)}`;
-                document.getElementById('totalVariableCost').innerText = `R$ ${stats.totalVariableCost.toFixed(2)}`;
-                document.getElementById('totalFixedCostDash').innerText = `R$ ${stats.totalFixedCost.toFixed(2)}`;
-                document.getElementById('totalProfit').innerText = `R$ ${stats.netProfit.toFixed(2)}`;
-                document.getElementById('ticketAvg').innerText = `R$ ${stats.ticketAverage.toFixed(2)}`;
-                document.getElementById('totalItems').innerText = stats.salesCount;
+                if (document.getElementById('totalSales')) document.getElementById('totalSales').innerText = `R$ ${stats.totalRevenue.toFixed(2)}`;
+                if (document.getElementById('totalVariableCost')) document.getElementById('totalVariableCost').innerText = `R$ ${stats.totalVariableCost.toFixed(2)}`;
+                if (document.getElementById('totalFixedCostDash')) document.getElementById('totalFixedCostDash').innerText = `R$ ${stats.totalFixedCost.toFixed(2)}`;
+                if (document.getElementById('totalProfit')) document.getElementById('totalProfit').innerText = `R$ ${stats.netProfit.toFixed(2)}`;
+                if (document.getElementById('ticketAvg')) document.getElementById('ticketAvg').innerText = `R$ ${stats.ticketAverage.toFixed(2)}`;
+                if (document.getElementById('totalItems')) document.getElementById('totalItems').innerText = stats.salesCount;
                 
-                // Payment methods elements not currently in DOM
-                // document.getElementById('pixSales').innerText = stats.salesByMethod.pix || 0;
-                // document.getElementById('cardSales').innerText = (stats.salesByMethod.credit || 0) + (stats.salesByMethod.debit || 0);
+                if (data.charts) updateCharts(data.charts);
+                if (stats.topProducts) updateTopProducts(stats.topProducts);
                 
-                updateCharts(data.charts);
-                updateTopProducts(stats.topProducts);
+                // Break-even
+                updateBreakEvenCard(stats.totalRevenue);
             } catch (error) {
                 console.error('Error loading dashboard:', error);
+            } finally {
+                if(loader) loader.style.display = 'none';
             }
         }
         
@@ -1705,12 +2220,183 @@
             });
         }
 
-        document.getElementById('periodFilter').addEventListener('change', loadDashboard);
-
         // Init
         loadDashboard();
         loadProductsList();
         loadRecentSales();
+        // Break-even Goal Logic
+        function updateBreakEvenCard(currentRevenue) {
+            const card = document.getElementById('breakEvenGoalCard');
+            if (!currentUserData || !currentUserData.breakEvenPoint) {
+                card.style.display = 'none';
+                return;
+            }
+
+            card.style.display = 'block';
+            const goal = currentUserData.breakEvenPoint;
+            const percent = Math.min((currentRevenue / goal) * 100, 100);
+            
+            document.getElementById('beGoalValue').textContent = goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('beCurrentValue').textContent = currentRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('bePercentage').textContent = percent.toFixed(1) + '%';
+            document.getElementById('beProgressBar').style.width = percent + '%';
+        }
+
+        // Costs Chart Modal Logic
+        let costsChartInstance = null;
+
+        function openCostsChartModal() {
+            document.getElementById('costsChartModal').style.display = 'flex';
+            renderCostsChart();
+        }
+
+        function closeCostsChartModal() {
+            document.getElementById('costsChartModal').style.display = 'none';
+        }
+
+        async function renderCostsChart() {
+            const ctx = document.getElementById('costsPieChart').getContext('2d');
+            
+            // Destroy existing if any
+            if (costsChartInstance) {
+                costsChartInstance.destroy();
+            }
+
+            // Fetch current costs breakdown
+            try {
+                // We use existing global data or fetch fresh
+                const res = await authFetch('/api/fixed-costs?period=this_month');
+                const costs = await res.json();
+                
+                if (!costs || costs.length === 0) {
+                    // Draw empty chart or just return?
+                    // Better to clear rect
+                    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.font = "16px Inter";
+                    ctx.fillStyle = "#888";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Nenhum custo cadastrado.", ctx.canvas.width/2, ctx.canvas.height/2);
+                    return;
+                }
+
+                // Group by name
+                const labels = costs.map(c => c.name);
+                const data = costs.map(c => c.amount);
+                
+                // Vivid Colors - High Contrast & Distinct
+                const baseColors = [
+                    '#FF3333', // Vivid Red
+                    '#33FF33', // Vivid Green
+                    '#3357FF', // Vivid Blue
+                    '#FF33A8', // Hot Pink
+                    '#FF8C00', // Dark Orange
+                    '#9933FF', // Purple
+                    '#00CED1', // Dark Turquoise
+                    '#FFD700', // Gold
+                    '#DC143C', // Crimson
+                    '#00FF7F'  // Spring Green
+                ];
+                // Cycle through colors if needed
+                const colors = costs.map((_, i) => baseColors[i % baseColors.length]);
+
+                // Responsive Legend Position
+                const isMobile = window.innerWidth < 600;
+                const legendPosition = isMobile ? 'bottom' : 'right';
+
+                costsChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors,
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: 20
+                        },
+                        plugins: {
+                            legend: {
+                                position: legendPosition,
+                                labels: {
+                                    boxWidth: 20,
+                                    padding: 15,
+                                    font: {
+                                        size: 14,
+                                        family: "'Inter', sans-serif"
+                                    },
+                                    color: '#5D4037'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                titleColor: '#5D4037',
+                                bodyColor: '#5D4037',
+                                bodyFont: { size: 14 },
+                                titleFont: { size: 16, weight: 'bold' },
+                                borderColor: '#E0E0E0',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                                            // Add percentage
+                                            const total = context.chart._metasets[context.datasetIndex].total;
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1) + '%';
+                                            label += ` (${percentage})`;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            title: {
+                                display: false
+                            }
+                        },
+                        cutout: '60%',
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error('Error rendering costs chart:', err);
+            }
+        }
     </script>
+
+    <!-- Costs Chart Modal -->
+    <div id="costsChartModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem;">
+        <div style="background: white; width: 100%; max-width: 800px; padding: 2.5rem; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; align-items: center;">
+            <button onclick="closeCostsChartModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: #f5f5f5; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                <i data-lucide="x" style="width: 24px; height: 24px; color: #666;"></i>
+            </button>
+            
+            <h2 style="margin-top: 0; margin-bottom: 2rem; text-align: center; color: var(--text-brown); font-size: 1.8rem; font-weight: 700;">
+                Distribuição de Custos Fixos
+            </h2>
+            
+            <div style="position: relative; height: 500px; width: 100%;">
+                <canvas id="costsPieChart"></canvas>
+            </div>
+            
+            <p style="margin-top: 1.5rem; color: #888; font-size: 0.9rem; text-align: center;">
+                * Valores baseados nos custos cadastrados para este mês.
+            </p>
+        </div>
+    </div>
 </body>
 </html>

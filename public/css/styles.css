@@ -19,7 +19,7 @@
     /* Theme-specific variables (Default Dark) */
     --video-bg: var(--pricing-bg); /* Updated to match Pricing section background */
     --pricing-bg: linear-gradient(135deg, var(--falu-red) 0%, var(--seal-brown) 100%);
-    --navbar-bg: rgba(73, 18, 15, 0.95);
+    --navbar-bg: #73401F; /* Updated per user request */
     --audience-bg: var(--seal-brown);
     --card-border: rgba(255, 255, 255, 0.2);
     
@@ -55,7 +55,7 @@
 
     --video-bg: var(--pricing-bg); /* Match pricing bg */
     --pricing-bg: linear-gradient(135deg, #FFF0E0 0%, #FFFFFF 100%); /* Soft Orange to White */
-    --navbar-bg: rgba(73, 18, 15, 0.95); /* Dark Navbar in Light Theme (High Contrast) */
+    --navbar-bg: #73401F; /* Updated per user request */
     --audience-bg: #F5E6D3; /* Darker Beige for Light Mode to contrast with White Cards */
     --card-border: rgba(50, 34, 29, 0.1); /* Darker border for light theme */
 
@@ -212,6 +212,84 @@ body {
     color: white;
 }
 
+/* Gift Bonus Icon Standardized */
+.gift-bonus-icon {
+    width: 24px !important;
+    height: 24px !important;
+    color: var(--primary-yellow);
+    flex-shrink: 0;
+}
+
+/* Pricing Table Features - Dark Card Style */
+.table-features {
+    list-style: none;
+    padding: 0;
+    margin: 1.0rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.table-features li {
+    background: var(--dark-card);
+    border: 1px solid var(--card-border);
+    padding: 0.3rem 0.5rem; /* Further reduced padding */
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-white);
+    font-size: 0.95rem;
+    transition: transform 0.2s;
+}
+
+.table-features li:hover {
+    transform: translateX(5px);
+    border-color: var(--primary-yellow);
+}
+
+.table-features li i {
+    color: var(--primary-yellow);
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+/* Bonus Styling */
+.highlight-feature {
+    border: 2px solid var(--primary-yellow) !important;
+    background: rgba(205, 122, 62, 0.1) !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+}
+
+.bonus-label {
+    display: block;
+    font-weight: 800;
+    color: var(--primary-yellow);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    margin-bottom: 0.3rem;
+}
+
+.bonus-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Standardize Gift Icons */
+.lucide-gift {
+    width: 24px !important;
+    height: 24px !important;
+    color: var(--primary-yellow);
+}
+
+.icon-large {
+    width: 24px !important;
+    height: 24px !important;
+}
+
 /* Hero Section */
 .hero-section {
     min-height: 100vh;
@@ -221,14 +299,8 @@ body {
     justify-content: center;
     width: 100%;
     position: relative;
-    background-color: var(--seal-brown); /* Ensure dark background behind image */
-    /* Ensure dark cake background is visible here specifically as requested */
-    background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=white%20frosted%20cake%20with%20strawberries%20and%20white%20chocolate%20truffles%20on%20top%2C%20dark%20moody%20lighting%2C%20cinematic%2C%20high%20resolution%2C%20food%20photography%2C%20floating%20particles&image_size=square_hd');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    /* Force text to be light since background is always dark cake */
-    color: var(--new-tan);
+    background-color: #F5E6D3;
+    color: var(--seal-brown);
 }
 
 .hero-content {
@@ -245,31 +317,25 @@ body {
 
 /* Force specific elements in Hero to be light regardless of theme */
 .hero-section .main-title {
-    color: var(--new-tan) !important;
+    color: var(--seal-brown) !important;
 }
 
 .hero-section .subtitle {
-    color: white !important; /* Changed to white as requested */
+    color: var(--falu-red) !important; /* Changed to dark brown for contrast */
 }
 
-/* Hero section overrides removed to keep it dark in light mode */
-/* [data-theme="light"] .hero-section { ... } rules deleted */
-
-/* Hero section overrides kept default (Dark) even in Light Mode as requested */
 [data-theme="light"] .hero-section {
-    /* Keep the background image and dark overlay */
-    background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=white%20frosted%20cake%20with%20strawberries%20and%20white%20chocolate%20truffles%20on%20top%2C%20dark%20moody%20lighting%2C%20cinematic%2C%20high%20resolution%2C%20food%20photography%2C%20floating%20particles&image_size=square_hd');
-    background-color: var(--seal-brown);
+    background-color: #F5E6D3;
 }
 
 [data-theme="light"] .hero-section .main-title {
-    color: var(--new-tan) !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    color: var(--seal-brown) !important;
+    text-shadow: none;
 }
 
 [data-theme="light"] .hero-section .subtitle {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    color: var(--falu-red) !important;
+    text-shadow: none;
 }
 
 .main-title {
@@ -792,9 +858,7 @@ body {
     }
     
     .btn-primary.small {
-        display: flex; /* Show button on mobile */
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
+        display: none; /* Hide button on mobile */
     }
     
     .mobile-menu-btn {
@@ -1003,15 +1067,14 @@ body:not([data-theme="light"]) .audience-title .highlight {
 /* But since we have both classes in HTML, .audience-card styles will apply. 
    We just need to make sure flex: 0 0 300px overrides any width/flex from audience-card if present. */
 .audience-card.why-us-card {
-    /* Formula for 3.5 cards: 100% / 3.5 = ~28.57% minus gap adjustment */
-    flex: 0 0 28%; 
-    width: auto; /* Reset any fixed width */
+    flex: 0 0 28%;
+    width: auto;
 }
 
 @media (max-width: 768px) {
     .audience-card.why-us-card {
-        flex: 0 0 70%; /* Mobile peek effect - 1.5 cards */
-        box-shadow: none; /* Remove shadow on mobile */
+        flex: 0 0 80%;
+        box-shadow: none;
     }
 
     .nav-logo {
@@ -1055,7 +1118,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 .pricing-tables-container {
     display: flex;
     justify-content: center;
-    gap: 2rem;
+    gap: 4rem;
     flex-wrap: wrap;
     max-width: 1000px;
     margin: 0 auto;
@@ -1081,12 +1144,12 @@ body:not([data-theme="light"]) .audience-title .highlight {
 }
 
 .highlight-feature {
-    border: none;
-    background: transparent;
-    transform: none;
-    padding: 0;
-    margin: 0.8rem 0;
+    border: 2px dashed var(--primary-yellow); /* Dotted/dashed border */
+    padding: 0.4rem; /* Reduced padding */
+    border-radius: 12px; /* Match border radius */
+    margin: 0.2rem 0;
     display: block !important; /* Force block to stack label and content */
+    background: var(--dark-card); /* Ensure it has background */
 }
 
 .bonus-label {
@@ -1107,19 +1170,9 @@ body:not([data-theme="light"]) .audience-title .highlight {
 }
 
 .icon-large {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     color: var(--primary-yellow);
-}
-
-.highlight-feature {
-    background: transparent !important;
-    color: inherit;
-    font-weight: normal;
-    border: 2px dashed var(--primary-yellow); /* Dotted/dashed border */
-    padding: 0.5rem;
-    border-radius: 8px;
-    margin: 0.8rem 0;
 }
 
 .pricing-table.featured:hover {
@@ -1159,7 +1212,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 }
 
 .table-features li {
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.2rem;
     color: var(--text-muted);
     display: flex;
     align-items: center;
@@ -1395,13 +1448,118 @@ body:not([data-theme="light"]) .audience-title .highlight {
     background: var(--audience-bg); /* Match Who Am I section in light mode */
 }
 
+/* Base Video Slide Style */
+.video-slide {
+    aspect-ratio: 16/9; /* Default for desktop */
+}
+
 /* =========================================
    Mobile Specific Overrides (High Priority)
    ========================================= */
 @media (max-width: 768px) {
-    /* Adjust section titles - significantly reduced for mobile */
+    .site-footer {
+        padding-bottom: 100px; /* Raise footer above sticky CTA */
+    }
+
+    .video-slide {
+        aspect-ratio: 9/16 !important; /* Mobile vertical video */
+    }
+
+    .mobile-bottom-cta {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(135deg, var(--raw-sienna), var(--falu-red));
+        color: white;
+        padding: 0.5rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 800;
+        z-index: 3000;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    }
+
+    .mobile-bottom-cta button,
+    .mobile-bottom-cta a {
+        border: none;
+        background: white;
+        color: var(--seal-brown);
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        text-decoration: none;
+        margin-left: auto; /* Ensure button is pushed to right if space permits */
+        white-space: nowrap;
+    }
+    
+    .cta-left-content {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .cta-timer {
+         font-family: 'Courier New', monospace;
+        font-weight: 700;
+        font-size: 0.9rem;
+         color: #FFEB3B;
+        background: rgba(0,0,0,0.2);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .cta-prices {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+    }
+
+    .cta-prices .old {
+        font-size: 0.7rem;
+        text-decoration: line-through;
+        opacity: 0.8;
+        font-weight: 400;
+    }
+
+    .cta-prices .new {
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+     [data-theme="light"] .cta-timer {
+         color: #FFFFFF;
+     }
+
+    /* Slider - Wider Cards & Peek Effect */
+    .why-us-track {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 1rem;
+        gap: 1rem;
+        padding-right: 1.5rem; /* Peek effect for carousel indication */
+    }
+
+    .why-us-card, .audience-card {
+        min-width: 75vw !important; /* Adjusted to show part of next card */
+        scroll-snap-align: start;
+        flex: 0 0 auto;
+        width: 75vw !important;
+        margin-right: 1rem; /* Ensure spacing */
+    }
+    
+    /* Remove grid behavior if present */
+    .why-us-track {
+        grid-template-columns: none !important;
+    }
+
+    /* Adjust section titles - Reduced size as requested */
     .audience-title, .video-title, .who-title {
-        font-size: 2.0rem !important; /* Force override */
+        font-size: 1.9rem !important; /* Reduced from 2rem */
     }
 
     /* Reduce pricing card height (padding) but keep width */
@@ -1411,6 +1569,27 @@ body:not([data-theme="light"]) .audience-title .highlight {
     
     .pricing-table .table-features {
         margin-bottom: 1.5rem !important;
+    }
+
+    /* Pricing Card Text Reductions (approx -1px equivalent) */
+    .pricing-table .table-title {
+        font-size: 1.4rem !important; /* Was 1.5rem */
+    }
+
+    .pricing-table .table-price {
+        font-size: 2.4rem !important; /* Was 2.5rem */
+    }
+    
+    .pricing-table .main-price {
+        font-size: 2.4rem !important; /* Was 2.5rem */
+    }
+
+    .pricing-table .table-features li {
+        font-size: 0.9rem !important; /* Reduced slightly */
+    }
+    
+    .bonus-label {
+        font-size: 0.75rem !important; /* Reduced */
     }
 
     /* Modal Mobile Improvements */
@@ -1430,5 +1609,25 @@ body:not([data-theme="light"]) .audience-title .highlight {
         width: 32px !important;
         height: 32px !important;
         color: #333 !important; /* Ensure X is visible against white bg */
+    }
+}
+
+/* Hero Section Overrides */
+.hero-section {
+    background-color: #F5E6D3 !important;
+}
+
+/* Mobile Bottom CTA - Revert & Fixes */
+.mobile-bottom-cta button,
+.mobile-bottom-cta a {
+    font-weight: 800 !important;
+    border-radius: 5px !important;
+}
+
+@media (max-width: 768px) {
+    /* Hide Navbar Button on Mobile */
+    .navbar .btn-primary, 
+    .nav-menu .btn-primary { 
+        display: none !important; 
     }
 }

@@ -10,6 +10,14 @@ const UserSchema = new mongoose.Schema({
     status: { type: String, default: 'pending' },
     subscriptionStatus: { type: String, enum: ['active', 'inactive', 'expired'], default: 'inactive' },
     subscriptionExpiresAt: { type: Date },
+    
+    // Break-even Data
+    breakEvenPoint: { type: Number }, // Calculated break-even revenue
+    fixedCostsInput: { type: Number },
+    avgRevenueInput: { type: Number },
+    avgVariableCostInput: { type: Number },
+    breakEvenCalculatedAt: { type: Date },
+
     createdAt: { type: Date, default: Date.now }
 });
 

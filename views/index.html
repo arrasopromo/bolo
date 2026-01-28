@@ -95,7 +95,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <h2 class="video-title">Entenda como funciona a planilha</h2>
         
         <div class="video-slider-container" id="videoSliderContainer" style="display: flex; justify-content: center;">
-            <div class="video-slide" style="flex: 0 0 100%; max-width: 800px; aspect-ratio: 16/9; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="video-slide" style="flex: 0 0 100%; max-width: 800px; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                 <div class="video-placeholder" style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.5);">
                     <i data-lucide="play-circle" style="width: 64px; height: 64px; color: white;"></i>
                     <p style="color: white; margin-top: 1rem;">Vídeo Explicativo</p>
@@ -250,15 +250,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <li class="highlight-feature">
                         <span class="bonus-label">Bônus exclusivo</span>
                         <div class="bonus-content">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="gift" aria-hidden="true" class="lucide lucide-gift icon-large"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
-                            - Ferramenta para cálculo de ponto de equilíbrio com IA integrada
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
+                            Ferramenta para cálculo de ponto de equilíbrio com IA integrada
                         </div>
                     </li>
-                    <li class="highlight-feature" style="margin-top: 0.5rem;">
+                    <li class="highlight-feature">
                         <span class="bonus-label">Bônus exclusivo #2</span>
                         <div class="bonus-content">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="gift" aria-hidden="true" class="lucide lucide-gift icon-large"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
-                            - Ferramenta completa para fluxo de caixa
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
+                            Ferramenta completa para fluxo de caixa
                         </div>
                     </li>
                 </ul>
@@ -286,6 +286,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </div>
     </section>
 
+
+
     <!-- Rodapé -->
     <footer class="site-footer">
         <div style="color: var(--text-muted); font-size: 0.9rem;">
@@ -293,7 +295,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </div>
     </footer>
 
-    <!-- Order Modal removed as requested -->
+    <!-- Mobile Sticky CTA -->
+    <div class="mobile-bottom-cta">
+        <div class="cta-left-content">
+            <div class="cta-timer" id="ctaTimer">15:00</div>
+            <div class="cta-prices">
+                <span class="old">R$ 49,90</span>
+                <span class="new">R$ 19,90</span>
+            </div>
+        </div>
+        <button onclick="location.href='#tabela-de-precos'">
+            Garantir planilha
+        </button>
+    </div>
 
     <!-- Upgrade Modal -->
     <div id="upgradeModal" class="modal-overlay">
@@ -313,17 +327,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
                     <li><i data-lucide="check"></i> Suporte via WhatsApp</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício a Planilha</li>
-                    <li class="highlight-feature" style="border: 2px dashed var(--primary-yellow); padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
-                        <span class="bonus-label" style="color: var(--primary-yellow); font-size: 0.7rem; display: block; font-weight: 800; text-transform: uppercase;">Bônus exclusivo</span>
-                        <div class="bonus-content" style="font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="gift" aria-hidden="true" class="lucide lucide-gift icon-large"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
+                    <li class="highlight-feature">
+                        <span class="bonus-label">Bônus exclusivo</span>
+                        <div class="bonus-content">
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
                             Ferramenta para cálculo de ponto de equilíbrio com IA integrada
                         </div>
                     </li>
-                    <li class="highlight-feature" style="border: 2px dashed var(--primary-yellow); padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
-                        <span class="bonus-label" style="color: var(--primary-yellow); font-size: 0.7rem; display: block; font-weight: 800; text-transform: uppercase;">Bônus exclusivo #2</span>
-                        <div class="bonus-content" style="font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="gift" aria-hidden="true" class="lucide lucide-gift icon-large"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
+                    <li class="highlight-feature">
+                        <span class="bonus-label">Bônus exclusivo #2</span>
+                        <div class="bonus-content">
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
                             Ferramenta completa para fluxo de caixa
                         </div>
                     </li>

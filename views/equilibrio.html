@@ -506,8 +506,30 @@
             const marginValue = avgRevenue - avgVariableCost;
             const marginPercent = marginValue / avgRevenue; // Decimal (e.g., 0.40)
 
-            // 2. Break-even Revenue = Fixed Costs / Margin Decimal
+            // Break-even Revenue = Fixed Costs / Margin Decimal
             metaFaturamento = fixedCosts / marginPercent;
+
+            // Save to Backend
+            try {
+                const token = localStorage.getItem('bellecake_token');
+                if (token) {
+                    fetch('/api/break-even', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            breakEvenPoint: metaFaturamento,
+                            fixedCosts: fixedCosts,
+                            avgRevenue: avgRevenue,
+                            avgVariableCost: avgVariableCost
+                        })
+                    }).catch(err => console.error('Erro ao salvar ponto de equilíbrio:', err));
+                }
+            } catch (e) {
+                console.error('Erro auth:', e);
+            }
 
             // Update UI
             document.getElementById('pe-result').textContent = metaFaturamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
