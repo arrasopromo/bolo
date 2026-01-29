@@ -850,6 +850,28 @@ body {
     .annotation.heart-icon::after {
         display: none;
     }
+
+    /* Mobile Typography Adjustments - Removed to use correct media query at bottom */
+}
+
+/* Whatsapp Support Item Styling */
+.whatsapp-support {
+    background: #E8F5E9 !important;
+    border: 1px solid #4CAF50 !important;
+    color: #2E7D32 !important;
+    font-weight: 600;
+}
+
+.whatsapp-support i, .whatsapp-support svg {
+    color: #25D366 !important;
+    fill: #25D366 !important;
+    stroke: none !important;
+}
+
+/* Ensure SVG matches icon size */
+.whatsapp-icon {
+    width: 18px;
+    height: 18px;
 }
 
 @media (max-width: 768px) {
@@ -905,6 +927,14 @@ body {
     max-width: 800px;
     margin: 0 auto;
     aspect-ratio: 16/9;
+    background: #000;
+
+@media (max-width: 768px) {
+    .video-container {
+        aspect-ratio: 9/16;
+        max-width: 360px;
+    }
+}
     background: #000;
     border-radius: 16px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -1454,8 +1484,14 @@ body:not([data-theme="light"]) .audience-title .highlight {
 }
 
 /* =========================================
-   Mobile Specific Overrides (High Priority)
+   Desktop Specific Overrides
    ========================================= */
+@media (min-width: 769px) {
+    .mobile-bottom-cta {
+        display: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .site-footer {
         padding-bottom: 100px; /* Raise footer above sticky CTA */
@@ -1559,7 +1595,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
     /* Adjust section titles - Reduced size as requested */
     .audience-title, .video-title, .who-title {
-        font-size: 1.9rem !important; /* Reduced from 2rem */
+        font-size: calc(1.9rem - 1px) !important;
     }
 
     /* Reduce pricing card height (padding) but keep width */
@@ -1577,11 +1613,11 @@ body:not([data-theme="light"]) .audience-title .highlight {
     }
 
     .pricing-table .table-price {
-        font-size: 2.4rem !important; /* Was 2.5rem */
+        font-size: calc(2.4rem - 2px) !important;
     }
     
     .pricing-table .main-price {
-        font-size: 2.4rem !important; /* Was 2.5rem */
+        font-size: calc(2.4rem - 2px) !important;
     }
 
     .pricing-table .table-features li {

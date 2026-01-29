@@ -250,6 +250,10 @@ app.get('/membros', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'membros.html'));
 });
 
+app.get('/aulas', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'aulas.html'));
+});
+
 // Redirect /membro to /membros (common typo fix)
 app.get('/membro', (req, res) => {
     res.redirect('/membros');
@@ -258,6 +262,11 @@ app.get('/membro', (req, res) => {
 // Serve the Cash Flow (Fluxo) page
 app.get('/fluxo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'fluxo.html'));
+});
+
+// Serve the Upgrade page
+app.get('/upgrade', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'upgrade.html'));
 });
 
 // --- Dev Login Route (Localhost Support) ---
@@ -290,7 +299,7 @@ app.get('/api/user/me', async (req, res) => {
     try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
-        // Calculate total sales for the current month
+        // Calculate total sales for the current month and find break-even day
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
@@ -298,16 +307,26 @@ app.get('/api/user/me', async (req, res) => {
         const sales = await Sale.find({
             user: req.user._id,
             date: { $gte: startOfMonth, $lte: endOfMonth }
-        });
+        }).sort({ date: 1 }); // Sort by date ascending to find break-even day
 
-        const totalSales = sales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
+        let totalSales = 0;
+        let metaReachedDate = null;
+        const breakEvenPoint = req.user.breakEvenPoint || 0;
+
+        for (const sale of sales) {
+            totalSales += (sale.totalAmount || 0);
+            if (breakEvenPoint > 0 && totalSales >= breakEvenPoint && !metaReachedDate) {
+                metaReachedDate = sale.date;
+            }
+        }
 
         res.json({
             name: req.user.name,
             email: req.user.email,
             plan: req.user.plan,
             breakEvenPoint: req.user.breakEvenPoint,
-            totalSales: totalSales, // Add totalSales to response
+            totalSales: totalSales,
+            metaReachedDate: metaReachedDate, // Add meta reached date
             breakEvenData: {
                 fixedCosts: req.user.fixedCostsInput,
                 avgRevenue: req.user.avgRevenueInput,
@@ -458,11 +477,24 @@ app.delete('/api/products/:id', async (req, res) => {
 app.get('/api/sales', async (req, res) => {
     try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-        const { period } = req.query; // today, yesterday, 7days, 30days, lastmonth
+        
+        const { period, startDate, endDate, productId } = req.query; 
         let query = { user: req.user._id };
         const now = new Date();
         
-        if (period === 'today') {
+        // Date Filtering
+        if (startDate && endDate) {
+             // Handle ISO strings or YYYY-MM-DD
+             let start, end;
+             if (startDate.includes('T')) {
+                 start = new Date(startDate);
+                 end = new Date(endDate);
+             } else {
+                 start = new Date(startDate); start.setHours(0,0,0,0);
+                 end = new Date(endDate); end.setHours(23,59,59,999);
+             }
+             query.date = { $gte: start, $lte: end };
+        } else if (period === 'today') {
             const start = new Date(now.setHours(0,0,0,0));
             const end = new Date(now.setHours(23,59,59,999));
             query.date = { $gte: start, $lte: end };
@@ -480,13 +512,21 @@ app.get('/api/sales', async (req, res) => {
             const start = new Date(now);
             start.setDate(start.getDate() - 30);
             query.date = { $gte: start };
-        } else if (period === 'all') {
-            // No date filter
+        } else if (period === 'thismonth') {
+             const start = new Date(now.getFullYear(), now.getMonth(), 1);
+             const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+             query.date = { $gte: start, $lte: end };
+        }
+        
+        // Product Filtering
+        if (productId && productId !== 'all') {
+            query.product = productId;
         }
         
         const sales = await Sale.find(query).populate('product').sort({ date: -1 });
         res.json(sales);
     } catch (err) {
+        console.error('Error fetching sales:', err);
         res.status(500).json({ error: 'Erro ao buscar vendas' });
     }
 });
@@ -818,12 +858,17 @@ app.post('/api/dicas-vendas', async (req, res) => {
     console.log('Recebendo requisição em /api/dicas-vendas');
     console.log('Body:', req.body);
     try {
-        const { metaFaturamento, vendasAtuais } = req.body;
+        // Validar e converter input
+        const metaFaturamento = parseFloat(req.body.metaFaturamento);
+        const vendasAtuais = parseFloat(req.body.vendasAtuais);
         
-        if (metaFaturamento === undefined || vendasAtuais === undefined) {
-            console.error('Dados incompletos');
-            return res.status(400).json({ success: false, message: 'Dados incompletos.' });
+        if (isNaN(metaFaturamento) || isNaN(vendasAtuais)) {
+            console.error('Dados inválidos (NaN):', req.body);
+            return res.status(400).json({ success: false, message: 'Dados inválidos. Certifique-se de enviar números.' });
         }
+        
+        // Verificar API Key (fallback local se ausente)
+        const apiKeyMissing = !process.env.OPENAI_API_KEY;
 
         const faltam = metaFaturamento - vendasAtuais;
         const hoje = new Date();
@@ -848,10 +893,49 @@ app.post('/api/dicas-vendas', async (req, res) => {
         }
 
         // Buscar estratégias no "Mini-DB"
-        const strategies = await FinancialStrategy.find({ scenario });
+        let strategies = [];
+        try {
+            strategies = await FinancialStrategy.find({ scenario });
+        } catch (dbError) {
+            console.error('Erro ao buscar estratégias (DB):', dbError);
+            // Fallback will handle empty strategies
+        }
         
-        // Selecionar 2 aleatórias para dar variedade ao contexto
-        const selectedStrategies = strategies.sort(() => 0.5 - Math.random()).slice(0, 2);
+        // Buscar produtos do usuário para contexto
+        let userProducts = [];
+        try {
+            // Check if user is authenticated before accessing req.user
+            if (req.user && req.user.id) {
+                userProducts = await Product.find({ user: req.user.id }).limit(5);
+            }
+        } catch (err) {
+            console.warn('Erro ao buscar produtos para dica:', err.message);
+        }
+        
+        const productsText = userProducts.length > 0 
+            ? userProducts.map(p => {
+                const custo = p.totalCost !== undefined && p.totalCost !== null ? Number(p.totalCost) : 0;
+                const preco = p.sellingPrice !== undefined && p.sellingPrice !== null ? Number(p.sellingPrice) : 0;
+                return `${p.name} (Custo: R$${custo.toFixed(2)}, Preço: R$${preco.toFixed(2)})`;
+            }).join(', ')
+            : 'Nenhum produto cadastrado ainda.';
+
+        // Fallback if no strategies found
+        if (!strategies || strategies.length === 0) {
+            strategies = [
+                { title: 'Redução de Custos', content: 'Negocie com fornecedores para compras em maior volume.', source: 'Sistema' },
+                { title: 'Aumento de Ticket Médio', content: 'Crie kits de produtos para aumentar o valor da venda.', source: 'Sistema' },
+                { title: 'Promoção Relâmpago', content: 'Faça ofertas limitadas para gerar urgência.', source: 'Sistema' },
+                { title: 'Fidelização', content: 'Ofereça um brinde na próxima compra.', source: 'Sistema' }
+            ];
+        }
+
+        let selectedStrategies;
+        if (strategies.length <= 2) {
+            selectedStrategies = strategies;
+        } else {
+            selectedStrategies = strategies.sort(() => 0.5 - Math.random()).slice(0, 2);
+        }
         
         const strategiesText = selectedStrategies.map(s => `- ${s.title}: ${s.content} (Fonte: ${s.source})`).join('\n');
 
@@ -861,12 +945,14 @@ app.post('/api/dicas-vendas', async (req, res) => {
             - Vendas realizadas até hoje (dia ${hoje.getDate()}): ${vendasFormatted}.
             - ${goalText}
             - Dias restantes no mês: ${diasRestantes} dias.
+            - Produtos Principais Cadastrados: ${productsText}
             
             Base de Conhecimento (Estratégias Recomendadas para este cenário):
             ${strategiesText}
             
             Ação:
             Com base no contexto e usando a Base de Conhecimento como inspiração (mas adaptando para a realidade de uma confeiteira), dê uma dica curta, prática e valiosa (máximo 2 parágrafos).
+            IMPORTANTE: Se houver produtos cadastrados, TENTE mencionar uma estratégia específica usando um dos produtos (ex: "Faça uma promoção com o [Nome do Produto]").
             
             ${scenario === 'below_break_even' 
                 ? 'Foque em ações rápidas para gerar caixa imediato.' 
@@ -875,16 +961,53 @@ app.post('/api/dicas-vendas', async (req, res) => {
             Seja amigável, direto e use emojis.
         `;
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: systemRole },
-                { role: "user", content: prompt }
-            ],
-            max_tokens: 300,
-        });
+        // Fallback local generator
+        const buildFallbackTip = () => {
+            // Select a random product if available
+            let prodText = 'um produto carro-chefe';
+            if (userProducts.length > 0) {
+                const randomProd = userProducts[Math.floor(Math.random() * userProducts.length)];
+                prodText = `o produto "${randomProd.name}"`;
+            }
 
-        const dica = completion.choices[0].message.content;
+            // Determine specific action based on scenario
+            let action = '';
+            if (scenario === 'below_break_even') {
+                action = `Faça uma "Promoção Relâmpago" (24h) com ${prodText}. Crie um combo ou dê um desconto progressivo para gerar caixa rápido.`;
+            } else {
+                action = `Aproveite o bom momento para fidelizar! Envie uma mensagem para quem comprou ${prodText} oferecendo um benefício na próxima compra.`;
+            }
+
+            const s1 = selectedStrategies[0]?.title ? `${selectedStrategies[0].title}: ${selectedStrategies[0].content}` : 'Revise seus custos variáveis.';
+            const s2 = selectedStrategies[1]?.title ? `${selectedStrategies[1].title}: ${selectedStrategies[1].content}` : 'Poste fotos apetitosas nos stories.';
+
+            return `💡 Dica Personalizada (Modo Offline):\n\n` +
+                   `📊 Status: ${metaFormatted} (Meta) vs ${vendasFormatted} (Atual)\n` +
+                   `🎯 Faltam: ${faltamFormatted} | Dias: ${diasRestantes}\n\n` +
+                   `🚀 Ação Recomendada: ${action}\n\n` +
+                   `✨ Outras ideias: ${s1} | ${s2}`;
+        };
+
+        let dica;
+        if (apiKeyMissing) {
+            console.warn('Gerando dica via fallback local (sem OPENAI_API_KEY).');
+            dica = buildFallbackTip();
+        } else {
+            try {
+                const completion = await openai.chat.completions.create({
+                    model: "gpt-4o-mini",
+                    messages: [
+                        { role: "system", content: systemRole },
+                        { role: "user", content: prompt }
+                    ],
+                    max_tokens: 300,
+                });
+                dica = completion.choices[0].message.content;
+            } catch (llmError) {
+                console.error('Falha no LLM, usando fallback local:', llmError.message);
+                dica = buildFallbackTip();
+            }
+        }
 
         res.json({
             success: true,
@@ -893,8 +1016,13 @@ app.post('/api/dicas-vendas', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Erro na API OpenAI:', error);
-        res.status(500).json({ success: false, message: 'Erro ao gerar dica. Tente novamente.' });
+        console.error('Erro na API Dicas:', error);
+        // Fallback final (caso algo acima quebrou antes de gerar dica)
+        const safeMessage = 'Dica gerada localmente. Tente novamente mais tarde.';
+        res.status(200).json({ 
+            success: true, 
+            message: safeMessage
+        });
     }
 });
 

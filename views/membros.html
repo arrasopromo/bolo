@@ -59,13 +59,13 @@
         }
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
             width: 100%;
         }
 
-        /* Só muda para 2 colunas em tablets (iPad) ou telas menores que 850px */
-        @media (max-width: 850px) {
+        /* Só muda para 2 colunas em tablets (iPad) ou telas menores que 950px */
+        @media (max-width: 950px) {
             .grid-container {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -92,12 +92,20 @@
             border-color: var(--primary-yellow);
         }
         .card-image {
-            height: 160px;
+            height: 120px;
             background: linear-gradient(135deg, #5D3A29, #CD7A3E);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+        }
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         .card-image::after {
             content: '';
@@ -186,11 +194,17 @@
             <h1 class="main-title" style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1rem; color: #000000;">Área de Membros</h1>
             <p class="subtitle" style="text-shadow: none !important;">Bem-vinda ao seu painel exclusivo de sucesso.</p>
             
-            <div class="user-badge">
-                <i data-lucide="crown" color="#CD7A3E" fill="#CD7A3E"></i>
+            <div class="user-badge" style="align-items: flex-start;">
+                <i data-lucide="crown" color="#CD7A3E" fill="#CD7A3E" style="margin-top: 5px;"></i>
                 <div style="text-align: left;">
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Status da Conta</div>
-                    <div style="font-weight: 700; color: var(--heading-color);">ACESSO VITALÍCIO</div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Status da Conta</div>
+                        <div style="font-weight: 700; color: var(--heading-color);">ACESSO COMPLETO</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted);">Membro desde</div>
+                        <div id="memberSince" style="font-weight: 600; font-size: 0.8rem; color: var(--heading-color);">...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -199,7 +213,7 @@
             <!-- Card 1: Planilha -->
             <div class="content-card">
                 <div class="card-image">
-                    <i data-lucide="table" size="48" color="white"></i>
+                    <img src="/images/planilha%20folder.png" alt="Capa Planilha">
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">Planilha Automática</h3>
@@ -212,14 +226,17 @@
 
             <!-- Card 2: Aulas -->
             <div class="content-card">
-                <div class="card-image">
-                    <i data-lucide="play-circle" size="48" color="white"></i>
+                <div class="card-image" style="background: url('https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=500&q=80') center/cover no-repeat;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;">
+                        <i data-lucide="video" size="48" color="white"></i>
+                    </div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(255,0,0,0.8); padding: 2px 8px; border-radius: 4px; color: white; font-size: 0.7rem; font-weight: 700; z-index: 2;">REC</div>
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">Aulas Práticas</h3>
                     <p class="card-desc">Tutoriais passo a passo ensinando como preencher e extrair o máximo da ferramenta.</p>
-                    <a href="#" class="access-btn">
-                        <i data-lucide="play"></i> ASSISTIR AGORA
+                    <a href="/aulas" class="access-btn">
+                        <i data-lucide="play-circle"></i> ASSISTIR AGORA
                     </a>
                 </div>
             </div>
@@ -227,10 +244,9 @@
             <!-- Card 3: IA Bonus -->
             <div class="content-card" style="border: 1px solid var(--primary-yellow);">
                 <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #CD7A3E);">
-                    <i data-lucide="brain-circuit" size="48" color="white"></i>
+                    <img src="/images/ponto%20equilibrio.png" alt="Capa IA">
                 </div>
                 <div class="card-body">
-                    <div style="color: var(--primary-yellow); font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase;">Ferramenta Exclusiva</div>
                     <h3 class="card-title">Cálculo com IA</h3>
                     <p class="card-desc">Descubra seu ponto de equilíbrio e receba dicas de vendas personalizadas com nossa Inteligência Artificial.</p>
                     <a href="/equilibrio" class="access-btn">
@@ -239,31 +255,45 @@
                 </div>
             </div>
 
-            <!-- Card 4: Fluxo de Caixa (Novo) -->
+            <!-- Card 4: Fluxo de Caixa -->
             <div class="content-card">
                 <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #4CAF50);">
-                    <i data-lucide="trending-up" size="48" color="white"></i>
+                    <img src="/images/fluxo%20caixa%20(1).png" alt="Capa Fluxo de Caixa">
                 </div>
                 <div class="card-body">
-                    <div style="color: #4CAF50; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase;">Gestão Financeira</div>
                     <h3 class="card-title">Fluxo de Caixa</h3>
                     <p class="card-desc">Controle suas vendas diárias, cadastre produtos e visualize seus lucros com gráficos detalhados.</p>
-                    <a href="/fluxo" id="btn-fluxo" class="access-btn" style="background: #4CAF50; color: white;">
-                        <i data-lucide="bar-chart-2"></i> ACESSAR PAINEL
+                    <a href="/fluxo" id="btn-fluxo" class="access-btn">
+                        <i data-lucide="layout-dashboard"></i> ACESSAR PAINEL
                     </a>
                 </div>
             </div>
 
-            <!-- Card 5: Suporte -->
+            <!-- Card 5: Material de Massas (Order Bump) -->
             <div class="content-card">
                 <div class="card-image">
-                    <i data-lucide="message-circle" size="48" color="white"></i>
+                    <img src="/images/bolo%20branco.jpeg" alt="Bolo Recheado" style="object-position: center;">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7);"></div>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Apostila de Massas</h3>
+                    <p class="card-desc">Acesse suas receitas exclusivas de massas profissionais e recheios estruturados.</p>
+                    <a href="#" class="access-btn">
+                        <i data-lucide="book-open"></i> ACESSAR MATERIAL
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 6: Suporte -->
+            <div class="content-card">
+                <div class="card-image" style="background: transparent;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Capa WhatsApp" style="width: 80px; height: 80px; position: relative;">
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">Suporte VIP</h3>
                     <p class="card-desc">Dúvidas sobre a planilha? Nossa equipe de suporte está pronta para te ajudar no WhatsApp.</p>
                     <a href="https://wa.me/5511999999999" target="_blank" class="access-btn" style="background: #25D366; color: white;">
-                        <i data-lucide="message-square"></i> CHAMAR NO ZAP
+                        <i data-lucide="message-circle"></i> CHAMAR NO ZAP
                     </a>
                 </div>
             </div>
@@ -348,6 +378,14 @@
                         const nameDisplay = document.getElementById('userNameDisplay');
                         if (nameDisplay && userData.name) {
                             nameDisplay.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
+                        }
+                        
+                        const memberSince = document.getElementById('memberSince');
+                        if (memberSince) {
+                            // Use userData.createdAt or fallback to now
+                            const dateStr = userData.createdAt || new Date().toISOString();
+                            const date = new Date(dateStr);
+                            memberSince.textContent = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
                         }
                     }
                 } catch (e) {

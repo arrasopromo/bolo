@@ -524,10 +524,21 @@
 
         /* Fix Mobile Menu Background & Visibility */
         .mobile-menu-dropdown {
-            background-color: var(--navbar-bg) !important;
+            background-color: #73401F !important;
             z-index: 2000;
             border-bottom-left-radius: 16px;
             border-bottom-right-radius: 16px;
+        }
+
+        .modal-overlay.open {
+            display: flex !important;
+        }
+
+        @media (min-width: 1024px) {
+            #breakEvenGoalCard {
+                max-width: 600px;
+                margin: 0 auto 1.5rem auto;
+            }
         }
     </style>
 </head>
@@ -539,7 +550,7 @@
             <img src="/images/LOGO%20BELLE%20CAKE.png" alt="Belle Cake" class="mobile-logo">
         </a>
         <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
-            <button onclick="document.getElementById('newSaleModal').style.display='flex'" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+            <button onclick="openSaleModal()" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px;">
                 <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Nova Venda
             </button>
             <button id="mobileMenuBtn" style="background:none; border:none; color:#FFFFFF; cursor: pointer;">
@@ -605,12 +616,22 @@
         <main class="main-content">
             
             <!-- Top User Bar -->
-            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1rem;">
-                <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 0.5rem 1rem; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;">
-                    <div style="width: 32px; height: 32px; background: #FFFBF7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--secondary-caramel);">
-                        <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; margin-bottom: 2rem;">
+                <div style="position: relative;">
+                    <div onclick="toggleUserMenu()" style="display: flex; align-items: center; gap: 10px; background: white; padding: 0.5rem 1rem; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; cursor: pointer;">
+                        <div style="width: 32px; height: 32px; background: #FFFBF7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--secondary-caramel);">
+                            <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <span id="topUserName" style="font-weight: 600; font-size: 0.95rem; color: var(--text-brown);">Olá</span>
+                        <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #999;"></i>
                     </div>
-                    <span id="topUserName" style="font-weight: 600; font-size: 0.95rem; color: var(--text-brown);">Olá</span>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userMenuDropdown" style="display: none; position: absolute; right: 0; top: 120%; background: white; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-width: 180px; padding: 0.5rem; z-index: 1000; flex-direction: column;">
+                         <div onclick="toggleMetaCard(true)" style="padding: 0.8rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-brown); transition: background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">
+                             <i data-lucide="eye"></i> Mostrar Meta
+                         </div>
+                    </div>
                 </div>
             </div>
 
@@ -938,15 +959,49 @@
 
             <!-- VIEW: VENDAS -->
             <section id="view-vendas" class="view-section">
-                <div class="header-dash">
-                    <h1>Registro de Vendas</h1>
-                    <select id="salesPeriodFilter" onchange="loadRecentSales()" style="padding: 0.6rem; border-radius: 8px; border: 1px solid #ddd; background: white;">
-                        <option value="today">Hoje</option>
-                        <option value="yesterday">Ontem</option>
-                        <option value="7days">Últimos 7 dias</option>
-                        <option value="30days" selected>Últimos 30 dias</option>
-                        <option value="all">Todo o período</option>
-                    </select>
+                <div class="header-dash" style="flex-direction: column; align-items: flex-start; margin-bottom: 2rem;">
+                    <h1 style="margin-bottom: 1rem;">Registro de Vendas</h1>
+                    
+                    <div class="filters-wrapper">
+                         <!-- Filter by Product -->
+                        <div class="filter-item">
+                            <label for="filterProductSales" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por produto</label>
+                            <div style="position: relative;">
+                                <i data-lucide="package" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999;"></i>
+                                <select id="filterProductSales" style="width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 8px; border: 1px solid #ddd; background: white; font-family: 'Inter', sans-serif; appearance: none; cursor: pointer;">
+                                    <option value="all">Todos produtos</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                                <i data-lucide="chevron-down" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999; pointer-events: none;"></i>
+                            </div>
+                        </div>
+
+                        <!-- Filter by Date -->
+                        <div class="filter-date">
+                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por data</label>
+                             <div class="date-range-container">
+                                <i data-lucide="calendar" class="date-range-icon"></i>
+                                <input type="text" id="filterDateRangeSales" class="date-range-input" placeholder="Selecione o período...">
+                             </div>
+                        </div>
+
+                        <!-- Filter Button -->
+                        <div class="filter-btn-container">
+                            <button id="btnApplyFiltersSales" onclick="loadRecentSales()" style="padding: 0.8rem 1.5rem; background: var(--secondary-caramel); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; height: 46px;">
+                                <i data-lucide="filter" style="width: 18px;"></i>
+                                Filtrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Presets -->
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                         <button class="period-preset sales-preset" type="button" data-period="today" onclick="setSalesPeriod('today')">Hoje</button>
+                         <button class="period-preset sales-preset" type="button" data-period="yesterday" onclick="setSalesPeriod('yesterday')">Ontem</button>
+                         <button class="period-preset sales-preset" type="button" data-period="7days" onclick="setSalesPeriod('7days')">7 Dias</button>
+                         <button class="period-preset sales-preset active" type="button" data-period="30days" onclick="setSalesPeriod('30days')">Últimos 30 dias</button>
+                         <button class="period-preset sales-preset" type="button" data-period="all" onclick="setSalesPeriod('all')">Todo o período</button>
+                    </div>
                 </div>
 
                 <div style="margin-top: 1rem;">
@@ -1079,18 +1134,35 @@
         // Wrapper for authenticated requests
         async function authFetch(url, options = {}) {
             const token = localStorage.getItem('bellecake_token');
+            console.log('[Auth] Token exists:', !!token); 
+            
             const headers = {
                 'Content-Type': 'application/json',
                 ...options.headers,
                 'Authorization': `Bearer ${token}`
             };
-            const res = await fetch(url, { ...options, headers });
-            if (res.status === 401) {
-                alert('Sessão expirada ou inválida. Por favor, acesse via link de membro.');
-                window.location.href = '/membros'; // Redirect to members/login
-                throw new Error('Unauthorized');
+            
+            // Allow FormData to set its own Content-Type (multipart/form-data with boundary)
+            if (options.body instanceof FormData) {
+                delete headers['Content-Type'];
             }
-            return res;
+            
+            try {
+                console.log(`[Auth] Fetching ${url}...`);
+                const res = await fetch(url, { ...options, headers });
+                console.log(`[Auth] Response ${url}:`, res.status);
+
+                if (res.status === 401) {
+                    console.warn('[Auth] 401 Unauthorized. Redirecting...');
+                    alert('Sessão expirada ou inválida. Por favor, acesse via link de membro.');
+                    window.location.href = '/membros'; 
+                    throw new Error('Unauthorized');
+                }
+                return res;
+            } catch (err) {
+                console.error(`[Auth] Error fetching ${url}:`, err);
+                throw err;
+            }
         }
 
         // Global User Data
@@ -1111,23 +1183,37 @@
                     // Update Meta Section (Merged into Break-Even Card below filter)
                     const breakEvenCard = document.getElementById('breakEvenGoalCard');
                     if (breakEvenCard) {
+                        const isHidden = localStorage.getItem('metaCardHidden') === 'true';
+
                         if (user.breakEvenPoint && user.breakEvenPoint > 0) {
                             // Calculate Progress
                             const totalVendido = user.totalSales || 0;
                             const meta = user.breakEvenPoint;
                             const percent = Math.round((totalVendido / meta) * 100);
                             const barWidth = Math.min(percent, 100);
-                            const isOver = percent > 100;
+                            const isOver = percent >= 100;
+                            
+                            const todayDay = new Date().getDate();
+                            const metaDate = user.metaReachedDate ? new Date(user.metaReachedDate) : null;
+                            const metaDay = metaDate ? metaDate.getDate() : null;
 
-                            breakEvenCard.style.display = 'block';
+                            breakEvenCard.style.display = isHidden ? 'none' : 'block';
                             breakEvenCard.innerHTML = `
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                                     <div>
                                         <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-brown);">Meta de Ponto de Equilíbrio</h3>
-                                        <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">Quanto falta para cobrir todos os custos do mês.</p>
+                                        <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">
+                                            Dia ${todayDay}
+                                            ${metaDay ? ` • <span style="color: #2E7D32; font-weight: 600;">Meta batida no dia ${metaDay}</span>` : ''}
+                                        </p>
                                     </div>
-                                    <div style="background: #E8F5E9; color: #2E7D32; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
-                                        Meta: <span id="beGoalValue">${meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="background: #E8F5E9; color: #2E7D32; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                                            Meta: <span id="beGoalValue">${meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                        </div>
+                                        <button onclick="toggleMetaCard(false)" style="background: none; border: none; cursor: pointer; color: #999; padding: 4px; transition: color 0.2s;" title="Ocultar Meta" onmouseover="this.style.color='#CD7A3E'" onmouseout="this.style.color='#999'">
+                                            <i data-lucide="eye-off" style="width: 18px; height: 18px;"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 
@@ -1141,12 +1227,6 @@
                                     <span style="color: var(--secondary-caramel);">Vendido: <span id="beCurrentValue">${totalVendido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></span>
                                     <span style="color: #666;"><span id="bePercentage">${percent}%</span> Concluído</span>
                                 </div>
-                                ${isOver ? `
-                                    <div style="margin-top: 12px; background: #E8F5E9; color: #2E7D32; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px; border: 1px solid #C8E6C9;">
-                                        <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>
-                                        PARABÉNS! VOCÊ JÁ PASSOU DA META!
-                                    </div>
-                                ` : ''}
                                 <style>
                                     @keyframes shine {
                                         0% { transform: translateX(-100%) skewX(-15deg); }
@@ -1156,7 +1236,7 @@
                             `;
                         } else {
                             // Show "Set Goal" CTA if no goal set
-                             breakEvenCard.style.display = 'block';
+                             breakEvenCard.style.display = isHidden ? 'none' : 'block';
                              breakEvenCard.innerHTML = `
                                 <div style="background: #E8F5E9; border: 1px solid #C8E6C9; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer;" onclick="window.location.href='/equilibrio'">
                                     <div style="display: flex; align-items: center; gap: 15px;">
@@ -1248,6 +1328,17 @@
                     if (currentVal) selectFilter.value = currentVal;
                 }
 
+                // 3. Filter Select (Sales - Vendas)
+                const selectFilterSales = document.getElementById('filterProductSales');
+                if (selectFilterSales) {
+                    const currentVal = selectFilterSales.value;
+                    selectFilterSales.innerHTML = '<option value="all">Todos produtos</option>';
+                    products.forEach(p => {
+                        selectFilterSales.innerHTML += `<option value="${p._id}">${p.name}</option>`;
+                    });
+                    if (currentVal) selectFilterSales.value = currentVal;
+                }
+
             } catch (error) {
                 console.error('Error loading products:', error);
             }
@@ -1282,7 +1373,10 @@
                             <div style="display:flex; justify-content:space-between; font-size: 0.85rem; padding-left: 25px; align-items: flex-end;">
                                 <div style="display: flex; flex-direction: column;">
                                     <span style="color: #888; font-size: 0.75rem;">Custo</span>
-                                    <span style="color: #666; font-weight: 600;">R$ ${p.variableCost.toFixed(2)}</span>
+                                    <span style="color: #666; font-weight: 600;">
+                                        <span style="font-size: 0.8em; color: #999; font-weight: 400;">(${p.salePrice > 0 ? ((p.variableCost/p.salePrice)*100).toFixed(0) : 0}%)</span> 
+                                        R$ ${p.variableCost.toFixed(2)}
+                                    </span>
                                 </div>
                                 <div style="display: flex; flex-direction: column; text-align: right;">
                                     <span style="color: #888; font-size: 0.75rem;">Venda</span>
@@ -1298,15 +1392,88 @@
             }
         }
 
+        // Set Sales Period
+        function setSalesPeriod(period) {
+            const now = new Date();
+            let start, end;
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.sales-preset').forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            const activeBtn = document.querySelector(`.sales-preset[onclick="setSalesPeriod('${period}')"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            switch(period) {
+                case 'today':
+                    start = now;
+                    end = now;
+                    break;
+                case 'yesterday':
+                    start = new Date(now);
+                    start.setDate(now.getDate() - 1);
+                    end = new Date(now);
+                    end.setDate(now.getDate() - 1);
+                    break;
+                case '7days':
+                    start = new Date(now);
+                    start.setDate(now.getDate() - 7);
+                    end = now;
+                    break;
+                case '30days':
+                    start = new Date(now);
+                    start.setDate(now.getDate() - 30);
+                    end = now;
+                    break;
+                case 'thismonth':
+                    start = new Date(now.getFullYear(), now.getMonth(), 1);
+                    end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    break;
+            }
+
+            if (datePickerSales) {
+                datePickerSales.setDate([start, end]);
+            }
+            
+            loadRecentSales();
+        }
+
         // Load Recent Sales
         async function loadRecentSales() {
             try {
-                const period = document.getElementById('salesPeriodFilter').value;
-                const res = await authFetch(`/api/sales?period=${period}`); 
-                const sales = await res.json();
+                let query = '?';
                 
-                // If "all" is selected or we want specific sorting
-                // The backend sorts by date desc already
+                // Product Filter
+                const productFilter = document.getElementById('filterProductSales');
+                if (productFilter && productFilter.value !== 'all') {
+                    query += `productId=${productFilter.value}&`;
+                }
+
+                // Date Filter
+                if (typeof datePickerSales !== 'undefined' && datePickerSales && datePickerSales.selectedDates.length > 0) {
+                    let start = datePickerSales.selectedDates[0];
+                    let end = datePickerSales.selectedDates[1] || start; // Handle single date or range
+                    
+                    // Adjust to include full day
+                    start = new Date(start); start.setHours(0,0,0,0);
+                    end = new Date(end); end.setHours(23,59,59,999);
+                    
+                    query += `startDate=${start.toISOString()}&endDate=${end.toISOString()}&`;
+                } else {
+                    // Fallback to 30 days if no date selected
+                     const end = new Date();
+                     const start = new Date();
+                     start.setDate(end.getDate() - 30);
+                     // Set picker to this default so UI matches
+                     if(typeof datePickerSales !== 'undefined' && datePickerSales) {
+                         datePickerSales.setDate([start, end]);
+                     }
+                     query += `startDate=${start.toISOString()}&endDate=${end.toISOString()}&`;
+                }
+                
+                console.log('Loading sales with query:', query);
+                const res = await authFetch(`/api/sales${query}`); 
+                const sales = await res.json();
                 
                 const tbody = document.getElementById('salesTableBody');
                 tbody.innerHTML = '';
@@ -1340,9 +1507,16 @@
 
         // Modal Logic
         function openSaleModal() {
+            console.log('Opening sale modal...');
             loadProducts(); // Refresh products
             document.getElementById('saleDate').valueAsDate = new Date();
-            document.getElementById('newSaleModal').classList.add('open');
+            const modal = document.getElementById('newSaleModal');
+            if (modal) {
+                 modal.classList.add('open');
+                 console.log('Modal class added: open');
+            } else {
+                 console.error('Modal element not found!');
+            }
             resetVoiceUI();
         }
 
@@ -1451,7 +1625,7 @@
             } catch (err) {
                 console.error('Processing error:', err);
                 const status = document.getElementById('voiceStatus');
-                status.innerText = 'Erro ao processar áudio.';
+                status.innerText = 'Erro na transcrição. Verifique sua chave de API ou tente novamente.';
                 status.style.color = '#F44336';
                 
                 const btn = document.getElementById('voiceRecordBtn');
@@ -1745,10 +1919,41 @@
                 }
             });
 
+            // Init Flatpickr for Sales (Vendas Tab)
+            const salesRangeInput = document.getElementById("filterDateRangeSales");
+            if (salesRangeInput) {
+                datePickerSales = flatpickr("#filterDateRangeSales", {
+                    mode: "range",
+                    dateFormat: "Y-m-d",
+                    locale: "pt",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    onChange: function(selectedDates, dateStr, instance) {
+                        if (selectedDates.length === 2 || (selectedDates.length === 1 && instance.config.mode !== 'range')) {
+                            loadRecentSales();
+                            // Clear active presets
+                            document.querySelectorAll('.period-preset-sales').forEach(b => b.classList.remove('active'));
+                        }
+                    }
+                });
+                
+                // Default to 30 days for Sales
+                const today = new Date();
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+                datePickerSales.setDate([thirtyDaysAgo, today]);
+            }
+
             // Product Filter Auto-update
             const productFilter = document.getElementById('filterProduct');
             if(productFilter) {
                 productFilter.addEventListener('change', loadDashboard);
+            }
+            
+            // Product Filter Auto-update (Sales)
+            const productFilterSales = document.getElementById('filterProductSales');
+            if(productFilterSales) {
+                productFilterSales.addEventListener('change', loadRecentSales);
             }
 
             // Set default to "This Month"
@@ -1764,6 +1969,10 @@
         // Apply Filters Button
         const btnApply = document.getElementById('btnApplyFilters');
         if(btnApply) btnApply.addEventListener('click', loadDashboard);
+        
+        // Apply Filters Button Sales
+        const btnApplySales = document.getElementById('btnApplyFiltersSales');
+        if(btnApplySales) btnApplySales.addEventListener('click', loadRecentSales);
 
         // Period Presets
         document.querySelectorAll('.period-preset').forEach(btn => {
@@ -1863,9 +2072,13 @@
                 if (stats.topProducts) updateTopProducts(stats.topProducts);
                 
                 // Break-even
-                updateBreakEvenCard(stats.totalRevenue);
+                // updateBreakEvenCard(stats.totalRevenue); // Disabled to keep monthly progress independent of filters
             } catch (error) {
                 console.error('Error loading dashboard:', error);
+                if(document.getElementById('totalSales')) {
+                    document.getElementById('totalSales').innerText = 'Erro';
+                    document.getElementById('totalSales').style.color = 'red';
+                }
             } finally {
                 if(loader) loader.style.display = 'none';
             }
@@ -2122,6 +2335,7 @@
                 e.target.reset();
                 document.getElementById('saleDate').valueAsDate = new Date();
                 loadRecentSales();
+                loadUserInfo(); // Refresh progress bar
             } catch (error) {
                 alert('Erro ao registrar venda');
             } finally {
@@ -2376,6 +2590,39 @@
                 console.error('Error rendering costs chart:', err);
             }
         }
+        // --- UI Toggles ---
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenuDropdown');
+            if (menu) {
+                menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+            }
+        }
+
+        function toggleMetaCard(show) {
+            const card = document.getElementById('breakEvenGoalCard');
+            if (card) {
+                if (show) {
+                    card.style.display = 'block';
+                    localStorage.removeItem('metaCardHidden');
+                    // Hide menu if open
+                    const menu = document.getElementById('userMenuDropdown');
+                    if (menu) menu.style.display = 'none';
+                } else {
+                    card.style.display = 'none';
+                    localStorage.setItem('metaCardHidden', 'true');
+                }
+            }
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('userMenuDropdown');
+            const trigger = document.querySelector('[onclick="toggleUserMenu()"]');
+            if (menu && menu.style.display === 'flex' && trigger && !menu.contains(e.target) && !trigger.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
     </script>
 
     <!-- Costs Chart Modal -->
