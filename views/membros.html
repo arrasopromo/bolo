@@ -166,6 +166,32 @@
             gap: 1rem;
         }
         
+        /* Locked Card State */
+        .content-card.locked {
+            filter: grayscale(100%);
+            opacity: 0.7;
+            cursor: pointer;
+            position: relative;
+        }
+        .content-card.locked:hover {
+            transform: none;
+            border-color: var(--border-light);
+        }
+        .content-card.locked .access-btn {
+            background-color: #555 !important;
+            color: #ccc !important;
+            pointer-events: none; /* Button looks disabled */
+        }
+        .content-card.locked::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50; /* Above everything */
+        }
+
         @media (max-width: 768px) {
             .nav-profile span {
                 display: none;
@@ -226,9 +252,9 @@
 
             <!-- Card 2: Aulas -->
             <div class="content-card">
-                <div class="card-image" style="background: url('https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=500&q=80') center/cover no-repeat;">
-                    <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(255,0,0,0.8); padding: 2px 8px; border-radius: 4px; color: white; font-size: 0.7rem; font-weight: 700; z-index: 2;">REC</div>
-                </div>
+                <div class="card-image" style="background: #000000; display: flex; align-items: center; justify-content: center;">
+                        <div style="color: #FF0000; font-weight: 900; font-size: 1.5rem; letter-spacing: 2px;">REC</div>
+                    </div>
                 <div class="card-body">
                     <h3 class="card-title">Aulas Práticas</h3>
                     <p class="card-desc">Tutoriais passo a passo ensinando como preencher e extrair o máximo da ferramenta.</p>
@@ -313,7 +339,7 @@
             <form id="loginForm">
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Seu E-mail</label>
-                    <input type="email" id="loginEmail" placeholder="exemplo@email.com" required style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;">
+                    <input type="email" id="loginEmail" placeholder="exemplo@email.com" required style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 16px;">
                 </div>
                 <button type="submit" style="width: 100%; padding: 1rem; background: var(--primary-yellow); color: var(--seal-brown); border: none; border-radius: 8px; font-weight: 800; cursor: pointer; transition: opacity 0.2s;">
                     ENTRAR AGORA
@@ -376,7 +402,7 @@
                     localStorage.setItem('bellecake_token', data.token);
                     
                     setTimeout(() => {
-                        window.location.reload();
+                        window.location.href = `/membros?token=${data.token}`;
                     }, 1000);
                 } else {
                     status.innerText = data.error || 'Erro ao entrar.';
@@ -465,6 +491,27 @@
                     `;
                     lucide.createIcons();
                 }
+            } else {
+                // Not Logged In - Lock Cards
+                const cards = document.querySelectorAll('.content-card');
+                cards.forEach(card => {
+                    card.classList.add('locked');
+                    
+                    // Change button text to indicate lock
+                    const btn = card.querySelector('.access-btn');
+                    if (btn) {
+                        btn.innerHTML = '<i data-lucide="lock"></i> BLOQUEADO';
+                    }
+
+                    // Add click event to open login modal
+                    card.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openLoginModal();
+                    });
+                });
+                // Re-render icons for the new lock icon
+                setTimeout(() => lucide.createIcons(), 100);
             }
 
             if (storedToken) {
@@ -484,7 +531,7 @@
                             // Use userData.createdAt or fallback to now
                             const dateStr = userData.createdAt || new Date().toISOString();
                             const date = new Date(dateStr);
-                            memberSince.textContent = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                            memberSince.textContent = date.toLocaleDateString('pt-BR');
                         }
                     }
                 } catch (e) {

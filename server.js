@@ -30,6 +30,31 @@ app.use((req, res, next) => {
     next();
 });
 
+// --- Email Login Route (Public) ---
+app.post('/api/auth/login-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email obrigatório' });
+
+        // Case insensitive search
+        const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Email não encontrado. Verifique se digitou corretamente.' });
+        }
+
+        // Return token
+        res.json({ 
+            success: true, 
+            token: user.token,
+            name: user.name 
+        });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ error: 'Erro ao processar login' });
+    }
+});
+
 // Authentication Middleware
 const authenticateUser = async (req, res, next) => {
     try {
@@ -294,30 +319,7 @@ app.get('/dev-login', async (req, res) => {
     }
 });
 
-// --- Email Login Route (Passwordless) ---
-app.post('/api/auth/login-email', async (req, res) => {
-    try {
-        const { email } = req.body;
-        if (!email) return res.status(400).json({ error: 'Email obrigatório' });
-
-        // Case insensitive search
-        const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
-
-        if (!user) {
-            return res.status(404).json({ error: 'Email não encontrado. Verifique se digitou corretamente.' });
-        }
-
-        // Return token
-        res.json({ 
-            success: true, 
-            token: user.token,
-            name: user.name 
-        });
-    } catch (err) {
-        console.error('Login error:', err);
-        res.status(500).json({ error: 'Erro ao processar login' });
-    }
-});
+// --- Email Login Route removed (moved to top) ---
 
 // Get current user info
 app.get('/api/user/me', async (req, res) => {
