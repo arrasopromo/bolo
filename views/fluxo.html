@@ -881,6 +881,12 @@
                             <input type="number" id="costInstallments" min="2" value="2" placeholder="Ex: 10">
                         </div>
 
+                        <div class="form-group" id="purchaseDateGroup" style="display: none;">
+                            <label>Data da Compra</label>
+                            <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.3rem;">Útil para registrar compras passadas.</div>
+                            <input type="date" id="costPurchaseDate">
+                        </div>
+
                         <button type="submit" class="btn-submit">Registrar Custo</button>
                     </form>
                 </div>
@@ -1719,7 +1725,7 @@
                                 <input type="checkbox" class="cost-checkbox" value="${safeId}" onchange="updateBulkActions()">
                             </div>
                             <div style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px;">
-                                <button onclick="editFixedCost('${safeId}', '${c.name.replace(/'/g, "\\'")}', ${c.amount}, '${c.recurrenceType}', ${c.installments || 1})" style="background: none; border: none; color: #CD7A3E; cursor: pointer; padding: 4px;" title="Editar Custo">
+                                <button onclick="editFixedCost('${safeId}', '${c.name.replace(/'/g, "\\'")}', ${c.amount}, '${c.recurrenceType}', ${c.installments || 1}, '${c.date}')" style="background: none; border: none; color: #CD7A3E; cursor: pointer; padding: 4px;" title="Editar Custo">
                                     <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
                                 </button>
                                 <button onclick="deleteFixedCost('${safeId}')" style="background: none; border: none; color: #999; cursor: pointer; padding: 4px;" title="Remover Custo">
@@ -2184,7 +2190,19 @@
         function toggleInstallments() {
             const type = document.querySelector('input[name="recurrenceType"]:checked').value;
             const group = document.getElementById('installmentsGroup');
-            group.style.display = type === 'installment' ? 'block' : 'none';
+            const dateGroup = document.getElementById('purchaseDateGroup');
+            
+            if (type === 'installment') {
+                group.style.display = 'block';
+                dateGroup.style.display = 'block';
+                // Set default date if empty
+                if (!document.getElementById('costPurchaseDate').value) {
+                    document.getElementById('costPurchaseDate').valueAsDate = new Date();
+                }
+            } else {
+                group.style.display = 'none';
+                dateGroup.style.display = 'none';
+            }
         }
 
         // Cost Classification Logic
@@ -2246,11 +2264,24 @@
             const recurrenceType = document.querySelector('input[name="recurrenceType"]:checked').value;
             const installments = recurrenceType === 'installment' ? 
                 parseInt(document.getElementById('costInstallments').value) : 1;
+            
+            // Handle Date
+            let costDate = new Date();
+            if (recurrenceType === 'installment') {
+                const dateInput = document.getElementById('costPurchaseDate').value;
+                if (dateInput) {
+                    // Create date as UTC or local? Backend expects Date object.
+                    // new Date('2023-12-01') creates UTC usually.
+                    // We want to preserve the day.
+                    const parts = dateInput.split('-');
+                    costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); // Noon to avoid timezone shifts
+                }
+            }
 
             const data = {
                 name: document.getElementById('costName').value,
                 amount: parseFloat(document.getElementById('costAmount').value),
-                date: new Date(),
+                date: costDate,
                 recurrenceType,
                 installments
             };
@@ -2290,7 +2321,7 @@
             }
         });
 
-        function editFixedCost(id, name, amount, type, installments) {
+        function editFixedCost(id, name, amount, type, installments, dateStr) {
             document.getElementById('editCostId').value = id;
             document.getElementById('costName').value = name;
             document.getElementById('costAmount').value = amount;
@@ -2300,6 +2331,14 @@
             
             if (type === 'installment') {
                 document.getElementById('costInstallments').value = installments;
+                // Format date for input type="date"
+                if (dateStr) {
+                    const d = new Date(dateStr);
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    document.getElementById('costPurchaseDate').value = `${yyyy}-${mm}-${dd}`;
+                }
             }
             toggleInstallments();
 

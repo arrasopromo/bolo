@@ -348,6 +348,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/js/main.js"></script>
     <script>
         lucide.createIcons();
+
+        // Hide sticky footer when viewing Pricing Section
+        document.addEventListener('DOMContentLoaded', () => {
+            const footer = document.querySelector('.mobile-bottom-cta');
+            const pricingSection = document.getElementById('tabela-de-precos');
+
+            if (footer && pricingSection) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            footer.style.opacity = '0';
+                            footer.style.pointerEvents = 'none'; // Prevent clicks while hidden
+                            footer.style.transition = 'opacity 0.3s ease';
+                        } else {
+                            footer.style.opacity = '1';
+                            footer.style.pointerEvents = 'auto';
+                        }
+                    });
+                }, { threshold: 0.1 }); // Trigger when 10% of pricing is visible
+
+                observer.observe(pricingSection);
+            }
+        });
     </script>
 </body>
 </html>
