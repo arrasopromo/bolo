@@ -208,20 +208,25 @@ app.get('/api/sales', authenticateToken, async (req, res) => {
 
 app.post('/api/sales', authenticateToken, async (req, res) => {
     try {
+        if (!req.user || !req.user._id) {
+            console.error('❌ User not authenticated or missing ID');
+            return res.status(401).json({ error: 'Usuário não autenticado' });
+        }
+
+        console.log('📥 Received POST /api/sales body:', req.body); // Log incoming data
         const { productId, quantity, date, paymentMethod, platformFee = 0, deliveryFee = 0, notes } = req.body;
         
         const product = await Product.findById(productId);
         if (!product) return res.status(404).json({ error: 'Product not found' });
 
-        const totalAmount = product.salePrice * quantity;
-        const totalCost = product.variableCost * quantity;
+        const variableCost = product.variableCost || 0; // Handle missing cost
+        const salePrice = product.salePrice || 0;
+
+        const totalAmount = salePrice * quantity;
+        const totalCost = variableCost * quantity;
         
         // Calculate Net Profit: (Revenue - ProductCost - Fees - Delivery)
-        // Assuming deliveryFee is paid by customer but collected by platform then paid to driver, 
-        // or if it's a cost to the business? 
-        // Usually: Profit = (Price * Qty) - (Cost * Qty) - PlatformFee - DeliveryCost(if absorbed)
-        // Here we subtract explicit fees provided by user.
-        const profit = totalAmount - totalCost - platformFee - deliveryFee;
+        const profit = totalAmount - totalCost - (parseFloat(platformFee) || 0) - (parseFloat(deliveryFee) || 0);
 
         const sale = new Sale({
             product: productId,
@@ -230,17 +235,18 @@ app.post('/api/sales', authenticateToken, async (req, res) => {
             totalCost,
             profit,
             paymentMethod,
-            platformFee,
-            deliveryFee,
+            platformFee: parseFloat(platformFee) || 0,
+            deliveryFee: parseFloat(deliveryFee) || 0,
             notes,
             date: date ? new Date(date.includes('T') ? date : date + 'T12:00:00.000Z') : new Date(),
             user: req.user._id
         });
 
         await sale.save();
+        console.log(`✅ Sale registered: ${sale._id} for User: ${req.user.name}`);
         res.status(201).json(sale);
     } catch (err) {
-        console.error('Error creating sale:', err);
+        console.error('❌ Error creating sale:', err);
         res.status(500).json({ error: err.message });
     }
 });

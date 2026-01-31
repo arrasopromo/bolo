@@ -114,13 +114,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
 
         .wa-avatar {
-            width: 56px; /* Increased size */
-            height: 56px;
+            width: 64px; /* Increased size for better visibility */
+            height: 64px;
             border-radius: 50%;
             overflow: hidden;
             background: #ccc;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 3px solid white; /* Thicker border */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Better shadow */
         }
 
         .wa-avatar img {
@@ -128,6 +128,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             height: 100%;
             object-fit: cover;
             display: block;
+            image-rendering: -webkit-optimize-contrast; /* Attempt to improve sharpness */
         }
 
         .wa-mic-badge {
@@ -222,35 +223,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .wa-meta-row {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 11px;
             color: #667781;
+            margin-top: 4px;
         }
 
-        /* Speed Controls (Bottom) */
-        .wa-bottom-row {
-            display: flex;
-            justify-content: flex-end; /* Align to right? Or center? WA has it on the avatar usually, but we want it below */
-            width: 100%;
-            padding-top: 4px;
-            border-top: 1px solid rgba(0,0,0,0.03);
-        }
-
+        /* Speed Controls */
         .wa-speed-controls {
             display: flex;
-            gap: 4px;
+            gap: 2px;
             background: #e9edef;
-            padding: 2px 4px;
-            border-radius: 16px;
+            padding: 2px;
+            border-radius: 12px;
         }
 
         .wa-speed-btn {
             background: none;
             border: none;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: #667781;
-            padding: 4px 10px;
-            border-radius: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -361,6 +356,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                             </div>
                             <div class="wa-meta-row">
                                 <div class="wa-time-display" id="waTimeDisplay">0:00</div>
+                                <div class="wa-speed-controls">
+                                    <button class="wa-speed-btn active" onclick="setSpeed(1, this)">1x</button>
+                                    <button class="wa-speed-btn" onclick="setSpeed(1.5, this)">1.5x</button>
+                                    <button class="wa-speed-btn" onclick="setSpeed(2, this)">2x</button>
+                                </div>
                             </div>
                         </div>
 
@@ -374,14 +374,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         </div>
                     </div>
                     
-                    <div class="wa-bottom-row">
-                        <div class="wa-speed-controls">
-                            <button class="wa-speed-btn active" onclick="setSpeed(1, this)">1x</button>
-                            <button class="wa-speed-btn" onclick="setSpeed(1.5, this)">1.5x</button>
-                            <button class="wa-speed-btn" onclick="setSpeed(2, this)">2x</button>
-                        </div>
-                    </div>
-
                     <audio id="waAudio" preload="metadata">
                          <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
                     </audio>

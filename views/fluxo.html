@@ -1118,7 +1118,7 @@
                 }
             </style>
             
-            <form id="saleForm">
+            <form id="saleForm" novalidate>
                 <input type="hidden" id="editSaleId">
                 <!-- Step 1: Basic Info -->
                 <div id="step1" class="step-section">
@@ -1193,6 +1193,8 @@
                         <div style="text-align: right; font-size: 0.8rem; color: #999;">Máx. 200 caracteres</div>
                     </div>
 
+                    <div id="debugStatus" style="display:none; background: #333; color: #fff; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap;"></div>
+                    
                     <div style="display: flex; gap: 10px;">
                         <button type="button" class="btn-submit" style="background: #ccc; color: #333;" onclick="goToStep1()">Voltar</button>
                         <button type="button" class="btn-submit" onclick="goToSummary()">Ver Resumo</button>
@@ -1207,6 +1209,7 @@
                         <p><strong>Quantidade:</strong> <span id="summaryQuantity"></span></p>
                         <p><strong>Total Bruto:</strong> <span id="summaryTotal"></span></p>
                         <p><strong>Taxas:</strong> <span id="summaryFees" style="color: #d32f2f;"></span></p>
+                        <p><strong>Custo Variável:</strong> <span id="summaryVariableCost" style="color: #d32f2f;"></span></p>
                         <p><strong>Entrega:</strong> <span id="summaryDelivery" style="color: #d32f2f;"></span></p>
                         <p id="summaryNotesContainer" style="display:none; font-style: italic; color: #666; margin-top: 5px;"><strong>Notas:</strong> <span id="summaryNotes"></span></p>
                         <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
@@ -1402,6 +1405,7 @@
                 const res = await authFetch('/api/products');
                 if (!res.ok) throw new Error('Failed to fetch products');
                 const products = await res.json();
+                window.productsData = products; // Store globally
                 console.log('Products loaded:', products.length);
                 
                 // 1. Modal Select
@@ -1455,6 +1459,10 @@
 
             } catch (error) {
                 console.error('Error loading products:', error);
+                const selectModal = document.getElementById('productSelect');
+                if (selectModal) {
+                    selectModal.innerHTML = '<option value="">Erro ao carregar produtos</option>';
+                }
             }
         }
 
@@ -1654,35 +1662,55 @@
         // Modal Logic
         // saleDatePicker is defined globally
 
-        function openSaleModal() {
+        async function openSaleModal() {
             console.log('Opening sale modal...');
-            loadProducts(); // Refresh products
-            
-            // Init Flatpickr if not exists
-            if (!saleDatePicker) {
-                saleDatePicker = flatpickr("#saleDate", {
-                    dateFormat: "Y-m-d",
-                    locale: "pt",
-                    altInput: true,
-                    altFormat: "d/m/Y",
-                    defaultDate: new Date()
-                });
-            } else {
-                saleDatePicker.setDate(new Date());
-            }
-
-            // Reset Edit Mode
-            document.getElementById('editSaleId').value = '';
-            document.querySelector('#newSaleModal h3').innerText = 'Nova Venda';
-            const submitBtn = document.querySelector('#saleForm button[type="submit"]');
-            if(submitBtn) submitBtn.innerText = 'Registrar Venda'; // Step 3 button
-
             const modal = document.getElementById('newSaleModal');
             if (modal) {
                  modal.classList.add('open');
+            } else {
+                console.error('Modal element not found!');
+                alert('Erro interno: Modal não encontrado.');
+                return;
             }
-            resetVoiceUI();
-            goToStep1(); // Ensure we start at step 1
+
+            try {
+                // Show loading state in select
+                const selectModal = document.getElementById('productSelect');
+                if (selectModal) selectModal.innerHTML = '<option value="">Carregando produtos...</option>';
+
+                await loadProducts(); // Refresh products
+                
+                // Init Flatpickr if not exists
+                if (!saleDatePicker) {
+                    const dateEl = document.getElementById("saleDate");
+                    if (dateEl) {
+                        saleDatePicker = flatpickr(dateEl, {
+                            dateFormat: "Y-m-d",
+                            locale: "pt",
+                            altInput: true,
+                            altFormat: "d/m/Y",
+                            defaultDate: new Date()
+                        });
+                    }
+                } else {
+                    saleDatePicker.setDate(new Date());
+                }
+
+                // Reset Edit Mode
+                document.getElementById('editSaleId').value = '';
+                document.querySelector('#newSaleModal h3').innerText = 'Nova Venda';
+                const submitBtn = document.querySelector('#saleForm button[type="submit"]');
+                if(submitBtn) {
+                    submitBtn.innerText = 'Confirmar Venda';
+                    submitBtn.disabled = false;
+                }
+
+                resetVoiceUI();
+                goToStep1(); // Ensure we start at step 1
+            } catch (err) {
+                console.error('Error in openSaleModal:', err);
+                alert('Erro ao abrir modal de venda.');
+            }
         }
 
 
@@ -2533,311 +2561,328 @@
             }
         });
 
-        // Cost Classification Logic
-        document.getElementById('btnConsultar').addEventListener('click', async () => {
-            const item = document.getElementById('costInput').value.trim();
-            if (!item) return;
+        // Wait for DOM to be fully loaded before attaching listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM Loaded, attaching listeners...');
 
-            const loading = document.getElementById('consultLoading');
-            const resultDiv = document.getElementById('consultResult');
-            const resClass = document.getElementById('resClass');
-            const resDesc = document.getElementById('resDesc');
-            const btn = document.getElementById('btnConsultar');
-
-            loading.style.display = 'block';
-            resultDiv.style.display = 'none';
-            btn.disabled = true;
-
-            try {
-                const response = await authFetch('/api/classificar-custo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ item })
+            // Cost Classification Logic
+            const btnConsultar = document.getElementById('btnConsultar');
+            if (btnConsultar) {
+                btnConsultar.addEventListener('click', async () => {
+                    const item = document.getElementById('costInput').value.trim();
+                    if (!item) return;
+        
+                    const loading = document.getElementById('consultLoading');
+                    const resultDiv = document.getElementById('consultResult');
+                    const resClass = document.getElementById('resClass');
+                    const resDesc = document.getElementById('resDesc');
+                    const btn = document.getElementById('btnConsultar');
+        
+                    loading.style.display = 'block';
+                    resultDiv.style.display = 'none';
+                    btn.disabled = true;
+        
+                    try {
+                        const response = await authFetch('/api/classificar-custo', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ item })
+                        });
+        
+                        const data = await response.json();
+        
+                        if (data.success) {
+                            const { classificacao, explicacao } = data.data;
+                            
+                            const isFixed = classificacao.toLowerCase().includes('fixo');
+                            resultDiv.style.background = isFixed ? 'rgba(255, 68, 68, 0.1)' : 'rgba(76, 175, 80, 0.1)';
+                            resultDiv.style.border = isFixed ? '1px solid #ff4444' : '1px solid #4CAF50';
+                            resClass.style.color = isFixed ? '#d32f2f' : '#388e3c';
+                            
+                            resClass.textContent = classificacao;
+                            resDesc.textContent = explicacao;
+                            resultDiv.style.display = 'block';
+                        } else {
+                            alert('Erro: ' + data.message);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Erro ao consultar.');
+                    } finally {
+                        loading.style.display = 'none';
+                        btn.disabled = false;
+                    }
                 });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    const { classificacao, explicacao } = data.data;
+            }
+    
+            // Register Fixed Cost (Create Only)
+            const fixedCostForm = document.getElementById('fixedCostForm');
+            if (fixedCostForm) {
+                fixedCostForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = e.target.querySelector('button');
+                    const originalText = btn.innerText;
+                    btn.innerText = 'Salvando...';
+                    btn.disabled = true;
+        
+                    // No editId logic here anymore. Only create.
+                    const recurrenceType = document.querySelector('input[name="recurrenceType"]:checked').value;
+                    const installments = recurrenceType === 'installment' ? 
+                        parseInt(document.getElementById('costInstallments').value) : 1;
                     
-                    const isFixed = classificacao.toLowerCase().includes('fixo');
-                    resultDiv.style.background = isFixed ? 'rgba(255, 68, 68, 0.1)' : 'rgba(76, 175, 80, 0.1)';
-                    resultDiv.style.border = isFixed ? '1px solid #ff4444' : '1px solid #4CAF50';
-                    resClass.style.color = isFixed ? '#d32f2f' : '#388e3c';
+                    // Handle Date
+                    let costDate = new Date();
+                    if (recurrenceType === 'installment') {
+                        const dateInput = document.getElementById('costPurchaseDate').value;
+                        if (dateInput) {
+                            const parts = dateInput.split('-');
+                            costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); 
+                        }
+                    }
+        
+                    // Calculate Amount (If installment, user enters TOTAL, we save PER INSTALLMENT)
+                    let amount = parseFloat(document.getElementById('costAmount').value);
+                    if (recurrenceType === 'installment' && installments > 0) {
+                        amount = amount / installments;
+                    }
+        
+                    const data = {
+                        name: document.getElementById('costName').value,
+                        amount: amount,
+                        date: costDate,
+                        recurrenceType,
+                        installments
+                    };
                     
-                    resClass.textContent = classificacao;
-                    resDesc.textContent = explicacao;
-                    resultDiv.style.display = 'block';
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Erro ao consultar.');
-            } finally {
-                loading.style.display = 'none';
-                btn.disabled = false;
-            }
-        });
-
-        // Register Fixed Cost (Create Only)
-        document.getElementById('fixedCostForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = 'Salvando...';
-            btn.disabled = true;
-
-            // No editId logic here anymore. Only create.
-            const recurrenceType = document.querySelector('input[name="recurrenceType"]:checked').value;
-            const installments = recurrenceType === 'installment' ? 
-                parseInt(document.getElementById('costInstallments').value) : 1;
-            
-            // Handle Date
-            let costDate = new Date();
-            if (recurrenceType === 'installment') {
-                const dateInput = document.getElementById('costPurchaseDate').value;
-                if (dateInput) {
-                    const parts = dateInput.split('-');
-                    costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); 
-                }
-            }
-
-            // Calculate Amount (If installment, user enters TOTAL, we save PER INSTALLMENT)
-            let amount = parseFloat(document.getElementById('costAmount').value);
-            if (recurrenceType === 'installment' && installments > 0) {
-                amount = amount / installments;
-            }
-
-            const data = {
-                name: document.getElementById('costName').value,
-                amount: amount,
-                date: costDate,
-                recurrenceType,
-                installments
-            };
-            
-            try {
-                const res = await authFetch('/api/fixed-costs', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
+                    try {
+                        const res = await authFetch('/api/fixed-costs', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(data)
+                        });
+                        
+                        if (!res.ok) throw new Error('Failed');
+        
+                        alert('Custo registrado!');
+                        e.target.reset();
+                        // document.getElementById('editCostId').value = ''; // No longer needed
+                        btn.innerText = 'Registrar Custo';
+        
+                        document.querySelector('input[name="recurrenceType"][value="monthly"]').checked = true;
+                        toggleInstallments();
+                        loadFixedCosts();
+                        loadDashboard();
+                    } catch (error) {
+                        alert('Erro ao salvar custo');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerText = 'Registrar Custo';
+                    }
                 });
-                
-                if (!res.ok) throw new Error('Failed');
-
-                alert('Custo registrado!');
-                e.target.reset();
-                // document.getElementById('editCostId').value = ''; // No longer needed
-                btn.innerText = 'Registrar Custo';
-
-                document.querySelector('input[name="recurrenceType"][value="monthly"]').checked = true;
-                toggleInstallments();
-                loadFixedCosts();
-                loadDashboard();
-            } catch (error) {
-                alert('Erro ao salvar custo');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Registrar Custo';
-            }
-        });
-
-        function editFixedCost(id, name, amount, type, installments, dateStr) {
-            openEditCostModal(id, name, amount, type, installments, dateStr);
-        }
-
-        // --- Edit Modal Logic ---
-        function toggleModalInstallments() {
-            const type = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
-            const group = document.getElementById('modalInstallmentGroup');
-            
-            if (type === 'installment') {
-                group.style.display = 'block';
-                // Set default date if empty
-                if (!document.getElementById('modalCostPurchaseDate').value) {
-                    document.getElementById('modalCostPurchaseDate').valueAsDate = new Date();
-                }
-            } else {
-                group.style.display = 'none';
-            }
-        }
-
-        function openEditCostModal(id, name, amount, type, installments, dateStr) {
-            document.getElementById('editCostModal').style.display = 'flex';
-            document.getElementById('modalEditCostId').value = id;
-            document.getElementById('modalCostName').value = name;
-            
-            // If it's an installment, show the TOTAL value
-            if (type === 'installment' && installments > 1) {
-                document.getElementById('modalCostAmount').value = (amount * installments).toFixed(2);
-            } else {
-                document.getElementById('modalCostAmount').value = amount;
             }
 
-            const radio = document.querySelector(`input[name="modalRecurrenceType"][value="${type}"]`);
-            if (radio) radio.checked = true;
-            
-            if (type === 'installment') {
-                document.getElementById('modalCostInstallments').value = installments;
-                if (dateStr) {
-                    const d = new Date(dateStr);
-                    const yyyy = d.getFullYear();
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    document.getElementById('modalCostPurchaseDate').value = `${yyyy}-${mm}-${dd}`;
-                }
-            }
-            toggleModalInstallments();
-        }
-
-        function closeEditCostModal() {
-            document.getElementById('editCostModal').style.display = 'none';
-        }
-
-        // Handle Edit Form Submit
-        document.getElementById('editFixedCostForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = 'Salvando...';
-            btn.disabled = true;
-
-            const editId = document.getElementById('modalEditCostId').value;
-            const recurrenceType = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
-            const installments = recurrenceType === 'installment' ? 
-                parseInt(document.getElementById('modalCostInstallments').value) : 1;
-            
-            // Handle Date
-            let costDate = new Date();
-            if (recurrenceType === 'installment') {
-                const dateInput = document.getElementById('modalCostPurchaseDate').value;
-                if (dateInput) {
-                    const parts = dateInput.split('-');
-                    costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); 
-                }
-            }
-
-            // Calculate Amount (If installment, user enters TOTAL, we save PER INSTALLMENT)
-            let amount = parseFloat(document.getElementById('modalCostAmount').value);
-            if (recurrenceType === 'installment' && installments > 0) {
-                amount = amount / installments;
-            }
-
-            const data = {
-                name: document.getElementById('modalCostName').value,
-                amount: amount,
-                date: costDate,
-                recurrenceType,
-                installments
-            };
-            
-            try {
-                const res = await authFetch(`/api/fixed-costs/${editId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
-                
-                if (!res.ok) throw new Error('Failed');
-
-                alert('Custo atualizado com sucesso!');
-                closeEditCostModal();
-                loadFixedCosts();
-                loadDashboard();
-            } catch (error) {
-                alert('Erro ao atualizar custo');
-                console.error(error);
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        });
-
-
-        // Register Sale (Create/Update)
-        document.getElementById('saleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
-            btn.innerText = 'Salvando...';
-            btn.disabled = true;
-
-            const editId = document.getElementById('editSaleId').value;
-
-            // Calculate Fee
-            let platformFee = 0;
-            if (document.getElementById('hasFee').checked) {
-                const feeType = document.querySelector('input[name="feeType"]:checked').value;
-                const feeInputVal = parseFloat(document.getElementById('platformFee').value || 0);
-                
-                if (feeType === 'percent') {
-                    // Need price to calculate percentage
-                    const select = document.getElementById('productSelect');
-                    const option = select.options[select.selectedIndex];
-                    const priceStr = option.text.split(' - R$')[1];
-                    const price = parseFloat(priceStr || 0);
-                    const qty = parseInt(document.getElementById('quantity').value);
-                    const totalBruto = price * qty;
+            // Handle Edit Form Submit
+            const editFixedCostForm = document.getElementById('editFixedCostForm');
+            if (editFixedCostForm) {
+                editFixedCostForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = e.target.querySelector('button');
+                    const originalText = btn.innerText;
+                    btn.innerText = 'Salvando...';
+                    btn.disabled = true;
+        
+                    const editId = document.getElementById('modalEditCostId').value;
+                    const recurrenceType = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
+                    const installments = recurrenceType === 'installment' ? 
+                        parseInt(document.getElementById('modalCostInstallments').value) : 1;
                     
-                    platformFee = totalBruto * (feeInputVal / 100);
-                } else {
-                    platformFee = feeInputVal;
-                }
+                    // Handle Date
+                    let costDate = new Date();
+                    if (recurrenceType === 'installment') {
+                        const dateInput = document.getElementById('modalCostPurchaseDate').value;
+                        if (dateInput) {
+                            const parts = dateInput.split('-');
+                            costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); 
+                        }
+                    }
+        
+                    // Calculate Amount (If installment, user enters TOTAL, we save PER INSTALLMENT)
+                    let amount = parseFloat(document.getElementById('modalCostAmount').value);
+                    if (recurrenceType === 'installment' && installments > 0) {
+                        amount = amount / installments;
+                    }
+        
+                    const data = {
+                        name: document.getElementById('modalCostName').value,
+                        amount: amount,
+                        date: costDate,
+                        recurrenceType,
+                        installments
+                    };
+                    
+                    try {
+                        const res = await authFetch(`/api/fixed-costs/${editId}`, {
+                            method: 'PUT',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(data)
+                        });
+                        
+                        if (!res.ok) throw new Error('Failed');
+        
+                        alert('Custo atualizado com sucesso!');
+                        closeEditCostModal();
+                        loadFixedCosts();
+                        loadDashboard();
+                    } catch (error) {
+                        alert('Erro ao atualizar custo');
+                        console.error(error);
+                    } finally {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
+                });
             }
-
-            const data = {
-                productId: document.getElementById('productSelect').value,
-                quantity: parseInt(document.getElementById('quantity').value),
-                date: document.getElementById('saleDate').value,
-                paymentMethod: document.getElementById('paymentMethod').value,
-                platformFee: platformFee,
-                deliveryFee: document.getElementById('hasDelivery').checked ? parseFloat(document.getElementById('deliveryFee').value || 0) : 0,
-                notes: document.getElementById('saleNotes').value
-            };
-            
-            try {
-                let res;
-                if (editId) {
-                     res = await authFetch(`/api/sales/${editId}`, {
-                        method: 'PUT',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
-                    });
-                } else {
-                     res = await authFetch('/api/sales', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
-                    });
-                }
-                
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.error || 'Erro ao salvar');
-                }
-
-                alert(editId ? 'Venda atualizada com sucesso!' : 'Venda registrada com sucesso!');
-                e.target.reset();
-                if(saleDatePicker) saleDatePicker.setDate(new Date());
-                
-                // Reset Steps
-                goToStep1();
-                
-                // Reset Checkboxes and Hidden Inputs
-                document.getElementById('hasFee').checked = false;
-                document.getElementById('hasDelivery').checked = false;
-                toggleFeeInput();
-                toggleDeliveryInput();
-                
-                loadRecentSales();
-                loadUserInfo(); // Refresh progress bar
-                closeSaleModal();
-            } catch (error) {
-                alert('Erro ao registrar venda: ' + (error.message || 'Erro desconhecido'));
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+    
+            // Register Sale (Create/Update)
+            const saleForm = document.getElementById('saleForm');
+            if (saleForm) {
+                saleForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    // Setup Debug UI
+                    const debugEl = document.getElementById('debugStatus');
+                    if (debugEl) {
+                        debugEl.style.display = 'block';
+                    debugEl.innerText = '📝 Iniciando processo de venda...\\n';
+                    
+                    }
+                    
+                    function logDebug(msg) {
+                        console.log(msg);
+                        if (debugEl) debugEl.innerText += `> ${msg}\n`;
+                    }
+        
+                    logDebug('Verificando botão de submit...');
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    let originalText = 'Confirmar Venda';
+                    
+                    if (btn) {
+                        originalText = btn.innerText;
+                        btn.innerText = 'Salvando...';
+                        btn.disabled = true;
+                    }
+        
+                    try {
+                        logDebug('Coletando dados do formulário...');
+                        const editId = document.getElementById('editSaleId').value;
+                        const productSelect = document.getElementById('productSelect');
+                        
+                        if (!productSelect.value) {
+                            throw new Error('Por favor, selecione um produto.');
+                        }
+                        
+                        const quantityInput = document.getElementById('quantity');
+                        const qtyVal = parseInt(quantityInput.value);
+                        if (!qtyVal || isNaN(qtyVal) || qtyVal < 1) {
+                            throw new Error('Por favor, insira uma quantidade válida.');
+                        }
+                        
+                        // Verify Auth Token
+                        logDebug('Verificando autenticação...');
+                        const token = localStorage.getItem('bellecake_token');
+                        if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+        
+                        // Calculate Fee
+                        let platformFee = 0;
+                        if (document.getElementById('hasFee').checked) {
+                            const feeTypeEl = document.querySelector('input[name="feeType"]:checked');
+                            if (!feeTypeEl) throw new Error('Selecione o tipo de taxa (Fixo ou %).');
+                            
+                            const feeType = feeTypeEl.value;
+                            const feeInputVal = parseFloat(document.getElementById('platformFee').value || 0);
+                            
+                            if (feeType === 'percent') {
+                                const option = productSelect.options[productSelect.selectedIndex];
+                                const priceStr = option.text.split(' - R$')[1];
+                                const price = parseFloat(priceStr || 0);
+                                const totalBruto = price * qtyVal;
+                                
+                                platformFee = totalBruto * (feeInputVal / 100);
+                                logDebug(`Taxa calculada (%): ${platformFee}`);
+                            } else {
+                                platformFee = feeInputVal;
+                                logDebug(`Taxa fixa: ${platformFee}`);
+                            }
+                        }
+        
+                        const data = {
+                            productId: productSelect.value,
+                            quantity: qtyVal,
+                            date: document.getElementById('saleDate').value,
+                            paymentMethod: document.getElementById('paymentMethod').value,
+                            platformFee: platformFee,
+                            deliveryFee: document.getElementById('hasDelivery').checked ? parseFloat(document.getElementById('deliveryFee').value || 0) : 0,
+                            notes: document.getElementById('saleNotes').value
+                        };
+                        
+                        logDebug(`Dados preparados: ${JSON.stringify(data)}`);
+        
+                        const url = editId ? `/api/sales/${editId}` : '/api/sales';
+                        const method = editId ? 'PUT' : 'POST';
+        
+                        logDebug(`Enviando requisição ${method} para ${url}...`);
+        
+                        // Use authFetch for consistency and error handling
+                        const res = await authFetch(url, {
+                            method: method,
+                            body: JSON.stringify(data)
+                        });
+                        
+                        logDebug(`Status da resposta: ${res.status}`);
+                        
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => ({ error: 'Erro desconhecido no servidor' }));
+                            logDebug(`Erro do servidor: ${JSON.stringify(err)}`);
+                            throw new Error(err.error || 'Erro ao salvar venda no servidor.');
+                        }
+        
+                        const result = await res.json();
+                        logDebug('✅ Sucesso! Venda registrada.');
+        
+                        alert(editId ? 'Venda atualizada com sucesso!' : 'Venda registrada com sucesso!');
+                        e.target.reset();
+                        if(saleDatePicker) saleDatePicker.setDate(new Date());
+                        
+                        // Reset Steps
+                        goToStep1();
+                        
+                        // Reset Checkboxes and Hidden Inputs
+                        document.getElementById('hasFee').checked = false;
+                        document.getElementById('hasDelivery').checked = false;
+                        toggleFeeInput();
+                        toggleDeliveryInput();
+                        
+                        loadRecentSales();
+                        loadUserInfo(); // Refresh progress bar
+                        
+                        // Wait a bit before closing so user sees the log
+                        setTimeout(() => {
+                            closeSaleModal();
+                            debugEl.style.display = 'none';
+                            debugEl.innerText = '';
+                        }, 1000);
+        
+                    } catch (error) {
+                        logDebug(`❌ ERRO: ${error.message}`);
+                        console.error('Catch Error:', error);
+                        alert('Erro ao registrar venda: ' + (error.message || 'Erro desconhecido'));
+                    } finally {
+                        if (btn) {
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                        }
+                    }
+                });
             }
         });
 
@@ -2887,11 +2932,14 @@
             let productName = 'Produto';
             let totalBruto = 0;
             let platformFee = 0;
+            let variableCostTotal = 0; // Initialize variableCostTotal
             
             try {
                 // We can find the product in the select options to avoid an API call if possible, 
                 // but we need the price. The select option text has the price.
                 const select = document.getElementById('productSelect');
+                if (select.selectedIndex === -1) throw new Error('Selecione um produto');
+                
                 const option = select.options[select.selectedIndex];
                 const optionText = option.text; // "Name - R$ 0.00"
                 
@@ -2900,6 +2948,16 @@
                 const price = parseFloat(priceStr);
                 
                 totalBruto = price * qty;
+
+                // Calculate Variable Cost
+                if (typeof window.productsData !== 'undefined' && window.productsData) {
+                    const product = window.productsData.find(p => p._id === productId);
+                    if (product) {
+                        variableCostTotal = (product.variableCost || 0) * qty;
+                    }
+                } else {
+                     console.warn('productsData not loaded globally');
+                }
                 
                 // Calculate Fee based on Type
                 if (document.getElementById('hasFee').checked) {
@@ -2917,13 +2975,14 @@
                 console.error('Error calculating summary', e);
             }
 
-            const liquido = totalBruto - platformFee - deliveryFee;
+            const liquido = totalBruto - platformFee - deliveryFee - variableCostTotal;
 
             // Populate Summary
             document.getElementById('summaryProduct').innerText = productName;
             document.getElementById('summaryQuantity').innerText = qty;
             document.getElementById('summaryTotal').innerText = totalBruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('summaryFees').innerText = '- ' + platformFee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('summaryVariableCost').innerText = '- ' + variableCostTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('summaryDelivery').innerText = '- ' + deliveryFee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('summaryNet').innerText = liquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -3440,6 +3499,14 @@
                         <input type="date" id="modalCostPurchaseDate">
                         <small style="color: #888; display: block; margin-top: 0.3rem;">Define quando começa a contar as parcelas.</small>
                     </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
                 </div>
 
                 <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Salvar Alterações</button>
