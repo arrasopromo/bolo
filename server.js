@@ -62,6 +62,7 @@ app.get('/fluxo', (req, res) => res.sendFile(path.join(__dirname, 'views', 'flux
 app.get('/membros', (req, res) => res.sendFile(path.join(__dirname, 'views', 'membros.html')));
 app.get('/equilibrio', (req, res) => res.sendFile(path.join(__dirname, 'views', 'equilibrio.html')));
 app.get('/apresentacao', (req, res) => res.sendFile(path.join(__dirname, 'views', 'apresentacao.html')));
+app.get('/aulas', (req, res) => res.sendFile(path.join(__dirname, 'views', 'aulas.html')));
 app.get('/upgrade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'upgrade.html')));
 // app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html'))); // Use modal instead
 
