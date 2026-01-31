@@ -11,6 +11,16 @@ const multer = require('multer');
 const fs = require('fs');
 require('dotenv').config();
 
+// Polyfill for global File object (Required for OpenAI SDK in Node < 20)
+try {
+    const { File } = require('node:buffer');
+    if (!globalThis.File) {
+        globalThis.File = File;
+    }
+} catch (e) {
+    console.warn('Could not polyfill global.File, OpenAI uploads might fail on older Node versions:', e);
+}
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -542,11 +552,21 @@ app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
 
 // API: Transcribe Audio (Voice to Text for New Sale)
 app.post('/api/transcribe', authenticateToken, upload.single('audio'), async (req, res) => {
+    let filePath = '';
     try {
         if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
 
+        // OpenAI requires a valid file extension to determine format
+        // Multer saves as temp file without extension, so we must rename it
+        const originalName = req.file.originalname;
+        const extension = path.extname(originalName) || '.webm'; // Default to .webm if missing
+        filePath = req.file.path + extension;
+        
+        // Rename the file to include extension
+        fs.renameSync(req.file.path, filePath);
+
         const transcription = await openai.audio.transcriptions.create({
-            file: fs.createReadStream(req.file.path),
+            file: fs.createReadStream(filePath),
             model: "whisper-1",
             language: "pt"
         });
@@ -570,12 +590,15 @@ app.post('/api/transcribe', authenticateToken, upload.single('audio'), async (re
         const parsedData = JSON.parse(completion.choices[0].message.content);
         
         // Cleanup file
-        fs.unlinkSync(req.file.path);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
         res.json({ text, parsedData });
     } catch (err) {
         console.error('Transcription error:', err);
-        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        // Cleanup on error
+        if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        else if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        
         res.status(500).json({ error: 'Erro na transcrição', details: err.message });
     }
 });
