@@ -516,7 +516,7 @@
 
             if (storedToken) {
                 try {
-                    const res = await fetch('/api/user/me', {
+                    const res = await fetch('/api/auth/me', {
                         headers: { 'Authorization': `Bearer ${storedToken}` }
                     });
                     if (res.ok) {

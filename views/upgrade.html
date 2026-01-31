@@ -85,6 +85,229 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             color: white !important;
         }
 
+        /* Audio Player Container */
+        .wa-audio-container {
+            background-color: #f0f2f5; /* Light WhatsApp background */
+            border-radius: 12px; /* Slightly more rounded */
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 360px; /* Slightly wider */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin: 0 auto;
+        }
+
+        .wa-top-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        /* Avatar */
+        .wa-avatar-container {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .wa-avatar {
+            width: 56px; /* Increased size */
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #ccc;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .wa-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .wa-mic-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: #09D261; /* WhatsApp Green */
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border: 2px solid #f0f2f5;
+        }
+
+        /* Play Button */
+        .wa-play-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        
+        .wa-play-btn svg {
+            width: 32px; /* Larger play icon */
+            height: 32px;
+            fill: #999;
+        }
+
+        .wa-play-btn:hover svg {
+            fill: #00a884; /* WhatsApp teal on hover */
+        }
+
+        /* Progress Area */
+        .wa-center-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0; /* Prevent flex overflow */
+        }
+
+        .wa-progress-container {
+            width: 100%;
+            height: 20px; /* Hit area */
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .wa-progress-bg {
+            width: 100%;
+            height: 4px;
+            background-color: #d1d7db;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .wa-progress-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #00a884; /* WhatsApp teal */
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .wa-progress-thumb {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background-color: #00a884;
+            border-radius: 50%;
+            opacity: 0; /* Hidden by default like WA */
+            transition: opacity 0.2s;
+        }
+
+        .wa-progress-container:hover .wa-progress-thumb {
+            opacity: 1;
+        }
+
+        .wa-meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #667781;
+        }
+
+        /* Speed Controls (Bottom) */
+        .wa-bottom-row {
+            display: flex;
+            justify-content: flex-end; /* Align to right? Or center? WA has it on the avatar usually, but we want it below */
+            width: 100%;
+            padding-top: 4px;
+            border-top: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .wa-speed-controls {
+            display: flex;
+            gap: 4px;
+            background: #e9edef;
+            padding: 2px 4px;
+            border-radius: 16px;
+        }
+
+        .wa-speed-btn {
+            background: none;
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+            color: #667781;
+            padding: 4px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wa-speed-btn.active {
+            background-color: #00a884;
+            color: white;
+        }
+
+        .wa-speed-btn:hover:not(.active) {
+            background-color: #d1d7db;
+        }
+
+        @media (max-width: 480px) {
+            .wa-audio-container {
+                max-width: 100%; /* Full width on mobile */
+            }
+            .wa-avatar {
+                width: 52px;
+                height: 52px;
+            }
+        }
+        
+        /* Special Offer Badge Styles */
+        .special-offer-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            color: white;
+            padding: 0.6rem 1.8rem;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            /* text-transform: uppercase; Removed as requested */
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .special-offer-badge::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
+
         @media (max-width: 768px) {
             .entenda-mais-btn {
                 display: block !important;
@@ -112,23 +335,74 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <main>
         <!-- Hero / Pricing Card Section -->
         <div class="upgrade-hero-container">
-            <h1 class="upgrade-headline">Desbloqueie Todo o Potencial do Seu Negócio</h1>
+            
+            <!-- Detailed Tools Section - Moved above Pricing Card -->
+            <section class="audience-section" style="padding-top: 0; padding-bottom: 2rem; background: transparent;">
+                <div class="special-offer-badge">Oferta Especial</div>
+                <h2 style="text-align: center; margin-bottom: 0.5rem; font-size: calc(2rem - 2px); color: var(--heading-color); text-transform: none !important;">Leve seu negócio para o próximo nível</h2>
+                <p style="text-align: center; margin-bottom: 3rem; color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    Garanta agora as ferramentas que vão automatizar sua gestão e multiplicar seus lucros com o Acesso Completo.
+                </p>
+
+                <!-- Audio Player (WhatsApp Style) -->
+                <div class="wa-audio-container">
+                    <div class="wa-top-row">
+                        <button class="wa-play-btn" id="waPlayBtn" onclick="toggleAudio()">
+                            <i data-lucide="play" fill="currentColor"></i>
+                        </button>
+                        
+                        <div class="wa-center-col">
+                            <div class="wa-progress-container" onclick="seekAudio(event)">
+                                <div class="wa-progress-bg">
+                                    <div class="wa-progress-fill" id="waProgressFill">
+                                        <div class="wa-progress-thumb"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wa-meta-row">
+                                <div class="wa-time-display" id="waTimeDisplay">0:00</div>
+                            </div>
+                        </div>
+
+                        <div class="wa-avatar-container">
+                            <div class="wa-avatar">
+                                <img src="/images/isa.png" alt="Isa">
+                            </div>
+                            <div class="wa-mic-badge">
+                                <i data-lucide="mic" style="width: 14px; height: 14px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="wa-bottom-row">
+                        <div class="wa-speed-controls">
+                            <button class="wa-speed-btn active" onclick="setSpeed(1, this)">1x</button>
+                            <button class="wa-speed-btn" onclick="setSpeed(1.5, this)">1.5x</button>
+                            <button class="wa-speed-btn" onclick="setSpeed(2, this)">2x</button>
+                        </div>
+                    </div>
+
+                    <audio id="waAudio" preload="metadata">
+                         <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+                    </audio>
+                </div>
+            </section>
             
             <!-- Main Upgrade Card -->
-            <div class="upgrade-card">
-                <div class="table-title" style="font-size: calc(2rem - 3px); margin-bottom: 0.5rem; font-weight: 800;">Acesso Completo</div>
-                <div class="table-price" style="font-size: calc(3.5rem - 16px); margin-bottom: 2rem; color: var(--primary-color); font-weight: 900;">
-                    R$ 29,90 <span style="font-size: 1.2rem; color: #666; font-weight: normal;">/único</span>
+            <div class="pricing-table featured" style="margin: 0 auto; max-width: 380px;">
+                <div class="recommended-badge">RECOMENDADO</div>
+                <div class="table-title">Acesso Completo</div>
+                <div class="table-price">
+                    R$ 29,90 <span>/único</span>
                 </div>
-
-                <ul class="table-features" style="text-align: left; margin-bottom: 2rem; list-style: none; max-width: 500px; margin-left: auto; margin-right: auto;">
+                <ul class="table-features">
                     <li><i data-lucide="check"></i> Acesso Imediato à Planilha</li>
                     <li><i data-lucide="check"></i> Aulas de Explicação</li>
                     <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício a Planilha</li>
                     <li class="whatsapp-support">
                         <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                        Suporte prioritário no Whatsapp
+                        Suporte Whatsapp
                     </li>
                     <li class="highlight-feature">
                         <span class="bonus-label">Bônus exclusivo</span>
@@ -145,50 +419,98 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         </div>
                     </li>
                 </ul>
-
-                <a href="https://pay.cakto.com.br/wh5jn42" class="btn-primary" target="_blank" style="width: 100%; padding: 1.2rem; font-size: 0.9rem; margin-bottom: 1rem; background: #2E7D32 !important; border: none !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1); white-space: nowrap; color: #FFFFFF !important; text-decoration: none !important; justify-content: center !important;">
-                    SIM, QUERO FAZER UPGRADE
-                </a>
-                
-                <a href="/" class="modal-link-secondary" style="display: block; margin-top: 1rem;">
-                    Não, prefiro continuar com o plano básico
+                <a href="https://pay.cakto.com.br/wh5jn42" class="btn-cta cakto-checkout-btn" target="_blank">
+                    OBTER PACOTE COMPLETO
                 </a>
             </div>
         </div>
-
-        <!-- Detailed Tools Section - Reusing audience-section class for background matching -->
-        <section class="audience-section" style="padding-top: 4rem; padding-bottom: 4rem;">
-            <div class="section-badge">Ferramentas Exclusivas</div>
-            <h2 style="text-align: center; margin-bottom: 3rem; font-size: calc(2rem - 2px); color: var(--heading-color); text-transform: none !important;">O que você vai receber a mais:</h2>
-
-            <!-- Flex container matching index.html layout structure -->
-            <div style="display: flex; gap: 3rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; max-width: 1200px; margin: 2rem auto; padding: 0 0.5rem;">
-
-                <!-- Tool 1 -->
-                <div class="tool-detail-card" style="flex: 1; min-width: 280px; max-width: 380px;">
-                    <!-- Title removed as requested -->
-                    <img src="/images/ponto equilibrio.png" alt="Ferramenta de Ponto de Equilíbrio" style="max-width: 70%;">
-                    <button class="btn-primary small entenda-mais-btn">Entenda mais</button>
-                </div>
-
-                <!-- Tool 2 -->
-                <div class="tool-detail-card" style="flex: 1; min-width: 280px; max-width: 380px;">
-                    <!-- Title removed as requested -->
-                    <img src="/images/fluxo caixa (1).png" alt="Fluxo de Caixa" style="max-width: 70%;">
-                    <button class="btn-primary small entenda-mais-btn">Entenda mais</button>
-                </div>
-
-            </div>
-            
-            <div style="text-align: center; margin-top: 4rem; color: #666; font-size: 0.9rem;">
-                <p>&copy; 2026 BelleCake. Todos os direitos reservados.</p>
-            </div>
-        </section>
+        
+        <div style="text-align: center; margin-top: 4rem; color: #666; font-size: 0.9rem;">
+            <p>&copy; 2026 BelleCake. Todos os direitos reservados.</p>
+        </div>
     </main>
 
     <script src="/js/main.js"></script>
     <script>
         lucide.createIcons();
+
+        // --- WhatsApp Audio Player Logic ---
+        const audio = document.getElementById('waAudio');
+        const playBtn = document.getElementById('waPlayBtn');
+        const progressFill = document.getElementById('waProgressFill');
+        const timeDisplay = document.getElementById('waTimeDisplay');
+        
+        let isPlaying = false;
+
+        function toggleAudio() {
+            if (isPlaying) {
+                audio.pause();
+            } else {
+                audio.play();
+            }
+        }
+
+        audio.addEventListener('play', () => {
+            isPlaying = true;
+            playBtn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+            playBtn.classList.add('playing');
+            document.querySelector('.wa-mic-badge').classList.add('animating');
+            lucide.createIcons();
+        });
+
+        audio.addEventListener('pause', () => {
+            isPlaying = false;
+            playBtn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+            playBtn.classList.remove('playing');
+            document.querySelector('.wa-mic-badge').classList.remove('animating');
+            lucide.createIcons();
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            const duration = audio.duration || 0;
+            const currentTime = audio.currentTime;
+            const percent = duration > 0 ? (currentTime / duration) * 100 : 0;
+            
+            if (progressFill) progressFill.style.width = percent + '%';
+            
+            // Update time text
+            const current = formatTime(currentTime);
+            const total = formatTime(duration);
+            if (timeDisplay) {
+                // Check if we have spans (new structure) or just text
+                const spans = timeDisplay.querySelectorAll('span');
+                if (spans.length === 2) {
+                    spans[0].textContent = current;
+                    spans[1].textContent = total;
+                } else {
+                    timeDisplay.textContent = `${current} / ${total}`;
+                }
+            }
+        });
+
+        function seekAudio(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percent = x / rect.width;
+            if (audio.duration) {
+                audio.currentTime = percent * audio.duration;
+            }
+        }
+
+        function setSpeed(speed, btn) {
+            audio.playbackRate = speed;
+            
+            // Update UI
+            document.querySelectorAll('.wa-speed-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
     </script>
 </body>
 </html>

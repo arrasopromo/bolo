@@ -50,7 +50,7 @@
             font-family: 'Inter', sans-serif !important;
             background: #FFFFFF !important;
             cursor: pointer !important;
-            font-size: 0.95rem !important;
+            font-size: 1rem !important;
             color: var(--text-brown) !important;
             box-shadow: none !important;
             height: 46px !important; /* Fixed height to match button */
@@ -646,13 +646,21 @@
                         
                         <!-- Filter by Product -->
                         <div class="filter-item">
-                            <label for="filterProduct" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por produto</label>
-                            <div style="position: relative;">
+                            <label for="productSearchInput" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por produto</label>
+                            
+                            <div style="position: relative;" id="productFilterContainer">
                                 <i data-lucide="package" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999;"></i>
-                                <select id="filterProduct" style="width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 8px; border: 1px solid #ddd; background: white; font-family: 'Inter', sans-serif; appearance: none; cursor: pointer;">
-                                    <option value="all">Todos produtos</option>
+                                <input type="text" id="productSearchInput" placeholder="Todos produtos" 
+                                       autocomplete="off"
+                                       onfocus="openProductDropdown()" 
+                                       oninput="filterProductDropdown(this.value)"
+                                       style="width: 100%; padding: 0.8rem 2.5rem 0.8rem 2.5rem; border-radius: 8px; border: 1px solid #ddd; background: white; font-family: 'Inter', sans-serif; cursor: pointer;">
+                                <input type="hidden" id="filterProduct" value="all">
+                                
+                                <div id="productDropdownList" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 100; max-height: 250px; overflow-y: auto; margin-top: 5px;">
                                     <!-- Populated by JS -->
-                                </select>
+                                </div>
+                                
                                 <i data-lucide="chevron-down" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999; pointer-events: none;"></i>
                             </div>
                         </div>
@@ -694,7 +702,7 @@
                 </div>
 
                 <!-- Break-even Goal Card (Hidden by default until data is loaded) -->
-                <div id="breakEvenGoalCard" style="display: none; background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-light); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <div id="breakEvenGoalCard" style="display: block; background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-light); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
                             <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-brown);">Meta de Ponto de Equilíbrio</h3>
@@ -1020,6 +1028,8 @@
                                     <th style="padding: 1rem; text-align: left;">Qtd</th>
                                     <th style="padding: 1rem; text-align: left;">Método</th>
                                     <th style="padding: 1rem; text-align: left;">Valor Total</th>
+                                    <th style="padding: 1rem; text-align: left;">Lucro</th>
+                                    <th style="padding: 1rem; text-align: right;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="salesTableBody">
@@ -1036,53 +1046,178 @@
     <!-- New Sale Modal -->
     <div id="newSaleModal" class="modal-overlay">
         <div class="modal-content form-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0;">Nova Venda</h3>
                 <button onclick="closeSaleModal()" style="background: none; border: none; cursor: pointer; color: #666;">
                     <i data-lucide="x" style="width: 24px; height: 24px;"></i>
                 </button>
             </div>
 
-            <div style="margin-bottom: 1.5rem; text-align: center;">
-                <button type="button" id="voiceRecordBtn" onclick="toggleRecording()" style="background: var(--card-white); border: 1px solid var(--primary-yellow); color: var(--text-brown); padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                    <i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz
-                </button>
-                <div id="voiceStatus" style="margin-top: 0.5rem; font-size: 0.85rem; color: #666; font-style: italic; display: none;"></div>
-                <style>
-                    .recording { animation: pulse 1.5s infinite; }
-                    @keyframes pulse {
-                        0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
-                        70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
-                        100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
-                    }
-                </style>
+            <!-- Stepper -->
+            <div class="stepper-container">
+                <div class="step-indicator active" id="step1-indicator">1</div>
+                <div class="step-line"></div>
+                <div class="step-indicator" id="step2-indicator">2</div>
             </div>
+
+            <!-- Voice Status (Global for modal) -->
+            <div id="voiceStatus" style="margin-bottom: 1rem; font-size: 0.85rem; color: #666; font-style: italic; display: none; text-align: center;"></div>
+            <style>
+                .recording { animation: pulse 1.5s infinite; }
+                @keyframes pulse {
+                    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+                    70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+                }
+                .stepper-container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 1.5rem;
+                }
+                .step-indicator {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    background: #eee;
+                    color: #999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    transition: all 0.3s;
+                }
+                .step-indicator.active {
+                    background: var(--secondary-caramel);
+                    color: white;
+                }
+                .step-line {
+                    height: 2px;
+                    width: 50px;
+                    background: #eee;
+                    margin: 0 10px;
+                }
+                /* Date Input Styling */
+                input[type="date"] {
+                    appearance: none;
+                    -webkit-appearance: none;
+                    padding: 0.8rem;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 1rem;
+                    color: #333;
+                    background: #fff;
+                    width: 100%;
+                    outline: none;
+                    transition: border-color 0.2s;
+                }
+                input[type="date"]:focus {
+                    border-color: var(--primary-color);
+                }
+            </style>
             
             <form id="saleForm">
-                <div class="form-group">
-                    <label>Produto</label>
-                    <select id="productSelect" required>
-                        <option value="">Carregando...</option>
-                    </select>
+                <input type="hidden" id="editSaleId">
+                <!-- Step 1: Basic Info -->
+                <div id="step1" class="step-section">
+                    
+                    <div id="voiceRecordContainer" style="margin-bottom: 1.5rem; text-align: center;">
+                        <button type="button" id="voiceRecordBtn" onclick="toggleRecording()" style="background: var(--card-white); border: 1px solid var(--primary-yellow); color: var(--text-brown); padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                            <i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Produto</label>
+                        <select id="productSelect" required>
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantidade</label>
+                        <input type="number" id="quantity" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Método de Pagamento</label>
+                        <select id="paymentMethod" required onchange="checkPaymentMethod()">
+                            <option value="pix">Pix</option>
+                            <option value="credit">Crédito</option>
+                            <option value="debit">Débito</option>
+                            <option value="cash">Dinheiro</option>
+                            <option value="platform">Plataforma (iFood, 99, etc)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="text" id="saleDate" class="date-range-input" placeholder="Selecione a data" required>
+                    </div>
+                    <button type="button" class="btn-submit" onclick="goToStep2()">Próximo</button>
                 </div>
-                <div class="form-group">
-                    <label>Quantidade</label>
-                    <input type="number" id="quantity" min="1" value="1" required>
+
+                <!-- Step 2: Extra Costs -->
+                <div id="step2" class="step-section" style="display: none;">
+                    <div class="form-group" style="background: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                            <span>Teve Taxa?</span>
+                            <input type="checkbox" id="hasFee" onchange="toggleFeeInput()" style="width: auto;">
+                        </label>
+                        <div id="feeInputContainer" style="display: none; margin-top: 10px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="feeType" value="money" checked onchange="updateFeePlaceholder()"> R$ (Valor)
+                                </label>
+                                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="feeType" value="percent" onchange="updateFeePlaceholder()"> % (Porcentagem)
+                                </label>
+                            </div>
+                            <input type="number" id="platformFee" min="0" step="0.01" value="0" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="background: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                            <span>Você pagou entrega?</span>
+                            <input type="checkbox" id="hasDelivery" onchange="toggleDeliveryInput()" style="width: auto;">
+                        </label>
+                        <div id="deliveryInputContainer" style="display: none; margin-top: 10px;">
+                            <label>Valor da Entrega (R$)</label>
+                            <input type="number" id="deliveryFee" min="0" step="0.01" value="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Informações Adicionais (Opcional)</label>
+                        <textarea id="saleNotes" maxlength="200" rows="3" placeholder="Ex: Detalhes do pedido..." style="width: 100%; padding: 0.9rem; border: 2px solid #f0f0f0; border-radius: 10px; background: #FAFAFA; resize: vertical; font-family: 'Inter', sans-serif;"></textarea>
+                        <div style="text-align: right; font-size: 0.8rem; color: #999;">Máx. 200 caracteres</div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-submit" style="background: #ccc; color: #333;" onclick="goToStep1()">Voltar</button>
+                        <button type="button" class="btn-submit" onclick="goToSummary()">Ver Resumo</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Método de Pagamento</label>
-                    <select id="paymentMethod" required>
-                        <option value="pix">Pix</option>
-                        <option value="credit">Crédito</option>
-                        <option value="debit">Débito</option>
-                        <option value="cash">Dinheiro</option>
-                    </select>
+
+                <!-- Step 3: Summary -->
+                <div id="stepSummary" class="step-section" style="display: none;">
+                    <h4 style="margin-top: 0; color: var(--secondary-caramel);">Resumo da Venda</h4>
+                    <div style="background: #FFFBF7; padding: 1rem; border-radius: 8px; border: 1px solid #eee; margin-bottom: 1.5rem;">
+                        <p><strong>Produto:</strong> <span id="summaryProduct"></span></p>
+                        <p><strong>Quantidade:</strong> <span id="summaryQuantity"></span></p>
+                        <p><strong>Total Bruto:</strong> <span id="summaryTotal"></span></p>
+                        <p><strong>Taxas:</strong> <span id="summaryFees" style="color: #d32f2f;"></span></p>
+                        <p><strong>Entrega:</strong> <span id="summaryDelivery" style="color: #d32f2f;"></span></p>
+                        <p id="summaryNotesContainer" style="display:none; font-style: italic; color: #666; margin-top: 5px;"><strong>Notas:</strong> <span id="summaryNotes"></span></p>
+                        <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
+                        <p style="font-size: 1.1rem;"><strong>Líquido Estimado:</strong> <span id="summaryNet" style="color: #2E7D32;"></span></p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-submit" style="background: #ccc; color: #333;" onclick="goToStep2()">Voltar</button>
+                        <button type="submit" class="btn-submit" style="background: #4CAF50;">Confirmar Venda</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Data</label>
-                    <input type="date" id="saleDate" required>
-                </div>
-                <button type="submit" class="btn-submit" style="background: #4CAF50;">Registrar Venda</button>
             </form>
         </div>
     </div>
@@ -1123,6 +1258,16 @@
     <script>
         lucide.createIcons();
 
+        // Chart.js Instances (Global - Hoisted to top to avoid TDZ errors)
+        let salesChartInstance = null;
+        let ticketChartInstance = null;
+        let costsChartInstance = null;
+        
+        // GLOBAL VARIABLES (Fixes TDZ errors)
+        let saleDatePicker = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
         // --- Auth Logic ---
         const urlParams = new URLSearchParams(window.location.search);
         const urlToken = urlParams.get('token');
@@ -1158,11 +1303,12 @@
                 const res = await fetch(url, { ...options, headers });
                 console.log(`[Auth] Response ${url}:`, res.status);
 
-                if (res.status === 401) {
-                    console.warn('[Auth] 401 Unauthorized. Redirecting...');
+                if (res.status === 401 || res.status === 403) {
+                    console.warn(`[Auth] ${res.status} Error. Redirecting...`);
                     alert('Sessão expirada ou inválida. Por favor, acesse via link de membro.');
+                    localStorage.removeItem('bellecake_token'); // Clear token
                     window.location.href = '/membros'; 
-                    throw new Error('Unauthorized');
+                    throw new Error('Auth Error');
                 }
                 return res;
             } catch (err) {
@@ -1171,95 +1317,36 @@
             }
         }
 
+        // --- Helper Functions ---
+        function formatDateLocal(date) {
+            if (!date) return '';
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         // Global User Data
         let currentUserData = null;
 
         // Load User Info
         async function loadUserInfo() {
             try {
-                const res = await authFetch('/api/user/me');
+                const res = await authFetch('/api/auth/me');
                 if (res.ok) {
                     const user = await res.json();
+                    console.log('User Data:', user); // DEBUG
                     currentUserData = user; // Store globally
                     const topName = document.getElementById('topUserName');
-                    if (topName && user.name) {
-                        topName.textContent = 'Olá, ' + user.name.split(' ')[0];
+                    if (topName) {
+                        const nameToUse = user.name || user.email || 'Confeiteira';
+                        const firstName = nameToUse.trim().split(' ')[0];
+                        topName.textContent = 'Olá, ' + (firstName || 'Confeiteira');
                     }
-
-                    // Update Meta Section (Merged into Break-Even Card below filter)
-                    const breakEvenCard = document.getElementById('breakEvenGoalCard');
-                    if (breakEvenCard) {
-                        const isHidden = localStorage.getItem('metaCardHidden') === 'true';
-
-                        if (user.breakEvenPoint && user.breakEvenPoint > 0) {
-                            // Calculate Progress
-                            const totalVendido = user.totalSales || 0;
-                            const meta = user.breakEvenPoint;
-                            const percent = Math.round((totalVendido / meta) * 100);
-                            const barWidth = Math.min(percent, 100);
-                            const isOver = percent >= 100;
-                            
-                            const todayDay = new Date().getDate();
-                            const metaDate = user.metaReachedDate ? new Date(user.metaReachedDate) : null;
-                            const metaDay = metaDate ? metaDate.getDate() : null;
-
-                            breakEvenCard.style.display = isHidden ? 'none' : 'block';
-                            breakEvenCard.innerHTML = `
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                                    <div>
-                                        <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-brown);">Meta de Ponto de Equilíbrio</h3>
-                                        <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">
-                                            Dia ${todayDay}
-                                            ${metaDay ? ` • <span style="color: #2E7D32; font-weight: 600;">Meta batida no dia ${metaDay}</span>` : ''}
-                                        </p>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="background: #E8F5E9; color: #2E7D32; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
-                                            Meta: <span id="beGoalValue">${meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                                        </div>
-                                        <button onclick="toggleMetaCard(false)" style="background: none; border: none; cursor: pointer; color: #999; padding: 4px; transition: color 0.2s;" title="Ocultar Meta" onmouseover="this.style.color='#CD7A3E'" onmouseout="this.style.color='#999'">
-                                            <i data-lucide="eye-off" style="width: 18px; height: 18px;"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div style="background: #F5F5F5; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 0.8rem; border: 1px solid rgba(0,0,0,0.05); position: relative;">
-                                    <div id="beProgressBar" style="width: ${barWidth}%; height: 100%; background: linear-gradient(90deg, #FFC107, #CD7A3E); border-radius: 6px; transition: width 1s ease; position: relative; overflow: hidden;">
-                                        ${isOver ? '<div style="position: absolute; right: 0; top: 0; bottom: 0; width: 20px; background: rgba(255,255,255,0.3); animation: shine 1.5s infinite;"></div>' : ''}
-                                    </div>
-                                </div>
-                                
-                                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500;">
-                                    <span style="color: var(--secondary-caramel);">Vendido: <span id="beCurrentValue">${totalVendido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></span>
-                                    <span style="color: #666;"><span id="bePercentage">${percent}%</span> Concluído</span>
-                                </div>
-                                <style>
-                                    @keyframes shine {
-                                        0% { transform: translateX(-100%) skewX(-15deg); }
-                                        100% { transform: translateX(200%) skewX(-15deg); }
-                                    }
-                                </style>
-                            `;
-                        } else {
-                            // Show "Set Goal" CTA if no goal set
-                             breakEvenCard.style.display = isHidden ? 'none' : 'block';
-                             breakEvenCard.innerHTML = `
-                                <div style="background: #E8F5E9; border: 1px solid #C8E6C9; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer;" onclick="window.location.href='/equilibrio'">
-                                    <div style="display: flex; align-items: center; gap: 15px;">
-                                        <div style="background: #4CAF50; color: white; padding: 12px; border-radius: 50%;">
-                                            <i data-lucide="calculator" style="width: 24px; height: 24px;"></i>
-                                        </div>
-                                        <div>
-                                            <h3 style="margin: 0; font-size: 1.1rem; color: #2E7D32;">Defina sua Meta</h3>
-                                            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #388E3C;">Calcule seu ponto de equilíbrio para acompanhar o progresso.</p>
-                                        </div>
-                                    </div>
-                                    <i data-lucide="chevron-right" style="color: #388E3C;"></i>
-                                </div>
-                            `;
-                        }
-                        lucide.createIcons();
-                    }
+                    
+                    // Trigger dashboard update to render meta card with user data
+                    if(typeof loadDashboard === 'function') loadDashboard();
                 }
             } catch (err) {
                 console.error('Error loading user info:', err);
@@ -1268,7 +1355,11 @@
         
         loadUserInfo();
 
-        document.getElementById('saleDate').valueAsDate = new Date();
+        // Initialize saleDate with today's date safely
+        const saleDateInput = document.getElementById('saleDate');
+        if (saleDateInput) {
+            saleDateInput.value = formatDateLocal(new Date());
+        }
 
         // --- Navigation Logic ---
         function switchView(viewId) {
@@ -1322,16 +1413,33 @@
                     });
                 }
 
-                // 2. Filter Select (Dashboard)
-                const selectFilter = document.getElementById('filterProduct');
-                if (selectFilter) {
-                    // Save current selection if any
-                    const currentVal = selectFilter.value;
-                    selectFilter.innerHTML = '<option value="all">Todos produtos</option>';
+                // 2. Filter Select (Dashboard) - Custom Dropdown
+                const dropdownList = document.getElementById('productDropdownList');
+                if (dropdownList) {
+                    dropdownList.innerHTML = '';
+                    
+                    // Option: All
+                    const divAll = document.createElement('div');
+                    divAll.innerText = 'Todos produtos';
+                    divAll.style.padding = '10px 15px';
+                    divAll.style.cursor = 'pointer';
+                    divAll.style.borderBottom = '1px solid #eee';
+                    divAll.onmouseover = function() { this.style.background = '#f9f9f9'; };
+                    divAll.onmouseout = function() { this.style.background = 'white'; };
+                    divAll.onclick = function() { selectProduct('all', 'Todos produtos'); };
+                    dropdownList.appendChild(divAll);
+
                     products.forEach(p => {
-                        selectFilter.innerHTML += `<option value="${p._id}">${p.name}</option>`;
+                        const div = document.createElement('div');
+                        div.innerText = p.name;
+                        div.style.padding = '10px 15px';
+                        div.style.cursor = 'pointer';
+                        div.style.borderBottom = '1px solid #eee';
+                        div.onmouseover = function() { this.style.background = '#f9f9f9'; };
+                        div.onmouseout = function() { this.style.background = 'white'; };
+                        div.onclick = function() { selectProduct(p._id, p.name); };
+                        dropdownList.appendChild(div);
                     });
-                    if (currentVal) selectFilter.value = currentVal;
                 }
 
                 // 3. Filter Select (Sales - Vendas)
@@ -1423,12 +1531,12 @@
                     break;
                 case '7days':
                     start = new Date(now);
-                    start.setDate(now.getDate() - 7);
+                    start.setDate(now.getDate() - 6);
                     end = now;
                     break;
                 case '30days':
                     start = new Date(now);
-                    start.setDate(now.getDate() - 30);
+                    start.setDate(now.getDate() - 29);
                     end = now;
                     break;
                 case 'thismonth':
@@ -1446,55 +1554,74 @@
 
         // Load Recent Sales
         async function loadRecentSales() {
-            try {
-                let query = '?';
-                
-                // Product Filter
-                const productFilter = document.getElementById('filterProductSales');
-                if (productFilter && productFilter.value !== 'all') {
-                    query += `productId=${productFilter.value}&`;
-                }
+            const tbody = document.getElementById('salesTableBody');
+            if(!tbody) return;
 
-                // Date Filter
+            tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem; text-align:center;"><i data-lucide="loader-2" class="spin"></i> Carregando vendas...</td></tr>';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            try {
+                // Get Product Filter
+                const productSelect = document.getElementById('filterProductSales');
+                const productId = productSelect ? productSelect.value : 'all';
+                
+                // Get Date Range
+                let query = '?limit=100'; // Default limit
+                
                 if (typeof datePickerSales !== 'undefined' && datePickerSales && datePickerSales.selectedDates.length > 0) {
                     let start = datePickerSales.selectedDates[0];
                     let end = datePickerSales.selectedDates[1] || start; // Handle single date or range
                     
-                    // Adjust to include full day
-                    start = new Date(start); start.setHours(0,0,0,0);
-                    end = new Date(end); end.setHours(23,59,59,999);
+                    // Adjust to include full day (Local Time -> ISO)
+                    // This matches loadDashboard logic to ensure consistency
+                    const s = new Date(start); s.setHours(0,0,0,0);
+                    const e = new Date(end); e.setHours(23,59,59,999);
                     
-                    query += `startDate=${start.toISOString()}&endDate=${end.toISOString()}&`;
+                    query += `&startDate=${s.toISOString()}&endDate=${e.toISOString()}`;
                 } else {
                     // Fallback to 30 days if no date selected
                      const end = new Date();
                      const start = new Date();
                      start.setDate(end.getDate() - 30);
+                     start.setHours(0,0,0,0);
+                     end.setHours(23,59,59,999);
+                     
                      // Set picker to this default so UI matches
                      if(typeof datePickerSales !== 'undefined' && datePickerSales) {
                          datePickerSales.setDate([start, end]);
                      }
-                     query += `startDate=${start.toISOString()}&endDate=${end.toISOString()}&`;
+                     query += `&startDate=${start.toISOString()}&endDate=${end.toISOString()}`;
+                }
+                
+                if (productId && productId !== 'all') {
+                    query += `&productId=${productId}`;
                 }
                 
                 console.log('Loading sales with query:', query);
                 const res = await authFetch(`/api/sales${query}`); 
+                if (!res.ok) throw new Error('Falha ao buscar vendas');
+
                 const sales = await res.json();
+                window.recentSalesData = sales; // Store globally for edit functionality
                 
-                const tbody = document.getElementById('salesTableBody');
                 tbody.innerHTML = '';
                 
                 if(sales.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="padding:1rem; text-align:center; color:#888;">Nenhuma venda encontrada neste período.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding:1rem; text-align:center; color:#888;">Nenhuma venda encontrada neste período.</td></tr>';
                     return;
                 }
 
                 sales.forEach(s => { 
                     const productName = s.product ? s.product.name : 'Produto removido';
-                    const paymentMap = { pix: 'Pix', credit: 'Crédito', debit: 'Débito', cash: 'Dinheiro' };
+                    const paymentMap = { pix: 'Pix', credit: 'Crédito', debit: 'Débito', cash: 'Dinheiro', platform: 'Plataforma' };
+                    
+                    // Format date for display
+                    const dateObj = new Date(s.date);
+                    const formattedDate = dateObj.toLocaleDateString('pt-BR') + ' ' + dateObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
                     tbody.innerHTML += `
                         <tr style="border-bottom: 1px solid #eee;">
-                            <td data-label="Data" style="padding: 1rem;"><span class="cell-content">${new Date(s.date).toLocaleDateString()}</span></td>
+                            <td data-label="Data" style="padding: 1rem;"><span class="cell-content">${formattedDate}</span></td>
                             <td data-label="Produto" style="padding: 1rem; font-weight: 500;"><span class="cell-content">${productName}</span></td>
                             <td data-label="Qtd" style="padding: 1rem;"><span class="cell-content">${s.quantity}</span></td>
                             <td data-label="Pagamento" style="padding: 1rem;">
@@ -1502,29 +1629,62 @@
                                     ${paymentMap[s.paymentMethod] || s.paymentMethod}
                                 </span>
                             </td>
-                            <td data-label="Valor" style="padding: 1rem; color: #4CAF50; font-weight: 600;"><span class="cell-content">R$ ${s.totalAmount.toFixed(2)}</span></td>
+                            <td data-label="Valor" style="padding: 1rem; color: #4CAF50; font-weight: 600;"><span class="cell-content">R$ ${s.totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></td>
+                            <td data-label="Lucro" style="padding: 1rem; color: #2E7D32; font-weight: 600;"><span class="cell-content">R$ ${(s.profit || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></td>
+                            <td data-label="Ações" style="padding: 1rem; text-align: right;">
+                                <div class="cell-content" style="display: flex; gap: 8px; justify-content: flex-end;">
+                                    <button onclick="editSale('${s._id}')" style="background: none; border: none; color: #CD7A3E; cursor: pointer; padding: 4px;" title="Editar Venda">
+                                        <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                    <button onclick="deleteSale('${s._id}')" style="background: none; border: none; color: #F44336; cursor: pointer; padding: 4px;" title="Excluir Venda">
+                                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
+                lucide.createIcons();
             } catch (error) {
                 console.error('Error loading sales list:', error);
+                tbody.innerHTML = `<tr><td colspan="6" style="padding:2rem; text-align:center; color:red;">Erro ao carregar vendas: ${error.message}</td></tr>`;
             }
         }
 
         // Modal Logic
+        // saleDatePicker is defined globally
+
         function openSaleModal() {
             console.log('Opening sale modal...');
             loadProducts(); // Refresh products
-            document.getElementById('saleDate').valueAsDate = new Date();
+            
+            // Init Flatpickr if not exists
+            if (!saleDatePicker) {
+                saleDatePicker = flatpickr("#saleDate", {
+                    dateFormat: "Y-m-d",
+                    locale: "pt",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    defaultDate: new Date()
+                });
+            } else {
+                saleDatePicker.setDate(new Date());
+            }
+
+            // Reset Edit Mode
+            document.getElementById('editSaleId').value = '';
+            document.querySelector('#newSaleModal h3').innerText = 'Nova Venda';
+            const submitBtn = document.querySelector('#saleForm button[type="submit"]');
+            if(submitBtn) submitBtn.innerText = 'Registrar Venda'; // Step 3 button
+
             const modal = document.getElementById('newSaleModal');
             if (modal) {
                  modal.classList.add('open');
-                 console.log('Modal class added: open');
-            } else {
-                 console.error('Modal element not found!');
             }
             resetVoiceUI();
+            goToStep1(); // Ensure we start at step 1
         }
+
 
         function closeSaleModal() {
             document.getElementById('newSaleModal').classList.remove('open');
@@ -1534,8 +1694,7 @@
         }
 
         // --- Voice Recording Logic ---
-        let mediaRecorder;
-        let audioChunks = [];
+        // mediaRecorder and audioChunks are defined globally
 
         function resetVoiceUI() {
             const btn = document.getElementById('voiceRecordBtn');
@@ -1610,7 +1769,10 @@
                     headers: {} // Let browser set boundary
                 });
 
-                if (!res.ok) throw new Error('Transcription failed');
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.details || errData.error || 'Transcription failed');
+                }
 
                 const data = await res.json();
                 console.log('Transcription result:', data);
@@ -1631,7 +1793,7 @@
             } catch (err) {
                 console.error('Processing error:', err);
                 const status = document.getElementById('voiceStatus');
-                status.innerText = 'Erro na transcrição. Verifique sua chave de API ou tente novamente.';
+                status.innerText = `Erro: ${err.message}. Verifique a API Key.`;
                 status.style.color = '#F44336';
                 
                 const btn = document.getElementById('voiceRecordBtn');
@@ -1664,7 +1826,7 @@
 
             // 2. Quantity
             if (data.quantity) {
-                document.getElementById('saleQuantity').value = data.quantity;
+                document.getElementById('quantity').value = data.quantity;
             }
 
             // 3. Payment Method
@@ -1679,7 +1841,11 @@
 
             // 4. Date
             if (data.date) {
-                document.getElementById('saleDate').value = data.date;
+                if(saleDatePicker) {
+                    saleDatePicker.setDate(data.date);
+                } else {
+                    document.getElementById('saleDate').value = data.date;
+                }
             }
         }
 
@@ -1734,7 +1900,7 @@
                             </div>
                             <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.2rem; padding-right: 60px; padding-left: 25px; word-break: break-word; line-height: 1.1; font-size: 0.9rem;">${c.name}</div>
                             <div style="display:flex; justify-content:space-between; font-size: 0.85rem; padding-left: 25px; align-items: flex-end;">
-                                <span style="color: #666; font-size: 0.75rem;">${new Date(c.date).toLocaleDateString()}</span>
+                                <span style="color: #666; font-size: 0.75rem; text-transform: capitalize;">${new Date(c.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                 <div style="text-align: right;">
                                     <span style="color: #F44336; font-weight:600; display: block; font-size: 0.95rem;">R$ ${c.amount.toFixed(2)}</span>
                                     <span style="font-size: 0.7rem; color: #999;">${percent}% do total</span>
@@ -1888,6 +2054,7 @@
 
         // --- Date Filter Logic ---
         let datePicker;
+        let datePickerSales;
         
         document.addEventListener('DOMContentLoaded', () => {
             // Mobile Menu Toggle
@@ -1970,6 +2137,7 @@
             // Initial Load
             loadProducts(); // Load products for filter
             loadDashboard();
+            loadRecentSales();
         });
 
         // Apply Filters Button
@@ -2024,15 +2192,105 @@
             });
         });
 
-        function formatDateLocal(date) {
-            const d = new Date(date);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+
+
+        function setSalesPeriod(period) {
+            // Update UI
+            document.querySelectorAll('.sales-preset').forEach(b => b.classList.remove('active'));
+            const btn = document.querySelector(`.sales-preset[data-period="${period}"]`);
+            if(btn) btn.classList.add('active');
+            
+            const end = new Date();
+            let start = new Date();
+            
+            if (period === 'today') {
+                start.setHours(0,0,0,0);
+                end.setHours(23,59,59,999);
+            } else if (period === 'yesterday') {
+                start.setDate(end.getDate() - 1);
+                start.setHours(0,0,0,0);
+                end.setDate(end.getDate() - 1);
+                end.setHours(23,59,59,999);
+            } else if (period === '7days') {
+                start.setDate(end.getDate() - 6);
+                start.setHours(0,0,0,0);
+            } else if (period === '30days') {
+                start.setDate(end.getDate() - 29);
+                start.setHours(0,0,0,0);
+            } else if (period === 'all') {
+                start = new Date(2020, 0, 1);
+            }
+
+            if(datePickerSales) {
+                datePickerSales.setDate([start, end]);
+            } else {
+                // Fallback if picker not ready? 
+                // We should try to reload anyway, loadRecentSales checks picker, but if picker is null it defaults to no date filter?
+                // Wait, if picker is null, loadRecentSales sends no date query.
+                // We should manually trigger loadRecentSales if picker is missing, but dates won't be respected unless we pass them.
+                // But datePickerSales should be ready.
+                loadRecentSales();
+            }
+            // Note: onChange of picker calls loadRecentSales, so setting date triggers it automatically if configured.
+            // But if we call setDate on flatpickr with triggerChange=true (default is false usually?), let's check.
+            // Flatpickr setDate(date, triggerChange, format)
+            // If we want to trigger, we pass true.
+            // But let's just call loadRecentSales explicitly if we want to be sure, or rely on callback.
+            // Lines 2185 callback calls loadRecentSales.
+            // Let's rely on callback or call it.
+            // Safer to call it explicitly if callback is not reliable or if setDate doesn't trigger.
+            // By default setDate does NOT trigger onChange.
+            loadRecentSales(); 
         }
 
         // Load Dashboard Data
+        function updateBreakEvenCard(revenue, fixedCost, variableCost, goalMetDate) {
+            const totalCost = fixedCost + variableCost;
+            // Allow percentage to go above 100%
+            const percentage = totalCost > 0 ? (revenue / totalCost) * 100 : (revenue > 0 ? 100 : 0);
+            
+            const goalEl = document.getElementById('beGoalValue');
+            const currentEl = document.getElementById('beCurrentValue');
+            const percentageEl = document.getElementById('bePercentage');
+            const progressBar = document.getElementById('beProgressBar');
+            const card = document.getElementById('breakEvenGoalCard');
+            const datesEl = document.getElementById('beDates');
+
+            if (goalEl) goalEl.innerText = totalCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            if (currentEl) currentEl.innerText = revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            if (percentageEl) percentageEl.innerText = percentage.toFixed(1) + '%';
+            if (progressBar) progressBar.style.width = Math.min(percentage, 100) + '%';
+            
+            // Add Date Info
+            const todayStr = new Date().toLocaleDateString('pt-BR');
+            let metaText = `Hoje: ${todayStr}`;
+            
+            if (goalMetDate) {
+                const metDate = new Date(goalMetDate);
+                metaText += ` | Meta batida em: ${metDate.toLocaleDateString('pt-BR')}`;
+            } else if (percentage >= 100) {
+                 metaText += ` | Meta batida!`;
+            }
+
+            if (!datesEl) {
+                const datesDiv = document.createElement('div');
+                datesDiv.id = 'beDates';
+                datesDiv.style.marginTop = '10px';
+                datesDiv.style.fontSize = '0.85rem';
+                datesDiv.style.color = '#666';
+                datesDiv.style.display = 'flex';
+                datesDiv.style.justifyContent = 'space-between';
+                datesDiv.innerText = metaText;
+                if(progressBar && progressBar.parentElement) {
+                    progressBar.parentElement.parentElement.appendChild(datesDiv);
+                }
+            } else {
+                datesEl.innerText = metaText;
+            }
+            
+            if (card) card.style.display = 'block';
+        }
+
         async function loadDashboard() {
             const loader = document.getElementById('dashboardLoading');
             try {
@@ -2046,12 +2304,20 @@
                 let query = '';
                 
                 if (selectedDates.length > 0) {
-                    const start = formatDateLocal(selectedDates[0]);
-                    const end = selectedDates.length > 1 ? formatDateLocal(selectedDates[1]) : start;
+                    let start = selectedDates[0];
+                    let end = selectedDates.length > 1 ? selectedDates[1] : start;
                     
-                    query = `?startDate=${start}&endDate=${end}`;
+                    // Adjust to include full day (Local Time)
+                    const s = new Date(start); s.setHours(0,0,0,0);
+                    const e = new Date(end); e.setHours(23,59,59,999);
+                    
+                    query = `?start=${s.toISOString()}&end=${e.toISOString()}`;
                 } else {
-                    query = `?period=thismonth`; 
+                    // Default to This Month
+                    const now = new Date();
+                    const s = new Date(now.getFullYear(), now.getMonth(), 1); s.setHours(0,0,0,0);
+                    const e = new Date(now.getFullYear(), now.getMonth() + 1, 0); e.setHours(23,59,59,999);
+                    query = `?start=${s.toISOString()}&end=${e.toISOString()}`;
                 }
 
                 if (productId && productId !== 'all') {
@@ -2060,30 +2326,57 @@
 
                 console.log('Loading Dashboard with query:', query);
 
-                const res = await authFetch(`/api/dashboard-stats${query}`);
-                if (!res.ok) throw new Error('Falha ao carregar dados: ' + res.status);
+                const res = await authFetch(`/api/dashboard/stats${query}`);
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.details || errData.error || 'Falha ao carregar dados: ' + res.status);
+                }
                 
                 const data = await res.json();
                 
                 const stats = data.summary;
 
-                if (document.getElementById('totalSales')) document.getElementById('totalSales').innerText = `R$ ${stats.totalRevenue.toFixed(2)}`;
-                if (document.getElementById('totalVariableCost')) document.getElementById('totalVariableCost').innerText = `R$ ${stats.totalVariableCost.toFixed(2)}`;
-                if (document.getElementById('totalFixedCostDash')) document.getElementById('totalFixedCostDash').innerText = `R$ ${stats.totalFixedCost.toFixed(2)}`;
-                if (document.getElementById('totalProfit')) document.getElementById('totalProfit').innerText = `R$ ${stats.netProfit.toFixed(2)}`;
-                if (document.getElementById('ticketAvg')) document.getElementById('ticketAvg').innerText = `R$ ${stats.ticketAverage.toFixed(2)}`;
+                if (document.getElementById('totalSales')) document.getElementById('totalSales').innerText = stats.totalRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                if (document.getElementById('totalVariableCost')) document.getElementById('totalVariableCost').innerText = stats.totalVariableCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                if (document.getElementById('totalFixedCostDash')) document.getElementById('totalFixedCostDash').innerText = stats.totalFixedCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                if (document.getElementById('totalProfit')) document.getElementById('totalProfit').innerText = stats.netProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                if (document.getElementById('ticketAvg')) document.getElementById('ticketAvg').innerText = stats.ticketAverage.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 if (document.getElementById('totalItems')) document.getElementById('totalItems').innerText = stats.salesCount;
                 
                 if (data.charts) updateCharts(data.charts);
                 if (stats.topProducts) updateTopProducts(stats.topProducts);
                 
-                // Break-even
-                // updateBreakEvenCard(stats.totalRevenue); // Disabled to keep monthly progress independent of filters
+                const monthly = data.monthlyStats;
+                updateBreakEvenCard(monthly.totalRevenue, monthly.totalFixedCost, monthly.totalVariableCost, monthly.goalMetDate);
             } catch (error) {
                 console.error('Error loading dashboard:', error);
                 if(document.getElementById('totalSales')) {
                     document.getElementById('totalSales').innerText = 'Erro';
-                    document.getElementById('totalSales').style.color = 'red';
+                    document.getElementById('totalSales').title = error.message; // Show details on hover
+                    
+                    // Also show a toast or alert for better visibility if it's a specific error
+                    const kpiCards = document.querySelectorAll('.kpi-value');
+                    kpiCards.forEach(el => {
+                        el.innerText = 'Erro';
+                        el.style.color = 'red';
+                    });
+                    
+                    // Show error in the container
+                    const container = document.querySelector('.header-dash');
+                    let errDiv = document.getElementById('dashErrorMsg');
+                    if(!errDiv) {
+                        errDiv = document.createElement('div');
+                        errDiv.id = 'dashErrorMsg';
+                        errDiv.style.color = 'red';
+                        errDiv.style.background = '#ffebee';
+                        errDiv.style.padding = '1rem';
+                        errDiv.style.borderRadius = '8px';
+                        errDiv.style.marginTop = '1rem';
+                        errDiv.style.width = '100%';
+                        container.appendChild(errDiv);
+                    }
+                    errDiv.innerText = `Erro ao carregar dados: ${error.message}`;
+                    errDiv.style.display = 'block';
                 }
             } finally {
                 if(loader) loader.style.display = 'none';
@@ -2205,6 +2498,41 @@
             }
         }
 
+        // --- Custom Product Dropdown Logic ---
+        function openProductDropdown() {
+            const list = document.getElementById('productDropdownList');
+            if(list) list.style.display = 'block';
+        }
+
+        function filterProductDropdown(text) {
+            const filter = text.toLowerCase();
+            const options = document.querySelectorAll('#productDropdownList div');
+            options.forEach(div => {
+                const txt = div.innerText.toLowerCase();
+                if (txt.includes(filter)) {
+                    div.style.display = 'block';
+                } else {
+                    div.style.display = 'none';
+                }
+            });
+        }
+
+        function selectProduct(id, name) {
+            document.getElementById('filterProduct').value = id;
+            document.getElementById('productSearchInput').value = name;
+            document.getElementById('productDropdownList').style.display = 'none';
+            loadDashboard(); // Trigger update
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            const container = document.getElementById('productFilterContainer');
+            if (container && !container.contains(e.target)) {
+                const list = document.getElementById('productDropdownList');
+                if(list) list.style.display = 'none';
+            }
+        });
+
         // Cost Classification Logic
         document.getElementById('btnConsultar').addEventListener('click', async () => {
             const item = document.getElementById('costInput').value.trim();
@@ -2252,7 +2580,7 @@
             }
         });
 
-        // Register Fixed Cost (Create/Update)
+        // Register Fixed Cost (Create Only)
         document.getElementById('fixedCostForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
@@ -2260,7 +2588,7 @@
             btn.innerText = 'Salvando...';
             btn.disabled = true;
 
-            const editId = document.getElementById('editCostId').value;
+            // No editId logic here anymore. Only create.
             const recurrenceType = document.querySelector('input[name="recurrenceType"]:checked').value;
             const installments = recurrenceType === 'installment' ? 
                 parseInt(document.getElementById('costInstallments').value) : 1;
@@ -2270,43 +2598,37 @@
             if (recurrenceType === 'installment') {
                 const dateInput = document.getElementById('costPurchaseDate').value;
                 if (dateInput) {
-                    // Create date as UTC or local? Backend expects Date object.
-                    // new Date('2023-12-01') creates UTC usually.
-                    // We want to preserve the day.
                     const parts = dateInput.split('-');
-                    costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); // Noon to avoid timezone shifts
+                    costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); 
                 }
+            }
+
+            // Calculate Amount (If installment, user enters TOTAL, we save PER INSTALLMENT)
+            let amount = parseFloat(document.getElementById('costAmount').value);
+            if (recurrenceType === 'installment' && installments > 0) {
+                amount = amount / installments;
             }
 
             const data = {
                 name: document.getElementById('costName').value,
-                amount: parseFloat(document.getElementById('costAmount').value),
+                amount: amount,
                 date: costDate,
                 recurrenceType,
                 installments
             };
             
             try {
-                let res;
-                if (editId) {
-                    res = await authFetch(`/api/fixed-costs/${editId}`, {
-                        method: 'PUT',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
-                    });
-                } else {
-                    res = await authFetch('/api/fixed-costs', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
-                    });
-                }
+                const res = await authFetch('/api/fixed-costs', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
                 
                 if (!res.ok) throw new Error('Failed');
 
-                alert(editId ? 'Custo atualizado!' : 'Custo registrado!');
+                alert('Custo registrado!');
                 e.target.reset();
-                document.getElementById('editCostId').value = '';
+                // document.getElementById('editCostId').value = ''; // No longer needed
                 btn.innerText = 'Registrar Custo';
 
                 document.querySelector('input[name="recurrenceType"][value="monthly"]').checked = true;
@@ -2317,75 +2639,339 @@
                 alert('Erro ao salvar custo');
             } finally {
                 btn.disabled = false;
-                if (!document.getElementById('editCostId').value) btn.innerText = 'Registrar Custo';
+                btn.innerText = 'Registrar Custo';
             }
         });
 
         function editFixedCost(id, name, amount, type, installments, dateStr) {
-            document.getElementById('editCostId').value = id;
-            document.getElementById('costName').value = name;
-            document.getElementById('costAmount').value = amount;
+            openEditCostModal(id, name, amount, type, installments, dateStr);
+        }
+
+        // --- Edit Modal Logic ---
+        function toggleModalInstallments() {
+            const type = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
+            const group = document.getElementById('modalInstallmentGroup');
             
-            const radio = document.querySelector(`input[name="recurrenceType"][value="${type}"]`);
+            if (type === 'installment') {
+                group.style.display = 'block';
+                // Set default date if empty
+                if (!document.getElementById('modalCostPurchaseDate').value) {
+                    document.getElementById('modalCostPurchaseDate').valueAsDate = new Date();
+                }
+            } else {
+                group.style.display = 'none';
+            }
+        }
+
+        function openEditCostModal(id, name, amount, type, installments, dateStr) {
+            document.getElementById('editCostModal').style.display = 'flex';
+            document.getElementById('modalEditCostId').value = id;
+            document.getElementById('modalCostName').value = name;
+            
+            // If it's an installment, show the TOTAL value
+            if (type === 'installment' && installments > 1) {
+                document.getElementById('modalCostAmount').value = (amount * installments).toFixed(2);
+            } else {
+                document.getElementById('modalCostAmount').value = amount;
+            }
+
+            const radio = document.querySelector(`input[name="modalRecurrenceType"][value="${type}"]`);
             if (radio) radio.checked = true;
             
             if (type === 'installment') {
-                document.getElementById('costInstallments').value = installments;
-                // Format date for input type="date"
+                document.getElementById('modalCostInstallments').value = installments;
                 if (dateStr) {
                     const d = new Date(dateStr);
                     const yyyy = d.getFullYear();
                     const mm = String(d.getMonth() + 1).padStart(2, '0');
                     const dd = String(d.getDate()).padStart(2, '0');
-                    document.getElementById('costPurchaseDate').value = `${yyyy}-${mm}-${dd}`;
+                    document.getElementById('modalCostPurchaseDate').value = `${yyyy}-${mm}-${dd}`;
                 }
             }
-            toggleInstallments();
-
-            const btn = document.querySelector('#fixedCostForm button[type="submit"]');
-            btn.innerText = 'Atualizar Custo';
-            
-            document.getElementById('fixedCostForm').scrollIntoView({ behavior: 'smooth' });
+            toggleModalInstallments();
         }
 
-        // Register Sale
-        document.getElementById('saleForm').addEventListener('submit', async (e) => {
+        function closeEditCostModal() {
+            document.getElementById('editCostModal').style.display = 'none';
+        }
+
+        // Handle Edit Form Submit
+        document.getElementById('editFixedCostForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
             const originalText = btn.innerText;
-            btn.innerText = 'Registrando...';
+            btn.innerText = 'Salvando...';
             btn.disabled = true;
 
+            const editId = document.getElementById('modalEditCostId').value;
+            const recurrenceType = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
+            const installments = recurrenceType === 'installment' ? 
+                parseInt(document.getElementById('modalCostInstallments').value) : 1;
+            
+            // Handle Date
+            let costDate = new Date();
+            if (recurrenceType === 'installment') {
+                const dateInput = document.getElementById('modalCostPurchaseDate').value;
+                if (dateInput) {
+                    const parts = dateInput.split('-');
+                    costDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0); 
+                }
+            }
+
+            // Calculate Amount (If installment, user enters TOTAL, we save PER INSTALLMENT)
+            let amount = parseFloat(document.getElementById('modalCostAmount').value);
+            if (recurrenceType === 'installment' && installments > 0) {
+                amount = amount / installments;
+            }
+
             const data = {
-                productId: document.getElementById('productSelect').value,
-                quantity: parseInt(document.getElementById('quantity').value),
-                date: document.getElementById('saleDate').value,
-                paymentMethod: document.getElementById('paymentMethod').value
+                name: document.getElementById('modalCostName').value,
+                amount: amount,
+                date: costDate,
+                recurrenceType,
+                installments
             };
             
             try {
-                await authFetch('/api/sales', {
-                    method: 'POST',
+                const res = await authFetch(`/api/fixed-costs/${editId}`, {
+                    method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 });
                 
-                alert('Venda registrada com sucesso!');
-                e.target.reset();
-                document.getElementById('saleDate').valueAsDate = new Date();
-                loadRecentSales();
-                loadUserInfo(); // Refresh progress bar
+                if (!res.ok) throw new Error('Failed');
+
+                alert('Custo atualizado com sucesso!');
+                closeEditCostModal();
+                loadFixedCosts();
+                loadDashboard();
             } catch (error) {
-                alert('Erro ao registrar venda');
+                alert('Erro ao atualizar custo');
+                console.error(error);
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
         });
 
+
+        // Register Sale (Create/Update)
+        document.getElementById('saleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+
+            const editId = document.getElementById('editSaleId').value;
+
+            // Calculate Fee
+            let platformFee = 0;
+            if (document.getElementById('hasFee').checked) {
+                const feeType = document.querySelector('input[name="feeType"]:checked').value;
+                const feeInputVal = parseFloat(document.getElementById('platformFee').value || 0);
+                
+                if (feeType === 'percent') {
+                    // Need price to calculate percentage
+                    const select = document.getElementById('productSelect');
+                    const option = select.options[select.selectedIndex];
+                    const priceStr = option.text.split(' - R$')[1];
+                    const price = parseFloat(priceStr || 0);
+                    const qty = parseInt(document.getElementById('quantity').value);
+                    const totalBruto = price * qty;
+                    
+                    platformFee = totalBruto * (feeInputVal / 100);
+                } else {
+                    platformFee = feeInputVal;
+                }
+            }
+
+            const data = {
+                productId: document.getElementById('productSelect').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                date: document.getElementById('saleDate').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                platformFee: platformFee,
+                deliveryFee: document.getElementById('hasDelivery').checked ? parseFloat(document.getElementById('deliveryFee').value || 0) : 0,
+                notes: document.getElementById('saleNotes').value
+            };
+            
+            try {
+                let res;
+                if (editId) {
+                     res = await authFetch(`/api/sales/${editId}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                     res = await authFetch('/api/sales', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                }
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Erro ao salvar');
+                }
+
+                alert(editId ? 'Venda atualizada com sucesso!' : 'Venda registrada com sucesso!');
+                e.target.reset();
+                if(saleDatePicker) saleDatePicker.setDate(new Date());
+                
+                // Reset Steps
+                goToStep1();
+                
+                // Reset Checkboxes and Hidden Inputs
+                document.getElementById('hasFee').checked = false;
+                document.getElementById('hasDelivery').checked = false;
+                toggleFeeInput();
+                toggleDeliveryInput();
+                
+                loadRecentSales();
+                loadUserInfo(); // Refresh progress bar
+                closeSaleModal();
+            } catch (error) {
+                alert('Erro ao registrar venda: ' + (error.message || 'Erro desconhecido'));
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // --- Step Navigation & Logic ---
+        function goToStep1() {
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('stepSummary').style.display = 'none';
+            
+            document.getElementById('step1-indicator').classList.add('active');
+            document.getElementById('step2-indicator').classList.remove('active');
+            
+            // Show Audio Player
+            const voiceContainer = document.getElementById('voiceRecordContainer');
+            if(voiceContainer) voiceContainer.style.display = 'block';
+        }
+
+        function goToStep2() {
+            const product = document.getElementById('productSelect').value;
+            const qty = document.getElementById('quantity').value;
+            const date = document.getElementById('saleDate').value;
+
+            if (!product || !qty || !date) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            document.getElementById('stepSummary').style.display = 'none';
+
+            document.getElementById('step1-indicator').classList.remove('active');
+            document.getElementById('step2-indicator').classList.add('active');
+
+            // Hide Audio Player
+            const voiceContainer = document.getElementById('voiceRecordContainer');
+            if(voiceContainer) voiceContainer.style.display = 'none';
+        }
+
+        async function goToSummary() {
+            // Get Values
+            const productId = document.getElementById('productSelect').value;
+            const qty = parseInt(document.getElementById('quantity').value);
+            const deliveryFee = document.getElementById('hasDelivery').checked ? parseFloat(document.getElementById('deliveryFee').value || 0) : 0;
+            
+            // Fetch Product Details for accurate calculation
+            let productName = 'Produto';
+            let totalBruto = 0;
+            let platformFee = 0;
+            
+            try {
+                // We can find the product in the select options to avoid an API call if possible, 
+                // but we need the price. The select option text has the price.
+                const select = document.getElementById('productSelect');
+                const option = select.options[select.selectedIndex];
+                const optionText = option.text; // "Name - R$ 0.00"
+                
+                productName = optionText.split(' - R$')[0];
+                const priceStr = optionText.split(' - R$')[1];
+                const price = parseFloat(priceStr);
+                
+                totalBruto = price * qty;
+                
+                // Calculate Fee based on Type
+                if (document.getElementById('hasFee').checked) {
+                    const feeType = document.querySelector('input[name="feeType"]:checked').value;
+                    const feeInputVal = parseFloat(document.getElementById('platformFee').value || 0);
+                    
+                    if (feeType === 'percent') {
+                        platformFee = totalBruto * (feeInputVal / 100);
+                    } else {
+                        platformFee = feeInputVal;
+                    }
+                }
+                
+            } catch (e) {
+                console.error('Error calculating summary', e);
+            }
+
+            const liquido = totalBruto - platformFee - deliveryFee;
+
+            // Populate Summary
+            document.getElementById('summaryProduct').innerText = productName;
+            document.getElementById('summaryQuantity').innerText = qty;
+            document.getElementById('summaryTotal').innerText = totalBruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('summaryFees').innerText = '- ' + platformFee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('summaryDelivery').innerText = '- ' + deliveryFee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('summaryNet').innerText = liquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            // Show Summary
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('stepSummary').style.display = 'block';
+        }
+
+        function toggleFeeInput() {
+            const checked = document.getElementById('hasFee').checked;
+            document.getElementById('feeInputContainer').style.display = checked ? 'block' : 'none';
+            if (!checked) {
+                document.getElementById('platformFee').value = 0;
+            } else {
+                updateFeePlaceholder();
+            }
+        }
+
+        function updateFeePlaceholder() {
+            const feeType = document.querySelector('input[name="feeType"]:checked').value;
+            const feeInput = document.getElementById('platformFee');
+            if (feeType === 'percent') {
+                feeInput.placeholder = "Ex: 10 (para 10%)";
+                feeInput.max = "100";
+            } else {
+                feeInput.placeholder = "0.00";
+                feeInput.removeAttribute('max');
+            }
+        }
+
+        function toggleDeliveryInput() {
+            const checked = document.getElementById('hasDelivery').checked;
+            document.getElementById('deliveryInputContainer').style.display = checked ? 'block' : 'none';
+            if (!checked) document.getElementById('deliveryFee').value = 0;
+        }
+
+        function checkPaymentMethod() {
+            const method = document.getElementById('paymentMethod').value;
+            if (method === 'platform') {
+                document.getElementById('hasFee').checked = true;
+                toggleFeeInput();
+            }
+        }
+
+
         // Chart.js Setup
-        let salesChartInstance = null;
-        let ticketChartInstance = null;
+        // salesChartInstance & ticketChartInstance defined at top of script
 
         function updateCharts(chartData) {
             updateSalesChart(chartData);
@@ -2477,26 +3063,60 @@
         loadDashboard();
         loadProductsList();
         loadRecentSales();
-        // Break-even Goal Logic
-        function updateBreakEvenCard(currentRevenue) {
-            const card = document.getElementById('breakEvenGoalCard');
-            if (!currentUserData || !currentUserData.breakEvenPoint) {
-                card.style.display = 'none';
-                return;
-            }
+        loadMonthlyMeta(); // Fetch specific meta data
 
-            card.style.display = 'block';
-            const goal = currentUserData.breakEvenPoint;
-            const percent = Math.min((currentRevenue / goal) * 100, 100);
-            
-            document.getElementById('beGoalValue').textContent = goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            document.getElementById('beCurrentValue').textContent = currentRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            document.getElementById('bePercentage').textContent = percent.toFixed(1) + '%';
-            document.getElementById('beProgressBar').style.width = percent + '%';
+        async function loadMonthlyMeta() {
+            try {
+                // Determine This Month Range (Local Time aligned)
+                const now = new Date();
+                const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                start.setHours(0,0,0,0);
+                const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                end.setHours(23,59,59,999);
+                
+                const query = `?start=${start.toISOString()}&end=${end.toISOString()}`;
+                
+                const res = await authFetch(`/api/dashboard/stats${query}`);
+                if (!res.ok) throw new Error('Failed to load meta');
+                
+                const data = await res.json();
+                const stats = data.summary;
+                
+                // Update Break Even Card
+                // Goal = Total Fixed Costs (Meta de Equilíbrio)
+                const goal = stats.totalFixedCost;
+                const current = stats.totalRevenue; // Monthly revenue
+                
+                const card = document.getElementById('breakEvenGoalCard');
+                if (card) {
+                    card.style.display = 'block';
+                    
+                    // Prevent division by zero
+                    let percent = 0;
+                    if (goal > 0) {
+                        percent = Math.min((current / goal) * 100, 100);
+                    } else if (current > 0) {
+                        percent = 100;
+                    }
+                    
+                    const elGoal = document.getElementById('beGoalValue');
+                    const elCurrent = document.getElementById('beCurrentValue');
+                    const elPercent = document.getElementById('bePercentage');
+                    const elBar = document.getElementById('beProgressBar');
+                    
+                    if(elGoal) elGoal.textContent = goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    if(elCurrent) elCurrent.textContent = current.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    if(elPercent) elPercent.textContent = percent.toFixed(1) + '%';
+                    if(elBar) elBar.style.width = percent + '%';
+                }
+                
+            } catch (error) {
+                console.error('Error loading monthly meta:', error);
+            }
         }
 
         // Costs Chart Modal Logic
-        let costsChartInstance = null;
+        // costsChartInstance defined at top of script
 
         function openCostsChartModal() {
             document.getElementById('costsChartModal').style.display = 'flex';
@@ -2533,8 +3153,17 @@
                 }
 
                 // Group by name
-                const labels = costs.map(c => c.name);
-                const data = costs.map(c => c.amount);
+                const dataRaw = costs.map(c => c);
+                // Sort by amount descending (maior percentual primeiro)
+                dataRaw.sort((a, b) => b.amount - a.amount);
+                
+                const data = dataRaw.map(c => c.amount);
+                const totalCost = data.reduce((a, b) => a + b, 0);
+                
+                const labels = dataRaw.map(c => {
+                    const percentage = totalCost > 0 ? ((c.amount / totalCost) * 100).toFixed(1) + '%' : '0%';
+                    return `${c.name} (${percentage})`;
+                });
                 
                 // Vivid Colors - High Contrast & Distinct
                 const baseColors = [
@@ -2662,6 +3291,86 @@
             }
         });
 
+        // --- Edit/Delete Sale Logic ---
+        async function editSale(id) {
+            const sale = window.recentSalesData.find(s => s._id === id);
+            if (!sale) return;
+
+            await openSaleModal();
+            
+            // Set fields
+            document.getElementById('editSaleId').value = sale._id;
+            
+            const productSelect = document.getElementById('productSelect');
+            if(sale.product) {
+                productSelect.value = sale.product._id || sale.product;
+            }
+            
+            document.getElementById('quantity').value = sale.quantity;
+            document.getElementById('paymentMethod').value = sale.paymentMethod;
+            
+            // Date
+            if (saleDatePicker) {
+                saleDatePicker.setDate(new Date(sale.date));
+            } else {
+                document.getElementById('saleDate').value = formatDateLocal(new Date(sale.date));
+            }
+            
+            // Notes
+            document.getElementById('saleNotes').value = sale.notes || '';
+            
+            // Fees
+            if (sale.platformFee && sale.platformFee > 0) {
+                document.getElementById('hasFee').checked = true;
+                toggleFeeInput();
+                // Assume fixed for simplicity as we store absolute value
+                document.querySelector('input[name="feeType"][value="fixed"]').checked = true;
+                updateFeePlaceholder();
+                document.getElementById('platformFee').value = sale.platformFee;
+            } else {
+                 document.getElementById('hasFee').checked = false;
+                 toggleFeeInput();
+            }
+            
+            if (sale.deliveryFee && sale.deliveryFee > 0) {
+                document.getElementById('hasDelivery').checked = true;
+                toggleDeliveryInput();
+                document.getElementById('deliveryFee').value = sale.deliveryFee;
+            } else {
+                document.getElementById('hasDelivery').checked = false;
+                toggleDeliveryInput();
+            }
+
+            // UI Text
+            document.querySelector('#newSaleModal h3').innerText = 'Editar Venda';
+            const submitBtn = document.querySelector('#saleForm button[type="submit"]');
+            if(submitBtn) submitBtn.innerText = 'Salvar Alterações';
+            
+            // Step 1
+            goToStep1();
+        }
+
+        async function deleteSale(id) {
+            if(!confirm('Tem certeza que deseja excluir esta venda?')) return;
+            
+            try {
+                const res = await authFetch(`/api/sales/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (res.ok) {
+                    alert('Venda excluída com sucesso!');
+                    loadRecentSales();
+                    loadDashboard(); // Refresh stats
+                } else {
+                    const data = await res.json();
+                    alert('Erro ao excluir: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao excluir venda.');
+            }
+        }
     </script>
 
     <!-- Costs Chart Modal -->
@@ -2682,6 +3391,59 @@
             <p style="margin-top: 1.5rem; color: #888; font-size: 0.9rem; text-align: center;">
                 * Valores baseados nos custos cadastrados para este mês.
             </p>
+        </div>
+    </div>
+
+    <!-- Edit Fixed Cost Modal -->
+    <div id="editCostModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem;">
+        <div style="background: white; width: 100%; max-width: 500px; padding: 2rem; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column;">
+            <button onclick="closeEditCostModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: #f5f5f5; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                <i data-lucide="x" style="width: 24px; height: 24px; color: #666;"></i>
+            </button>
+            
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-brown); font-size: 1.5rem; font-weight: 700;">
+                Editar Custo Fixo
+            </h2>
+            
+            <form id="editFixedCostForm">
+                <input type="hidden" id="modalEditCostId">
+                <div class="form-group">
+                    <label>Nome do Custo</label>
+                    <input type="text" id="modalCostName" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="modalCostAmount" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem;">Recorrência</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="modalRecurrenceType" value="monthly" checked onchange="toggleModalInstallments()" style="margin-right: 8px;">
+                            Mensal
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="modalRecurrenceType" value="installment" onchange="toggleModalInstallments()" style="margin-right: 8px;">
+                            Parcelado
+                        </label>
+                    </div>
+                </div>
+
+                <div id="modalInstallmentGroup" style="display: none;">
+                    <div class="form-group">
+                        <label>Número de Parcelas</label>
+                        <input type="number" id="modalCostInstallments" min="1" placeholder="Ex: 12">
+                    </div>
+                    <div class="form-group">
+                        <label>Data da Compra</label>
+                        <input type="date" id="modalCostPurchaseDate">
+                        <small style="color: #888; display: block; margin-top: 0.3rem;">Define quando começa a contar as parcelas.</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Salvar Alterações</button>
+            </form>
         </div>
     </div>
 </body>

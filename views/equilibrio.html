@@ -311,7 +311,7 @@
 <body>
     <nav class="navbar">
         <div class="logo-container">
-            <a href="/">
+            <a href="/equilibrio">
                 <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="nav-logo">
             </a>
         </div>
@@ -325,6 +325,12 @@
 
     <main class="equilibrio-section" style="padding-top: 120px;">
         
+        <div style="max-width: 600px; margin: 0 auto 1rem auto; display: flex;">
+            <a href="/membros" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--secondary-caramel); border-radius: 50%; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <i data-lucide="arrow-left"></i>
+            </a>
+        </div>
+
         <div class="calculator-card">
             <h1 class="calc-title">Meta Mensal</h1>
             <div class="stepper-container">
@@ -436,7 +442,7 @@
             const token = localStorage.getItem('bellecake_token');
             if (token) {
                 try {
-                    const res = await fetch('/api/user/me', {
+                    const res = await fetch('/api/auth/me', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (res.ok) {

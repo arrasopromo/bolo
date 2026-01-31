@@ -6,7 +6,10 @@ const SaleSchema = new mongoose.Schema({
     totalAmount: { type: Number, required: true },
     totalCost: { type: Number, required: true },
     profit: { type: Number, required: true },
-    paymentMethod: { type: String, enum: ['pix', 'credit', 'debit', 'cash'], default: 'pix' },
+    paymentMethod: { type: String, enum: ['pix', 'credit', 'debit', 'cash', 'platform'], default: 'pix' },
+    platformFee: { type: Number, default: 0 },
+    deliveryFee: { type: Number, default: 0 },
+    notes: { type: String, maxLength: 200 },
     date: { type: Date, default: Date.now },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 });
