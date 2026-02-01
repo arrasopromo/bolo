@@ -323,20 +323,21 @@
 
         .form-group { margin-bottom: 1.2rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.95rem; font-weight: 600; color: var(--text-brown); }
-        .form-group input, .form-group select {
+        .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 0.9rem;
-            border: 2px solid #f0f0f0;
-            border-radius: 10px;
-            background: #FAFAFA;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            background: #fff;
             font-size: 1rem;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
         
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             outline: none;
             border-color: var(--secondary-caramel);
-            background: white;
+            box-shadow: 0 4px 12px rgba(205, 122, 62, 0.15);
         }
 
         .btn-submit {
@@ -546,7 +547,7 @@
             .costs-modal-content {
                 padding: 1rem !important;
                 width: 95% !important;
-                max-height: 70vh; /* Reduced height */
+                max-height: 85vh; /* Increased height */
                 overflow-y: auto;
             }
             .costs-modal-content h2 {
@@ -554,7 +555,18 @@
                 margin-bottom: 0.5rem !important;
             }
             .costs-chart-container {
-                height: 200px !important; /* Reduced chart height */
+                height: 200px !important; 
+            }
+            
+            /* Mobile Fix for "Teve Taxa" */
+            #feeInputContainer > div {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 5px !important;
+            }
+            #feeInputContainer label {
+                width: 100%;
+                margin-bottom: 5px;
             }
         }
     </style>
@@ -994,15 +1006,23 @@
                     <h1 style="margin-bottom: 1rem;">Registro de Vendas</h1>
                     
                     <div class="filters-wrapper">
-                         <!-- Filter by Product -->
+                        <!-- Filter by Product -->
                         <div class="filter-item">
-                            <label for="filterProductSales" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por produto</label>
-                            <div style="position: relative;">
+                            <label for="productSearchInputSales" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #555;">Filtrar por produto</label>
+                            
+                            <div style="position: relative;" id="productFilterContainerSales">
                                 <i data-lucide="package" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999;"></i>
-                                <select id="filterProductSales" style="width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 8px; border: 1px solid #ddd; background: white; font-family: 'Inter', sans-serif; appearance: none; cursor: pointer;">
-                                    <option value="all">Todos produtos</option>
+                                <input type="text" id="productSearchInputSales" placeholder="Todos produtos" 
+                                       autocomplete="off"
+                                       onfocus="openProductDropdownSales()" 
+                                       oninput="filterProductDropdownSales(this.value)"
+                                       style="width: 100%; padding: 0.8rem 2.5rem 0.8rem 2.5rem; border-radius: 8px; border: 1px solid #ddd; background: white; font-family: 'Inter', sans-serif; cursor: pointer;">
+                                <input type="hidden" id="filterProductSales" value="all">
+                                
+                                <div id="productDropdownListSales" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 100; max-height: 250px; overflow-y: auto; margin-top: 5px;">
                                     <!-- Populated by JS -->
-                                </select>
+                                </div>
+                                
                                 <i data-lucide="chevron-down" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 18px; color: #999; pointer-events: none;"></i>
                             </div>
                         </div>
@@ -1463,15 +1483,33 @@
                     });
                 }
 
-                // 3. Filter Select (Sales - Vendas)
-                const selectFilterSales = document.getElementById('filterProductSales');
-                if (selectFilterSales) {
-                    const currentVal = selectFilterSales.value;
-                    selectFilterSales.innerHTML = '<option value="all">Todos produtos</option>';
+                // 3. Filter Select (Sales - Vendas) - Custom Dropdown
+                const dropdownListSales = document.getElementById('productDropdownListSales');
+                if (dropdownListSales) {
+                    dropdownListSales.innerHTML = '';
+                    
+                    // Option: All
+                    const divAll = document.createElement('div');
+                    divAll.innerText = 'Todos produtos';
+                    divAll.style.padding = '10px 15px';
+                    divAll.style.cursor = 'pointer';
+                    divAll.style.borderBottom = '1px solid #eee';
+                    divAll.onmouseover = function() { this.style.background = '#f9f9f9'; };
+                    divAll.onmouseout = function() { this.style.background = 'white'; };
+                    divAll.onclick = function() { selectProductFilterSales('all', 'Todos produtos'); };
+                    dropdownListSales.appendChild(divAll);
+
                     products.forEach(p => {
-                        selectFilterSales.innerHTML += `<option value="${p._id}">${p.name}</option>`;
+                        const div = document.createElement('div');
+                        div.innerText = p.name;
+                        div.style.padding = '10px 15px';
+                        div.style.cursor = 'pointer';
+                        div.style.borderBottom = '1px solid #eee';
+                        div.onmouseover = function() { this.style.background = '#f9f9f9'; };
+                        div.onmouseout = function() { this.style.background = 'white'; };
+                        div.onclick = function() { selectProductFilterSales(p._id, p.name); };
+                        dropdownListSales.appendChild(div);
                     });
-                    if (currentVal) selectFilterSales.value = currentVal;
                 }
 
             } catch (error) {
@@ -2605,6 +2643,41 @@
             const container = document.getElementById('productFilterContainer');
             if (container && !container.contains(e.target)) {
                 const list = document.getElementById('productDropdownList');
+                if(list) list.style.display = 'none';
+            }
+        });
+
+        // --- Custom Product Dropdown Logic (Sales) ---
+        function openProductDropdownSales() {
+            const list = document.getElementById('productDropdownListSales');
+            if(list) list.style.display = 'block';
+        }
+
+        function filterProductDropdownSales(text) {
+            const filter = text.toLowerCase();
+            const options = document.querySelectorAll('#productDropdownListSales div');
+            options.forEach(div => {
+                const txt = div.innerText.toLowerCase();
+                if (txt.includes(filter)) {
+                    div.style.display = 'block';
+                } else {
+                    div.style.display = 'none';
+                }
+            });
+        }
+
+        function selectProductFilterSales(id, name) {
+            document.getElementById('filterProductSales').value = id;
+            document.getElementById('productSearchInputSales').value = name;
+            document.getElementById('productDropdownListSales').style.display = 'none';
+            loadRecentSales(); // Trigger update
+        }
+
+        // Close dropdown when clicking outside (Sales)
+        window.addEventListener('click', function(e) {
+            const container = document.getElementById('productFilterContainerSales');
+            if (container && !container.contains(e.target)) {
+                const list = document.getElementById('productDropdownListSales');
                 if(list) list.style.display = 'none';
             }
         });
