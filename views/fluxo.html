@@ -544,17 +544,17 @@
         /* Costs Chart Modal Responsive Styles */
         @media (max-width: 768px) {
             .costs-modal-content {
-                padding: 1.5rem !important;
+                padding: 1rem !important;
                 width: 95% !important;
-                max-height: 85vh;
+                max-height: 70vh; /* Reduced height */
                 overflow-y: auto;
             }
             .costs-modal-content h2 {
-                font-size: 1.3rem !important;
-                margin-bottom: 1.5rem !important;
+                font-size: 1.2rem !important;
+                margin-bottom: 0.5rem !important;
             }
             .costs-chart-container {
-                height: 300px !important;
+                height: 200px !important; /* Reduced chart height */
             }
         }
     </style>
@@ -2159,6 +2159,13 @@
                 }
             });
 
+            // Default to Today for Resumo
+            const todayResumo = new Date();
+            const startOfDayResumo = new Date(todayResumo);
+            startOfDayResumo.setHours(0,0,0,0);
+            todayResumo.setHours(23,59,59,999); // Ensure end of day
+            datePicker.setDate([startOfDayResumo, todayResumo]);
+
             // Init Flatpickr for Sales (Vendas Tab)
             const salesRangeInput = document.getElementById("filterDateRangeSales");
             if (salesRangeInput) {
@@ -2177,11 +2184,12 @@
                     }
                 });
                 
-                // Default to 30 days for Sales
+                // Default to Today for Sales
                 const today = new Date();
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(today.getDate() - 30);
-                datePickerSales.setDate([thirtyDaysAgo, today]);
+                const startOfDay = new Date(today);
+                startOfDay.setHours(0,0,0,0);
+                
+                datePickerSales.setDate([startOfDay, today]);
             }
 
             // Product Filter Auto-update
@@ -2196,10 +2204,11 @@
                 productFilterSales.addEventListener('change', loadRecentSales);
             }
 
-            // Set default to "This Month"
-            const today = new Date();
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-            datePicker.setDate([firstDay, today]);
+            // Set default to "Today" for Dashboard
+            const now = new Date();
+            const startOfToday = new Date(now);
+            startOfToday.setHours(0,0,0,0);
+            datePicker.setDate([startOfToday, now]);
             
             // Initial Load
             loadProducts(); // Load products for filter
@@ -2901,6 +2910,8 @@
                         toggleFeeInput();
                         toggleDeliveryInput();
                         
+                        // Switch to Vendas view automatically
+                        switchView('vendas');
                         loadRecentSales();
                         loadUserInfo(); // Refresh progress bar
                         

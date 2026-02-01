@@ -1603,6 +1603,10 @@ body:not([data-theme="light"]) .audience-title .highlight {
         padding: 1.5rem 1rem !important;
     }
     
+    .pricing-tables-container {
+        gap: 1.5rem !important; /* Reduced from 4rem for mobile */
+    }
+    
     .pricing-table .table-features {
         margin-bottom: 1.5rem !important;
     }
