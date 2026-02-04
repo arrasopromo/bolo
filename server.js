@@ -9,7 +9,18 @@ const path = require('path');
 const OpenAI = require('openai');
 const multer = require('multer');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
+
+// Email Transporter Configuration (Gmail)
+// Ensure SMTP_USER and SMTP_PASS are set in .env
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    }
+});
 
 // Polyfill for global File object (Required for OpenAI SDK in Node < 20)
 try {
@@ -826,42 +837,99 @@ app.post('/api/webhook/cakto', async (req, res) => {
         const data = req.body;
         console.log('Webhook Cakto received:', JSON.stringify(data));
         
-        // Check for paid status (adjust based on actual payload)
-        // Common patterns: status: 'paid', 'approved', 'completed'
-        // 'pix_generated' added for compatibility with existing test-webhook.js, but typically we want 'paid'
+        // Extract status and event
         const status = data.status || data.current_status || '';
-        const isPaid = ['paid', 'approved', 'completed', 'pix_generated'].includes(status.toLowerCase());
+        const event = data.event || '';
+        const email = data.customer?.email || data.payer?.email;
+
+        // Validation Logic:
+        // 1. Standard Paid Statuses
+        // 2. Pix Generated Event (User requested to treat this as valid access trigger for testing/immediate access)
+        const isPaid = ['paid', 'approved', 'completed'].includes(status.toLowerCase()) || 
+                       (['pix_gerado', 'pix_generated'].includes(event.toLowerCase()));
         
-        if (isPaid) {
-             const email = data.customer?.email || data.payer?.email;
-             if (email) {
-                 let user = await User.findOne({ email });
-                 
-                 // If user doesn't exist, create one?
-                 if (!user) {
-                     // Generate temp password
-                     const tempPass = Math.random().toString(36).slice(-8);
-                     const hashed = await bcrypt.hash(tempPass, 10);
-                     user = new User({
-                        name: data.customer?.name || 'Cliente',
-                        email: email,
-                        password: hashed,
-                        plan: 'complete', // Bonus Plan (Gratuito) - Acesso Completo
-                        subscriptionStatus: 'active',
-                        subscriptionType: 'bonus', // Initial purchase = Bonus
-                        subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-                    });
-                } else {
-                    // Update existing user (Renewal)
-                    user.plan = 'complete'; 
-                    user.subscriptionStatus = 'active';
-                    user.subscriptionType = 'paid'; // Renewal = Paid Subscription
-                    // Add 30 days to NOW (Reset timer)
-                    user.subscriptionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                }
-                await user.save();
-                console.log(`User ${email} updated with 30 days access (${user.subscriptionType}).`);
-             }
+        if (isPaid && email) {
+            let user = await User.findOne({ email });
+            
+            // Create User if not exists
+            if (!user) {
+                // Generate temp password
+                const tempPass = Math.random().toString(36).slice(-8);
+                const hashed = await bcrypt.hash(tempPass, 10);
+                user = new User({
+                    name: data.customer?.name || 'Cliente',
+                    email: email,
+                    password: hashed,
+                    plan: 'complete', // Bonus Plan (Gratuito) - Acesso Completo
+                    subscriptionStatus: 'active',
+                    subscriptionType: 'bonus', // Initial purchase
+                    subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+                });
+            } else {
+                // Update existing user (Renewal)
+                user.plan = 'complete'; 
+                user.subscriptionStatus = 'active';
+                user.subscriptionType = 'paid'; // Renewal
+                user.subscriptionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // Add 30 days
+            }
+            await user.save();
+            console.log(`✅ User ${email} updated/created via Webhook.`);
+
+            // --- SEND ACCESS EMAIL ---
+            try {
+                // Generate Magic Link Token
+                const token = jwt.sign(
+                    { _id: user._id, name: user.name }, 
+                    process.env.JWT_SECRET
+                    // No expiration or long expiration for magic link convenience
+                );
+                
+                // Use production domain if available, otherwise assume localhost for dev (but email should ideally have prod link)
+                // Since user provided https://bellecake.com/api/webhook/cakto, we use bellecake.com
+                const accessLink = `https://bellecake.com/membros?token=${token}`;
+
+                const mailOptions = {
+                    from: `"BelleCake" <${process.env.SMTP_USER}>`,
+                    to: email,
+                    subject: 'Seu Acesso ao BelleCake Chegou! 🍰',
+                    html: `
+                        <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
+                            <div style="background-color: #32221D; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+                                <h1 style="color: #FFC107; margin: 0;">Bem-vinda(o)!</h1>
+                            </div>
+                            <div style="padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
+                                <p>Olá, <strong>${user.name}</strong>!</p>
+                                <p>Recebemos a confirmação do seu pagamento. Seu acesso à plataforma BelleCake já está liberado!</p>
+                                
+                                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+                                    <p style="margin: 0;"><strong>Seus Dados de Acesso:</strong></p>
+                                    <p style="margin: 5px 0 0 0;">📧 Login: <strong>${email}</strong></p>
+                                </div>
+
+                                <div style="text-align: center; margin: 30px 0;">
+                                    <a href="${accessLink}" style="background-color: #4CAF50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 18px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                        ACESSAR AGORA
+                                    </a>
+                                </div>
+                                
+                                <p style="font-size: 14px; color: #666;">Se o botão não funcionar, utilize o link abaixo:</p>
+                                <p style="font-size: 12px; color: #888; word-break: break-all;">${accessLink}</p>
+                                
+                                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                                <p>Aproveite todas as ferramentas para transformar sua confeitaria!</p>
+                                <p>Com carinho,<br><strong>Equipe BelleCake</strong></p>
+                            </div>
+                        </div>
+                    `
+                };
+
+                await transporter.sendMail(mailOptions);
+                console.log(`📧 Email de acesso enviado para ${email}`);
+
+            } catch (emailErr) {
+                console.error('❌ Erro ao enviar email de acesso:', emailErr);
+                // Non-blocking error for webhook response
+            }
         }
         
         res.json({ received: true });
