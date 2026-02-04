@@ -837,20 +837,38 @@ app.post('/api/webhook/cakto', async (req, res) => {
         const data = req.body;
         console.log('🔔 [WEBHOOK] Received Payload:', JSON.stringify(data, null, 2));
 
-        // 1. Data Extraction (Flattened approach)
-        // Check for 'data' wrapper common in webhooks
-        const payloadData = data.data || data;
+        // 1. Data Extraction (Robust for Arrays and Objects)
+        // Cakto payload often comes as { data: [ { ... } ] }
+        let payloadData = {};
+        
+        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+            console.log('📦 [WEBHOOK] Detected Array Payload. Using first item.');
+            payloadData = data.data[0];
+        } else if (data.data && typeof data.data === 'object') {
+            console.log('📦 [WEBHOOK] Detected Object Payload (nested data).');
+            payloadData = data.data;
+        } else {
+            console.log('📦 [WEBHOOK] Detected Flat Payload.');
+            payloadData = data;
+        }
         
         // Extract Status
-        const statusRaw = (payloadData.status || payloadData.current_status || data.status || '').toLowerCase();
+        const statusRaw = (
+            payloadData.status || 
+            payloadData.current_status || 
+            data.status || 
+            ''
+        ).toLowerCase();
         
         // Extract Event
+        // Sometimes event is at root, sometimes implied by content
         const eventRaw = (data.event || payloadData.event || '').toLowerCase();
         
-        // Extract Email (Try all common paths)
+        // Extract Email (Try all common paths in the resolved payloadData)
         const email = (
             payloadData.customer?.email || 
             payloadData.payer?.email || 
+            payloadData.email || // Direct email field
             data.customer?.email ||
             data.payer?.email ||
             ''
@@ -860,6 +878,7 @@ app.post('/api/webhook/cakto', async (req, res) => {
         const name = (
             payloadData.customer?.name || 
             payloadData.payer?.name || 
+            payloadData.name || // Direct name field
             data.customer?.name || 
             data.payer?.name || 
             'Cliente'
@@ -870,11 +889,16 @@ app.post('/api/webhook/cakto', async (req, res) => {
         // 2. Validation Logic
         // Payment is valid if:
         // - Status is paid/approved/completed OR
-        // - Event contains "pix" (user specific requirement)
+        // - Event contains "pix" OR
+        // - Payload contains a "pix" object (implied Pix transaction)
+        
         const isPaidStatus = ['paid', 'approved', 'completed'].includes(statusRaw);
         const isPixEvent = eventRaw.includes('pix');
+        const hasPixObject = !!payloadData.pix; // Check if 'pix' object exists in payload
         
-        const shouldProcess = isPaidStatus || isPixEvent;
+        console.log(`🤔 [WEBHOOK] Checks: PaidStatus=${isPaidStatus}, PixEvent=${isPixEvent}, HasPixObject=${hasPixObject}`);
+
+        const shouldProcess = isPaidStatus || isPixEvent || hasPixObject;
 
         if (!shouldProcess) {
             console.log(`⏸️ [WEBHOOK] Ignoring: Not a paid/pix event. (Status: ${statusRaw}, Event: ${eventRaw})`);
@@ -902,15 +926,20 @@ app.post('/api/webhook/cakto', async (req, res) => {
                 name,
                 email,
                 password: hashedPassword,
-                hasAccess: true
+                plan: 'complete', // Grant complete access by default for paid users
+                subscriptionStatus: 'active',
+                subscriptionType: 'paid',
+                subscriptionExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year access
             });
             await user.save();
             isNewUser = true;
             console.log('🆕 [WEBHOOK] User created:', email);
         } else {
             // Update existing user
-            if (!user.hasAccess) {
-                user.hasAccess = true;
+            if (user.subscriptionStatus !== 'active') {
+                user.subscriptionStatus = 'active';
+                user.subscriptionType = 'paid';
+                user.subscriptionExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
                 await user.save();
                 console.log('🔄 [WEBHOOK] User access updated:', email);
             } else {

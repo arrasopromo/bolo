@@ -1,5 +1,0 @@
-
-[2026-02-04T20:08:32.315Z] WEBHOOK RECEIVED
-Event: pix_gerado | Status:  | Email: teste.webhook.real@bellecake.com
-Payload Snippet: {"event":"pix_gerado","data":{"status":"waiting_payment","customer":{"email":"teste.webhook.real@bellecake.com","name":"Teste Real Webhook"}}}...
---------------------------------------------------
