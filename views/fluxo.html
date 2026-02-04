@@ -1148,14 +1148,68 @@
                 <div class="step-indicator" id="step2-indicator">2</div>
             </div>
 
-            <!-- Voice Status Removed -->
+            <!-- Voice Record Container -->
+            <div id="voiceRecordContainer" style="margin-bottom: 1rem; text-align: center;">
+                <div style="background: linear-gradient(135deg, #FFFBF7 0%, #fff 100%); border: 1px dashed #CD7A3E; border-radius: 12px; padding: 0.8rem; position: relative; overflow: hidden;">
+                    
+                    <div style="position: relative; display: flex; justify-content: center; align-items: center; gap: 15px;">
+                        <button type="button" id="voiceRecordBtn" onclick="toggleRecording()" style="background: linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%); color: white; width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(205, 122, 62, 0.4); transition: all 0.2s; position: relative; z-index: 2;">
+                            <i data-lucide="mic" style="width: 24px; height: 24px;"></i>
+                        </button>
+                        
+                        <button type="button" id="voiceCancelBtn" onclick="cancelRecording()" style="display: none; background: #ffebee; color: #d32f2f; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ffcdd2; cursor: pointer; align-items: center; justify-content: center; transition: all 0.2s;" title="Cancelar Gravação">
+                            <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                        </button>
+                    </div>
+
+                    <div id="voiceStatus" style="margin-top: 0.6rem; font-weight: 600; color: var(--text-brown); font-size: 0.9rem;">
+                        Toque para falar
+                    </div>
+                    <div style="font-size: 0.75rem; color: #999; margin-top: 0.2rem;">
+                        Ex: "Bolo Ninho c/ Nutella aro 15, 3 quantidades, PIX, data hoje"
+                    </div>
+
+                    <!-- Loading / Processing State -->
+                    <div id="voiceLoading" style="display: none; margin-top: 0.8rem;">
+                        <div style="display: flex; justify-content: center; gap: 4px; margin-bottom: 0.4rem;">
+                            <span class="voice-dot" style="animation-delay: 0s;"></span>
+                            <span class="voice-dot" style="animation-delay: 0.2s;"></span>
+                            <span class="voice-dot" style="animation-delay: 0.4s;"></span>
+                        </div>
+                        <span style="font-size: 0.8rem; color: var(--secondary-caramel);">Processando...</span>
+                    </div>
+                </div>
+            </div>
+
             <style>
+                /* Stepper Container - Fix for "fora de ordem" */
                 .stepper-container {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin-bottom: 1.5rem;
+                    margin-bottom: 1rem;
                 }
+
+                .voice-dot {
+                    width: 6px;
+                    height: 6px;
+                    background: var(--secondary-caramel);
+                    border-radius: 50%;
+                    animation: bounce 1s infinite;
+                }
+                @keyframes bounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-4px); }
+                }
+                .recording-pulse {
+                    animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+                }
+                @keyframes pulse-ring {
+                    0% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7); }
+                    70% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
+                }
+
                 .step-indicator {
                     width: 30px;
                     height: 30px;
@@ -1961,17 +2015,33 @@
 
         // --- Voice Recording Logic ---
         // mediaRecorder and audioChunks are defined globally
+        let isRecordingCancelled = false;
+
+        function cancelRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                isRecordingCancelled = true;
+                mediaRecorder.stop();
+            }
+            resetVoiceUI();
+        }
 
         function resetVoiceUI() {
             const btn = document.getElementById('voiceRecordBtn');
             const status = document.getElementById('voiceStatus');
+            const cancelBtn = document.getElementById('voiceCancelBtn');
+            
             if (btn) {
                 btn.classList.remove('recording');
-                btn.innerHTML = '<i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz';
+                btn.innerHTML = '<i data-lucide="mic" style="width: 24px; height: 24px;"></i>';
+                btn.style.background = 'linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%)';
+                btn.style.color = 'white';
             }
             if (status) {
                 status.style.display = 'none';
                 status.innerText = '';
+            }
+            if (cancelBtn) {
+                cancelBtn.style.display = 'none';
             }
             lucide.createIcons();
         }
@@ -1979,9 +2049,12 @@
         async function toggleRecording() {
             const btn = document.getElementById('voiceRecordBtn');
             const status = document.getElementById('voiceStatus');
+            const cancelBtn = document.getElementById('voiceCancelBtn');
 
             if (!mediaRecorder || mediaRecorder.state === 'inactive') {
                 // Start Recording
+                isRecordingCancelled = false; // Reset flag
+                
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     
@@ -2005,21 +2078,33 @@
                     };
 
                     mediaRecorder.onstop = async () => {
+                        // Stop mic tracks immediately
+                        stream.getTracks().forEach(track => track.stop());
+
+                        if (isRecordingCancelled) {
+                            console.log('Recording cancelled by user');
+                            resetVoiceUI();
+                            return; 
+                        }
+
                         // Use the actual mimeType from the recorder
                         const type = mediaRecorder.mimeType || mimeType;
                         const audioBlob = new Blob(audioChunks, { type: type });
                         await processAudio(audioBlob);
-                        stream.getTracks().forEach(track => track.stop()); // Stop mic
                     };
 
                     mediaRecorder.start();
                     btn.classList.add('recording');
-                    btn.innerHTML = '<i data-lucide="square" style="width: 18px; height: 18px;"></i> Parar Gravação';
+                    btn.innerHTML = '<i data-lucide="square" style="width: 24px; height: 24px;"></i>';
                     btn.style.background = '#F44336';
                     btn.style.color = 'white';
+                    
                     status.style.display = 'block';
                     status.innerText = 'Gravando... Fale os detalhes da venda.';
                     status.style.color = '#F44336';
+                    
+                    if (cancelBtn) cancelBtn.style.display = 'flex';
+                    
                     lucide.createIcons();
 
                 } catch (err) {
@@ -2027,14 +2112,17 @@
                     alert('Erro ao acessar microfone. Verifique as permissões.');
                 }
             } else {
-                // Stop Recording
+                // Stop Recording (Normal)
                 mediaRecorder.stop();
                 btn.classList.remove('recording');
-                btn.innerHTML = '<i data-lucide="loader-2" style="width: 18px; height: 18px; animation: spin 1s linear infinite;"></i> Processando...';
+                btn.innerHTML = '<i data-lucide="loader-2" style="width: 24px; height: 24px; animation: spin 1s linear infinite;"></i>';
                 btn.style.background = '#eee';
                 btn.style.color = '#666';
                 status.innerText = 'Transcrevendo e analisando...';
                 status.style.color = '#666';
+                
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                
                 lucide.createIcons();
             }
         }
@@ -2073,9 +2161,9 @@
                 
                 // Reset button
                 const btn = document.getElementById('voiceRecordBtn');
-                btn.innerHTML = '<i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz';
-                btn.style.background = ''; // Reset to default CSS
-                btn.style.color = '';
+                btn.innerHTML = '<i data-lucide="mic" style="width: 24px; height: 24px;"></i>';
+                btn.style.background = 'linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%)';
+                btn.style.color = 'white';
                 lucide.createIcons();
 
             } catch (err) {
@@ -2085,9 +2173,9 @@
                 status.style.color = '#F44336';
                 
                 const btn = document.getElementById('voiceRecordBtn');
-                btn.innerHTML = '<i data-lucide="mic" style="width: 18px; height: 18px;"></i> Tentar Novamente';
-                btn.style.background = '';
-                btn.style.color = '';
+                btn.innerHTML = '<i data-lucide="mic" style="width: 24px; height: 24px;"></i>';
+                btn.style.background = 'linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%)';
+                btn.style.color = 'white';
                 lucide.createIcons();
             }
         }
@@ -2098,9 +2186,6 @@
             // 1. Product
             const select = document.getElementById('productSelect');
             if (data.productName) {
-                // Fuzzy match or exact match
-                // API tries to match exact name from list we sent
-                // We'll iterate options to find best match
                 let found = false;
                 for (let i = 0; i < select.options.length; i++) {
                     if (select.options[i].text.includes(data.productName)) {
@@ -2119,11 +2204,22 @@
 
             // 3. Payment Method
             if (data.paymentMethod) {
-                // Map API "pix", "credit", "debit", "cash" to select values if they differ
-                // Current HTML select values are likely lower case
                 const methodSelect = document.getElementById('paymentMethod');
                 if (methodSelect) {
-                    methodSelect.value = data.paymentMethod.toLowerCase();
+                    let val = data.paymentMethod.toLowerCase();
+                    // Map common terms if needed, though 'platform' is now standard
+                    if (val === 'plataforma' || val === 'ifood' || val === 'app') val = 'platform';
+                    
+                    // Check if value exists in options
+                    let exists = false;
+                    for(let i=0; i<methodSelect.options.length; i++) {
+                        if(methodSelect.options[i].value === val) {
+                            methodSelect.selectedIndex = i;
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if(!exists && val === 'platform') methodSelect.value = 'platform'; // Try direct set
                 }
             }
 
@@ -2133,6 +2229,34 @@
                     saleDatePicker.setDate(data.date);
                 } else {
                     document.getElementById('saleDate').value = data.date;
+                }
+            }
+
+            // 5. Fee (Taxa) - Step 2
+            if (data.feeValue) {
+                document.getElementById('hasFee').checked = true;
+                const feeContainer = document.getElementById('feeInputContainer');
+                if(feeContainer) feeContainer.style.display = 'block'; // Ensure visible
+                
+                // Set Type
+                if (data.feeType) {
+                    const type = data.feeType === 'percent' ? 'percent' : 'money';
+                    const radio = document.querySelector(`input[name="feeType"][value="${type}"]`);
+                    if (radio) radio.checked = true;
+                }
+                
+                document.getElementById('platformFee').value = data.feeValue;
+            }
+
+            // 6. Delivery - Step 2
+            if (data.deliveryFee !== undefined && data.deliveryFee !== null) {
+                // If explicit 0, we might want to uncheck or set 0
+                // If > 0, check and set
+                if (data.deliveryFee > 0) {
+                    document.getElementById('hasDelivery').checked = true;
+                    const delContainer = document.getElementById('deliveryInputContainer');
+                    if(delContainer) delContainer.style.display = 'block';
+                    document.getElementById('deliveryFee').value = data.deliveryFee;
                 }
             }
         }
@@ -2147,9 +2271,26 @@
         async function loadFixedCosts() {
             try {
                 const res = await authFetch('/api/fixed-costs?period=this_month');
-                const costs = await res.json();
+                const rawCosts = await res.json();
                 
-                // Sort by amount (descending) -> implies percentage descending
+                // Filter out expired installments and prepare data
+                const costs = rawCosts.filter(c => {
+                    if (c.recurrenceType === 'installment' && c.installments > 1) {
+                        const startDate = new Date(c.date);
+                        const today = new Date();
+                        const diffMonths = (today.getFullYear() - startDate.getFullYear()) * 12 + (today.getMonth() - startDate.getMonth());
+                        const currentInstallment = diffMonths + 1;
+                        
+                        // If current installment is greater than total, exclude it
+                        if (currentInstallment > c.installments) return false;
+                        
+                        // Attach current installment info for display later
+                        c.currentInstallment = currentInstallment;
+                    }
+                    return true;
+                });
+                
+                // Sort by amount (descending)
                 costs.sort((a, b) => b.amount - a.amount);
 
                 const container = document.getElementById('fixedCostsList');
@@ -2167,11 +2308,16 @@
                 }
                 
                 costs.forEach(c => {
-                    // Ensure ID is safe string
                     const safeId = c._id || '';
                     if (!safeId) console.error('Cost without ID:', c);
 
                     const percent = total > 0 ? ((c.amount / total) * 100).toFixed(1) : 0;
+                    
+                    // Format Name with Installment info
+                    let displayName = c.name;
+                    if (c.recurrenceType === 'installment' && c.installments > 1 && c.currentInstallment) {
+                        displayName += ` (Parcela ${c.currentInstallment}/${c.installments})`;
+                    }
 
                     container.innerHTML += `
                         <div style="background: white; padding: 0.5rem 0.8rem; border-radius: 10px; border: 1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.02); position: relative; display: flex; flex-direction: column; justify-content: center; min-height: 60px;">
@@ -2186,7 +2332,9 @@
                                     <i data-lucide="x" style="width: 16px; height: 16px;"></i>
                                 </button>
                             </div>
-                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.2rem; padding-right: 60px; padding-left: 25px; word-break: break-word; line-height: 1.1; font-size: 0.9rem;">${c.name}</div>
+                            <div style="font-weight: 700; color: var(--text-brown); margin-bottom: 0.2rem; padding-right: 60px; padding-left: 25px; word-break: break-word; line-height: 1.1; font-size: 0.9rem;">
+                                ${displayName}
+                            </div>
                             <div style="display:flex; justify-content:space-between; font-size: 0.85rem; padding-left: 25px; align-items: flex-end;">
                                 <span style="color: #666; font-size: 0.75rem; text-transform: capitalize;">${new Date(c.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                 <div style="text-align: right;">
@@ -2204,6 +2352,48 @@
             } catch (error) {
                 console.error('Error loading fixed costs:', error);
             }
+        }
+
+        // --- Edit Fixed Cost Logic ---
+        function editFixedCost(id, name, amount, recurrenceType, installments, date) {
+            document.getElementById('modalEditCostId').value = id;
+            document.getElementById('modalCostName').value = name;
+            document.getElementById('modalCostAmount').value = amount;
+            
+            // Recurrence
+            const radio = document.querySelector(`input[name="modalRecurrenceType"][value="${recurrenceType}"]`);
+            if(radio) radio.checked = true;
+            
+            toggleModalInstallments();
+            
+            if (recurrenceType === 'installment') {
+                document.getElementById('modalCostInstallments').value = installments;
+                if (date) {
+                    const d = new Date(date);
+                    document.getElementById('modalCostPurchaseDate').value = d.toISOString().split('T')[0];
+                }
+            }
+            
+            document.getElementById('editCostModal').style.display = 'flex';
+        }
+
+        function closeEditCostModal() {
+            document.getElementById('editCostModal').style.display = 'none';
+        }
+
+        function toggleModalInstallments() {
+            const type = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
+            const group = document.getElementById('modalInstallmentGroup');
+            
+            if (type === 'installment') {
+                group.style.display = 'block';
+            } else {
+                group.style.display = 'none';
+            }
+        }
+        
+        function closeCostsChartModal() {
+            document.getElementById('costsChartModal').style.display = 'none';
         }
 
         // Bulk Actions Logic for Products
@@ -3900,13 +4090,59 @@
         </div>
     </div>
 
+    <script>
+        // Edit Fixed Cost Form Submission
+        document.addEventListener('DOMContentLoaded', () => {
+            const editForm = document.getElementById('editFixedCostForm');
+            if (editForm) {
+                editForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const id = document.getElementById('modalEditCostId').value;
+                    const name = document.getElementById('modalCostName').value;
+                    const amount = parseFloat(document.getElementById('modalCostAmount').value);
+                    const recurrenceType = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
+                    
+                    let installments = 1;
+                    let date = null;
+                    
+                    if (recurrenceType === 'installment') {
+                        installments = parseInt(document.getElementById('modalCostInstallments').value);
+                        date = document.getElementById('modalCostPurchaseDate').value;
+                    }
+                    
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    const originalText = btn.innerText;
+                    btn.innerText = 'Salvando...';
+                    btn.disabled = true;
+
+                    try {
+                        const res = await authFetch(`/api/fixed-costs/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, amount, recurrenceType, installments, date })
+                        });
+                        
+                        if (res.ok) {
+                            closeEditCostModal();
+                            loadFixedCosts();
+                            if (typeof loadDashboard === 'function') loadDashboard();
+                            alert('Custo atualizado com sucesso!');
+                        } else {
+                            const data = await res.json();
+                            alert('Erro ao atualizar: ' + (data.error || 'Erro desconhecido'));
+                        }
+                    } catch (error) {
+                        console.error('Error updating cost:', error);
+                        alert('Erro ao salvar alterações.');
+                    } finally {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-                </div>
-
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Salvar Alterações</button>
-            </form>
-        </div>
-    </div>
-</body>
 </html>

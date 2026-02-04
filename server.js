@@ -396,6 +396,31 @@ app.post('/api/fixed-costs', authenticateToken, checkSubscription, async (req, r
     }
 });
 
+app.put('/api/fixed-costs/:id', authenticateToken, checkSubscription, async (req, res) => {
+    try {
+        const { name, amount, recurrenceType, installments, date } = req.body;
+        
+        const updateData = { 
+            name, 
+            amount, 
+            recurrenceType, 
+            installments
+        };
+        if (date) updateData.date = new Date(date);
+
+        const updatedCost = await FixedCost.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id },
+            updateData,
+            { new: true }
+        );
+        
+        if (!updatedCost) return res.status(404).json({ error: 'Custo não encontrado' });
+        res.json(updatedCost);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.delete('/api/fixed-costs/:id', authenticateToken, checkSubscription, async (req, res) => {
     try {
         await FixedCost.findOneAndDelete({ _id: req.params.id, user: req.user._id });
@@ -633,13 +658,37 @@ app.post('/api/transcribe', authenticateToken, checkSubscription, upload.single(
         const text = transcription.text;
         console.log('Transcribed text:', text);
 
+        // Get user's products for better matching
+        let productNames = [];
+        if (req.user && req.user._id) {
+            const products = await Product.find({ user: req.user._id }).select('name');
+            productNames = products.map(p => p.name);
+        }
+        
+        const today = new Date().toISOString().split('T')[0];
+
         // Parse with GPT to extract fields
         const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 { 
                     role: "system", 
-                    content: "Você é um assistente que extrai informações de vendas de um texto. Retorne APENAS um JSON válido com os campos: productName (string, nome aproximado), quantity (number), paymentMethod (string: 'pix', 'credit', 'debit', 'cash'), date (string YYYY-MM-DD). Se faltar algo, omita o campo." 
+                    content: `Hoje é ${today}. Você é um assistente que extrai informações de vendas de um texto.
+                    
+                    Lista de produtos cadastrados do usuário:
+                    ${productNames.join(', ')}
+
+                    Instruções:
+                    1. Tente encontrar o produto da lista acima que melhor corresponde ao falado. Se encontrar, use o nome EXATO da lista no campo 'productName'. Se não, use o nome falado.
+                    2. Retorne APENAS um JSON válido com os campos: 
+                       - productName (string)
+                       - quantity (number)
+                       - paymentMethod (string: 'pix', 'credit', 'debit', 'cash', 'platform')
+                       - date (string YYYY-MM-DD)
+                       - feeValue (number, optional, para taxas/iFood)
+                       - feeType (string: 'percent' ou 'money', optional, default 'money')
+                       - deliveryFee (number, optional, para entrega).
+                    3. Se faltar algo, omita o campo.` 
                 },
                 { role: "user", content: text }
             ],
@@ -884,7 +933,14 @@ app.post('/api/webhook/cakto', async (req, res) => {
             'Cliente'
         ).trim();
 
-        console.log(`🔍 [WEBHOOK] Parsed: Event="${eventRaw}", Status="${statusRaw}", Email="${email}"`);
+        // Extract Offer/Product Name for Plan Determination
+        const offerName = (
+            payloadData.offer?.name || 
+            payloadData.product?.name || 
+            ''
+        ).toUpperCase();
+
+        console.log(`🔍 [WEBHOOK] Parsed: Event="${eventRaw}", Status="${statusRaw}", Email="${email}", Offer="${offerName}"`);
 
         // 2. Validation Logic
         // Payment is valid if:
@@ -912,10 +968,27 @@ app.post('/api/webhook/cakto', async (req, res) => {
 
         console.log('✅ [WEBHOOK] Processing valid payment for:', email);
 
+        // Determine Plan based on Offer Name
+        // "PLANILHA PRECIFICAÇÃO - ACESSO COMPLETO" -> complete
+        // "PLANILHA PRECIFICAÇÃO" -> basic
+        let planType = 'basic';
+        if (offerName.includes('COMPLETO')) {
+            planType = 'complete';
+        }
+        console.log(`📋 [WEBHOOK] Plan determined: ${planType} (Offer: ${offerName})`);
+
         // 3. User Management (MongoDB)
         let user = await User.findOne({ email });
         let password = '';
         let isNewUser = false;
+        
+        // Generate Permanent Access Token for User
+        // We need a temporary user object ID if new, or existing ID
+        const userIdForToken = user ? user._id : new mongoose.Types.ObjectId();
+        const userToken = jwt.sign(
+            { _id: userIdForToken, name: name }, 
+            process.env.JWT_SECRET
+        );
 
         if (!user) {
             // Create new user
@@ -923,10 +996,12 @@ app.post('/api/webhook/cakto', async (req, res) => {
             const hashedPassword = await bcrypt.hash(password, 10);
             
             user = new User({
+                _id: userIdForToken, // Explicitly set ID to match token
                 name,
                 email,
                 password: hashedPassword,
-                plan: 'complete', // Grant complete access by default for paid users
+                plan: planType,
+                token: userToken, // Save Token
                 subscriptionStatus: 'active',
                 subscriptionType: 'paid',
                 subscriptionExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year access
@@ -936,15 +1011,15 @@ app.post('/api/webhook/cakto', async (req, res) => {
             console.log('🆕 [WEBHOOK] User created:', email);
         } else {
             // Update existing user
-            if (user.subscriptionStatus !== 'active') {
-                user.subscriptionStatus = 'active';
-                user.subscriptionType = 'paid';
-                user.subscriptionExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-                await user.save();
-                console.log('🔄 [WEBHOOK] User access updated:', email);
-            } else {
-                console.log('ℹ️ [WEBHOOK] User already has access:', email);
-            }
+            // Always update token and plan on new purchase/webhook event
+            user.plan = planType;
+            user.token = userToken;
+            user.subscriptionStatus = 'active';
+            user.subscriptionType = 'paid';
+            user.subscriptionExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+            
+            await user.save();
+            console.log('🔄 [WEBHOOK] User updated (Plan & Token):', email);
         }
 
         // 4. Email Notification (Nodemailer)

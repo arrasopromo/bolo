@@ -1,7 +1,7 @@
-const http = require('http');
+const axios = require('axios');
 
-// Simulate Cakto Webhook Payload (Array Structure based on logs)
-const payload = {
+// Simulate Cakto Webhook Payload (Basic Plan)
+const payloadBasic = {
     data: [
         {
             status: "waiting_payment",
@@ -10,8 +10,8 @@ const payload = {
                 expirationDate: "2026-02-04T21:34:02.444Z"
             },
             customer: {
-                email: "teste.webhook.array@bellecake.com",
-                name: "Teste Array Webhook"
+                email: "teste.basic@bellecake.com",
+                name: "Teste Basic Webhook"
             },
             amount: 20.88,
             offer: {
@@ -22,40 +22,36 @@ const payload = {
     ]
 };
 
-const data = JSON.stringify(payload);
-
-const options = {
-    hostname: 'localhost',
-    port: 4000,
-    path: '/api/webhook/cakto',
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data)
-    }
+// Simulate Cakto Webhook Payload (Complete Plan)
+const payloadComplete = {
+    data: [
+        {
+            status: "paid",
+            customer: {
+                email: "teste.complete@bellecake.com",
+                name: "Teste Complete Webhook"
+            },
+            offer: {
+                id: "3aoidkh",
+                name: "PLANILHA PRECIFICAÇÃO - ACESSO COMPLETO"
+            }
+        }
+    ]
 };
 
-console.log('🚀 Sending Webhook Simulation (Array Structure)...');
-console.log('Target: http://localhost:4000/api/webhook/cakto');
+async function sendWebhook(payload, label) {
+    try {
+        console.log(`🚀 Sending Webhook Simulation (${label})...`);
+        const response = await axios.post('http://localhost:4000/api/webhook/cakto', payload);
+        console.log(`✅ Response (${label}):`, response.data);
+    } catch (error) {
+        console.error(`❌ Error (${label}):`, error.response ? error.response.data : error.message);
+    }
+}
 
-const req = http.request(options, (res) => {
-    console.log(`\n📡 Response Status: ${res.statusCode}`);
-    
-    let body = '';
-    res.on('data', (chunk) => body += chunk);
-    res.on('end', () => {
-        console.log('📦 Response Body:', body);
-        if (res.statusCode === 200) {
-            console.log('✅ Webhook accepted!');
-        } else {
-            console.log('❌ Webhook failed.');
-        }
-    });
-});
+async function runTests() {
+    await sendWebhook(payloadBasic, 'BASIC PLAN');
+    await sendWebhook(payloadComplete, 'COMPLETE PLAN');
+}
 
-req.on('error', (error) => {
-    console.error('❌ Request Error:', error.message);
-});
-
-req.write(data);
-req.end();
+runTests();
