@@ -560,13 +560,13 @@
             
             /* Mobile Fix for "Teve Taxa" */
             #feeInputContainer > div {
-                flex-direction: column;
-                align-items: flex-start !important;
-                gap: 5px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 15px !important;
             }
             #feeInputContainer label {
-                width: 100%;
-                margin-bottom: 5px;
+                width: auto !important;
+                margin-bottom: 0 !important;
             }
         }
     </style>
@@ -598,6 +598,9 @@
             </div>
             <div class="nav-item" onclick="switchView('vendas')">
                 <i data-lucide="shopping-cart"></i> Vendas
+            </div>
+            <div class="nav-item" onclick="switchView('assinatura')">
+                <i data-lucide="calendar-clock"></i> Assinatura
             </div>
             <div class="nav-item" onclick="window.location.href='/membros'">
                 <i data-lucide="arrow-left"></i> Voltar Painel
@@ -633,6 +636,9 @@
                 <li class="nav-item" onclick="switchView('vendas')">
                     <i data-lucide="shopping-cart"></i> Vendas
                 </li>
+                <li class="nav-item" onclick="switchView('assinatura')">
+                    <i data-lucide="calendar-clock"></i> Assinatura
+                </li>
             </ul>
             <div style="margin-top: auto;">
                 <div class="nav-item" onclick="window.location.href='/membros'" style="color: #FFFFFF;">
@@ -657,7 +663,7 @@
                     
                     <!-- Dropdown Menu -->
                     <div id="userMenuDropdown" style="display: none; position: absolute; right: 0; top: 120%; background: white; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-width: 180px; padding: 0.5rem; z-index: 1000; flex-direction: column;">
-                         <div onclick="toggleMetaCard(true)" style="padding: 0.8rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-brown); transition: background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">
+                         <div id="showMetaOption" onclick="toggleMetaCard(true)" style="padding: 0.8rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-brown); transition: background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">
                              <i data-lucide="eye"></i> Mostrar Meta
                          </div>
                     </div>
@@ -722,10 +728,10 @@
                     
                     <!-- Quick Presets -->
                     <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
-                        <button class="period-preset" data-period="today">Hoje</button>
+                        <button class="period-preset active" data-period="today">Hoje</button>
                         <button class="period-preset" data-period="yesterday">Ontem</button>
                         <button class="period-preset" data-period="7days">7 Dias</button>
-                        <button class="period-preset active" data-period="thismonth">Este Mês</button>
+                        <button class="period-preset" data-period="thismonth">Este Mês</button>
                         <button class="period-preset" data-period="30days">Últimos 30 dias</button>
                     </div>
                 </div>
@@ -734,7 +740,12 @@
                 <div id="breakEvenGoalCard" style="display: block; background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-light); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
-                            <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-brown);">Meta de Ponto de Equilíbrio</h3>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-brown);">Meta de Ponto de Equilíbrio</h3>
+                                <button onclick="toggleMetaCard(false)" style="background: none; border: none; cursor: pointer; padding: 4px; color: #999; display: flex; align-items: center;">
+                                    <i data-lucide="eye" id="metaEyeIcon" style="width: 18px; height: 18px;"></i>
+                                </button>
+                            </div>
                             <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">Quanto falta para cobrir todos os custos do mês.</p>
                         </div>
                         <div style="background: #E8F5E9; color: #2E7D32; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
@@ -742,13 +753,16 @@
                         </div>
                     </div>
                     
-                    <div style="background: #F5F5F5; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 0.8rem;">
-                        <div id="beProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FFC107, #CD7A3E); border-radius: 6px; transition: width 1s ease;"></div>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500;">
-                        <span>Vendido: <span id="beCurrentValue" style="color: var(--secondary-caramel);">R$ 0,00</span></span>
-                        <span id="bePercentage">0%</span>
+                    <div id="metaCardBody" style="transition: all 0.3s ease;">
+                        <div style="background: #F5F5F5; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 0.8rem;">
+                            <div id="beProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FFC107, #CD7A3E); border-radius: 6px; transition: width 1s ease;"></div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500;">
+                            <span>Vendido: <span id="beCurrentValue" style="color: var(--secondary-caramel);">R$ 0,00</span></span>
+                            <span id="bePercentage">0%</span>
+                        </div>
+                        <div id="beDates" style="margin-top: 10px; font-size: 0.85rem; color: #666; display: flex; justify-content: space-between;"></div>
                     </div>
                 </div>
 
@@ -811,6 +825,43 @@
                                 <!-- Populated by JS -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: ASSINATURA -->
+            <section id="view-assinatura" class="view-section">
+                <div style="max-width: 500px; margin: 0 auto; text-align: center;">
+                    <div class="header-dash" style="flex-direction: column; align-items: center; margin-bottom: 1.5rem;">
+                        <h1 style="margin-bottom: 0.5rem;">Minha Assinatura</h1>
+                        <p style="color: #666; margin: 0;">Gerencie seu plano e acesso</p>
+                    </div>
+                    
+                    <div class="kpi-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                        <div class="kpi-card" style="padding: 1rem;">
+                            <div class="kpi-title" style="font-size: 0.8rem; letter-spacing: 1px;">STATUS</div>
+                            <div class="kpi-value" id="subStatusText" style="color: #4CAF50; font-size: 1.2rem; margin-top: 5px;">-</div>
+                        </div>
+                        <div class="kpi-card" style="padding: 1rem;">
+                            <div class="kpi-title" style="font-size: 0.8rem; letter-spacing: 1px;">EXPIRA EM</div>
+                            <div class="kpi-value" id="subExpiresText" style="font-size: 1.2rem; margin-top: 5px;">-</div>
+                        </div>
+                    </div>
+    
+                    <div class="chart-section" style="width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-light);">
+                        <h3 style="margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem;">
+                            Detalhes do Plano
+                        </h3>
+                        <p id="subDescriptionText" style="color: #666; margin-bottom: 1.5rem; line-height: 1.6; font-size: 0.95rem;">
+                            Carregando informações...
+                        </p>
+                        
+                        <div id="subscriptionActionArea" style="display: none; background: #FFF4E5; padding: 1.2rem; border-radius: 12px; text-align: center;">
+                            <p id="subscriptionActionTitle" style="font-weight: 700; color: #CD7A3E; margin-bottom: 0.8rem; font-size: 0.95rem;"></p>
+                            <button id="subscriptionActionButton" onclick="window.open('https://pay.cakto.com.br/3agzzyq_753128', '_blank')" style="background: #4CAF50; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s;">
+                                RENOVAR ASSINATURA
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1097,15 +1148,8 @@
                 <div class="step-indicator" id="step2-indicator">2</div>
             </div>
 
-            <!-- Voice Status (Global for modal) -->
-            <div id="voiceStatus" style="margin-bottom: 1rem; font-size: 0.85rem; color: #666; font-style: italic; display: none; text-align: center;"></div>
+            <!-- Voice Status Removed -->
             <style>
-                .recording { animation: pulse 1.5s infinite; }
-                @keyframes pulse {
-                    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
-                    70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
-                }
                 .stepper-container {
                     display: flex;
                     align-items: center;
@@ -1136,10 +1180,23 @@
                     margin: 0 10px;
                 }
                 /* Date Input Styling */
-                input[type="date"] {
-                    appearance: none;
-                    -webkit-appearance: none;
-                    padding: 0.8rem;
+                .date-range-container {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    width: 100%;
+                }
+                .date-range-icon {
+                    position: absolute;
+                    left: 10px;
+                    color: #999;
+                    width: 18px;
+                    height: 18px;
+                    z-index: 10;
+                    pointer-events: none;
+                }
+                .date-range-input {
+                    padding: 0.8rem 0.8rem 0.8rem 2.5rem; /* Space for icon */
                     border: 1px solid #ddd;
                     border-radius: 8px;
                     font-family: 'Inter', sans-serif;
@@ -1149,9 +1206,19 @@
                     width: 100%;
                     outline: none;
                     transition: border-color 0.2s;
+                    box-sizing: border-box; /* Fix alignment */
                 }
-                input[type="date"]:focus {
+                .date-range-input:focus {
                     border-color: var(--primary-color);
+                }
+                
+                /* Mobile Fix for Fee Input Container */
+                @media (max-width: 480px) {
+                    #feeInputContainer > div {
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                        gap: 8px !important;
+                    }
                 }
             </style>
             
@@ -1160,17 +1227,14 @@
                 <!-- Step 1: Basic Info -->
                 <div id="step1" class="step-section">
                     
-                    <div id="voiceRecordContainer" style="margin-bottom: 1.5rem; text-align: center;">
-                        <button type="button" id="voiceRecordBtn" onclick="toggleRecording()" style="background: var(--card-white); border: 1px solid var(--primary-yellow); color: var(--text-brown); padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                            <i data-lucide="mic" style="width: 18px; height: 18px;"></i> Preencher com Voz
-                        </button>
-                    </div>
-
                     <div class="form-group">
                         <label>Produto</label>
                         <select id="productSelect" required>
                             <option value="">Carregando...</option>
                         </select>
+                    </div>
+
+                    <div class="form-group">
                     </div>
                     <div class="form-group">
                         <label>Quantidade</label>
@@ -1188,7 +1252,10 @@
                     </div>
                     <div class="form-group">
                         <label>Data</label>
-                        <input type="text" id="saleDate" class="date-range-input" placeholder="Selecione a data" required>
+                        <div class="date-range-container">
+                            <i data-lucide="calendar" class="date-range-icon"></i>
+                            <input type="text" id="saleDate" class="date-range-input" placeholder="Selecione a data" required>
+                        </div>
                     </div>
                     <button type="button" class="btn-submit" onclick="goToStep2()">Próximo</button>
                 </div>
@@ -1226,7 +1293,7 @@
 
                     <div class="form-group">
                         <label>Informações Adicionais (Opcional)</label>
-                        <textarea id="saleNotes" maxlength="200" rows="3" placeholder="Ex: Detalhes do pedido..." style="width: 100%; padding: 0.9rem; border: 2px solid #f0f0f0; border-radius: 10px; background: #FAFAFA; resize: vertical; font-family: 'Inter', sans-serif;"></textarea>
+                        <textarea id="saleNotes" maxlength="200" rows="6" placeholder="Ex: Detalhes do pedido..." style="width: 100%; padding: 0.9rem; border: 2px solid #f0f0f0; border-radius: 10px; background: #FAFAFA; resize: vertical; font-family: 'Inter', sans-serif;"></textarea>
                         <div style="text-align: right; font-size: 0.8rem; color: #999;">Máx. 200 caracteres</div>
                     </div>
 
@@ -1343,9 +1410,23 @@
                 const res = await fetch(url, { ...options, headers });
                 console.log(`[Auth] Response ${url}:`, res.status);
 
+                if (res.status === 403) {
+                    const clone = res.clone();
+                    try {
+                        const errData = await clone.json();
+                        if (errData.code === 'SUBSCRIPTION_EXPIRED') {
+                            const modal = document.getElementById('subscriptionExpiredModal');
+                            if (modal) modal.style.display = 'flex';
+                            throw new Error('Assinatura expirada');
+                        }
+                    } catch (e) {
+                        // Ignore JSON error
+                    }
+                }
+
                 if (res.status === 401 || res.status === 403) {
                     console.warn(`[Auth] ${res.status} Error. Redirecting...`);
-                    alert('Sessão expirada ou inválida. Por favor, acesse via link de membro.');
+                    // alert('Sessão expirada ou inválida. Por favor, acesse via link de membro.');
                     localStorage.removeItem('bellecake_token'); // Clear token
                     window.location.href = '/membros'; 
                     throw new Error('Auth Error');
@@ -1385,6 +1466,107 @@
                         topName.textContent = 'Olá, ' + (firstName || 'Confeiteira');
                     }
                     
+                    // Update Subscription Info in 'Assinatura' view
+                    const subStatusText = document.getElementById('subStatusText');
+                    const subExpiresText = document.getElementById('subExpiresText');
+                    const subDescriptionText = document.getElementById('subDescriptionText');
+                    const actionArea = document.getElementById('subscriptionActionArea');
+                    const actionTitle = document.getElementById('subscriptionActionTitle');
+                    const actionBtn = document.getElementById('subscriptionActionButton');
+
+                    if (subStatusText && subExpiresText) {
+                        const status = user.subscriptionStatus || 'inactive';
+                        const type = user.subscriptionType || 'bonus'; 
+                        const expiresAt = user.subscriptionExpiresAt;
+                        
+                        // 1. Status Display
+                        if (status === 'active') {
+                            if (type === 'bonus') {
+                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E0E0E0; padding:2px 6px; border-radius:4px; color:#666; vertical-align: middle; text-transform: uppercase;">GRATUITO</span>';
+                                subStatusText.style.color = '#4CAF50';
+                            } else {
+                                // Paid
+                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#FFF8E1; padding:2px 6px; border-radius:4px; color:#F57F17; vertical-align: middle; border: 1px solid #FFD54F; text-transform: uppercase;">PREMIUM</span>';
+                                subStatusText.style.color = '#2E7D32';
+                            }
+                        } else if (status === 'expired') {
+                            subStatusText.textContent = 'Expirado';
+                            subStatusText.style.color = '#F44336';
+                            
+                            // Show modal immediately if expired
+                            const modal = document.getElementById('subscriptionExpiredModal');
+                            if (modal) modal.style.display = 'flex';
+                        } else {
+                            subStatusText.textContent = 'Inativo';
+                            subStatusText.style.color = '#999';
+                        }
+
+                        // 2. Date Display
+                        if (expiresAt) {
+                            const d = new Date(expiresAt);
+                            if (!isNaN(d.getTime())) {
+                                subExpiresText.textContent = d.toLocaleDateString('pt-BR');
+                            } else {
+                                subExpiresText.textContent = '-';
+                            }
+                        } else {
+                            subExpiresText.textContent = '-';
+                        }
+
+                        // 3. Description Text & Button Logic
+                        if (actionArea && actionBtn && subDescriptionText) {
+                            actionArea.style.display = 'block'; 
+                            
+                            if (status === 'expired') {
+                                // Expired State
+                                subDescriptionText.innerHTML = `Sua assinatura expirou. Renove agora para recuperar o acesso.`;
+                                actionArea.style.background = '#FFF0F0';
+                                actionTitle.textContent = 'Acesso Bloqueado';
+                                actionTitle.style.color = '#D32F2F';
+                                
+                                actionBtn.textContent = 'RENOVAR AGORA';
+                                actionBtn.disabled = false;
+                                actionBtn.style.background = '#F44336';
+                                actionBtn.style.cursor = 'pointer';
+                                actionBtn.onclick = () => openPlanSelectionModal();
+                            } 
+                            else if (status === 'active') {
+                                if (type === 'bonus') {
+                                    // Bonus Active
+                                    subDescriptionText.innerHTML = `
+                                        Você possui o <strong style="color: var(--secondary-caramel);">Plano Bônus (Gratuito)</strong>.
+                                        <br>Aproveite para realizar a assinatura completa e garantir acesso contínuo.
+                                    `;
+                                    actionArea.style.background = '#FFF4E5';
+                                    actionTitle.textContent = 'Garanta seu acesso contínuo';
+                                    actionTitle.style.color = '#CD7A3E';
+                                    
+                                    actionBtn.textContent = 'FAZER ASSINATURA';
+                                    actionBtn.disabled = false;
+                                    actionBtn.style.background = '#4CAF50';
+                                    actionBtn.style.cursor = 'pointer';
+                                    actionBtn.onclick = () => openPlanSelectionModal();
+                                } else {
+                                    // Paid Active
+                                    subDescriptionText.innerHTML = `
+                                        Você possui uma <strong>Assinatura Mensal</strong> ativa. 
+                                        Aproveite todos os recursos da ferramenta de Fluxo de Caixa.
+                                    `;
+                                    actionArea.style.background = '#E8F5E9';
+                                    actionTitle.textContent = 'Sua assinatura está ativa';
+                                    actionTitle.style.color = '#2E7D32';
+                                    
+                                    actionBtn.innerHTML = '<i data-lucide="check-circle" style="width: 18px; vertical-align: middle;"></i> ASSINATURA EM USO';
+                                    actionBtn.disabled = true;
+                                    actionBtn.style.background = '#81C784';
+                                    actionBtn.style.cursor = 'default';
+                                    actionBtn.onclick = null;
+                                    setTimeout(() => lucide.createIcons(), 100);
+                                }
+                            }
+                        }
+                    }
+
                     // Trigger dashboard update to render meta card with user data
                     if(typeof loadDashboard === 'function') loadDashboard();
                 }
@@ -1422,6 +1604,7 @@
                 loadProducts(); 
                 loadRecentSales(); 
             }
+            if(viewId === 'assinatura') loadUserInfo();
         }
 
         // --- Data Logic ---
@@ -2228,6 +2411,19 @@
                 startOfDay.setHours(0,0,0,0);
                 
                 datePickerSales.setDate([startOfDay, today]);
+            }
+
+            // Init Flatpickr for Sale Date (Modal)
+            const saleDateInput = document.getElementById("saleDate");
+            if (saleDateInput) {
+                saleDatePicker = flatpickr("#saleDate", {
+                    dateFormat: "Y-m-d",
+                    locale: "pt",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    defaultDate: "today",
+                    disableMobile: "true"
+                });
             }
 
             // Product Filter Auto-update
@@ -3245,57 +3441,7 @@
         loadDashboard();
         loadProductsList();
         loadRecentSales();
-        loadMonthlyMeta(); // Fetch specific meta data
-
-        async function loadMonthlyMeta() {
-            try {
-                // Determine This Month Range (Local Time aligned)
-                const now = new Date();
-                const start = new Date(now.getFullYear(), now.getMonth(), 1);
-                start.setHours(0,0,0,0);
-                const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                end.setHours(23,59,59,999);
-                
-                const query = `?start=${start.toISOString()}&end=${end.toISOString()}`;
-                
-                const res = await authFetch(`/api/dashboard/stats${query}`);
-                if (!res.ok) throw new Error('Failed to load meta');
-                
-                const data = await res.json();
-                const stats = data.summary;
-                
-                // Update Break Even Card
-                // Goal = Total Fixed Costs (Meta de Equilíbrio)
-                const goal = stats.totalFixedCost;
-                const current = stats.totalRevenue; // Monthly revenue
-                
-                const card = document.getElementById('breakEvenGoalCard');
-                if (card) {
-                    card.style.display = 'block';
-                    
-                    // Prevent division by zero
-                    let percent = 0;
-                    if (goal > 0) {
-                        percent = Math.min((current / goal) * 100, 100);
-                    } else if (current > 0) {
-                        percent = 100;
-                    }
-                    
-                    const elGoal = document.getElementById('beGoalValue');
-                    const elCurrent = document.getElementById('beCurrentValue');
-                    const elPercent = document.getElementById('bePercentage');
-                    const elBar = document.getElementById('beProgressBar');
-                    
-                    if(elGoal) elGoal.textContent = goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    if(elCurrent) elCurrent.textContent = current.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    if(elPercent) elPercent.textContent = percent.toFixed(1) + '%';
-                    if(elBar) elBar.style.width = percent + '%';
-                }
-                
-            } catch (error) {
-                console.error('Error loading monthly meta:', error);
-            }
-        }
+        // loadMonthlyMeta removed as it is redundant (loadDashboard updates the card)
 
         // Costs Chart Modal Logic
         // costsChartInstance defined at top of script
@@ -3448,19 +3594,34 @@
             }
         }
 
+        // Initialize meta card visibility on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const isHidden = localStorage.getItem('metaCardHidden') === 'true';
+            const card = document.getElementById('breakEvenGoalCard');
+            const showOption = document.getElementById('showMetaOption');
+            
+            if (card) {
+                card.style.display = isHidden ? 'none' : 'block';
+            }
+            if (showOption) {
+                 showOption.style.display = isHidden ? 'flex' : 'none';
+            }
+        });
+
         function toggleMetaCard(show) {
             const card = document.getElementById('breakEvenGoalCard');
-            if (card) {
-                if (show) {
-                    card.style.display = 'block';
-                    localStorage.removeItem('metaCardHidden');
-                    // Hide menu if open
-                    const menu = document.getElementById('userMenuDropdown');
-                    if (menu) menu.style.display = 'none';
-                } else {
-                    card.style.display = 'none';
-                    localStorage.setItem('metaCardHidden', 'true');
-                }
+            const showOption = document.getElementById('showMetaOption');
+            
+            if (show) {
+                if (card) card.style.display = 'block';
+                if (showOption) showOption.style.display = 'none';
+                localStorage.setItem('metaCardHidden', 'false');
+                const menu = document.getElementById('userMenuDropdown');
+                if (menu) menu.style.display = 'none';
+            } else {
+                if (card) card.style.display = 'none';
+                if (showOption) showOption.style.display = 'flex';
+                localStorage.setItem('metaCardHidden', 'true');
             }
         }
 
@@ -3553,7 +3714,61 @@
                 alert('Erro ao excluir venda.');
             }
         }
+        function openPlanSelectionModal() {
+            const modal = document.getElementById('planSelectionModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closePlanSelectionModal() {
+            const modal = document.getElementById('planSelectionModal');
+            if (modal) modal.style.display = 'none';
+        }
     </script>
+
+    <!-- Plan Selection Modal -->
+    <div id="planSelectionModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 2000; justify-content: center; align-items: center; padding: 1rem;">
+        <div style="background: white; width: 100%; max-width: 450px; padding: 2rem; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; text-align: center;">
+            <button onclick="closePlanSelectionModal()" style="position: absolute; top: 1rem; right: 1rem; background: #f5f5f5; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                <i data-lucide="x" style="width: 20px; height: 20px; color: #666;"></i>
+            </button>
+            
+            <h2 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--text-brown); font-size: 1.5rem; font-weight: 700;">
+                Escolha seu Plano
+            </h2>
+            <p style="color: #666; margin-bottom: 2rem;">Garanta acesso contínuo ao Fluxo de Caixa</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Monthly Plan -->
+                <div onclick="window.open('https://pay.cakto.com.br/3agzzyq_753128', '_blank')" style="border: 2px solid #E0E0E0; border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between;" onmouseover="this.style.borderColor='#4CAF50'; this.style.background='#F1F8E9'" onmouseout="this.style.borderColor='#E0E0E0'; this.style.background='white'">
+                    <div style="text-align: left;">
+                        <div style="font-weight: 700; color: var(--text-brown); font-size: 1.1rem;">Assinatura Mensal</div>
+                        <div style="font-size: 0.9rem; color: #666;">Renova a cada mês</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; color: #4CAF50; font-size: 1.4rem;">R$ 12,50</div>
+                        <div style="font-size: 0.8rem; color: #888;">/mês</div>
+                    </div>
+                </div>
+
+                <!-- Lifetime Plan -->
+                <a href="https://pay.cakto.com.br/9gh3y82_753500" target="_blank" style="text-decoration: none; border: 2px solid var(--primary-yellow); border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between; background: #FFFDE7;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--primary-yellow); color: var(--seal-brown); font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 10px;">MAIS VANTAJOSO</div>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 700; color: var(--text-brown); font-size: 1.1rem;">Acesso Vitalício</div>
+                        <div style="font-size: 0.9rem; color: #666;">Pagamento único</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; color: var(--secondary-caramel); font-size: 1.4rem;">R$ 127,00</div>
+                        <div style="font-size: 0.8rem; color: #888;">sem mensalidade</div>
+                    </div>
+                </a>
+            </div>
+            
+            <p style="margin-top: 1.5rem; font-size: 0.8rem; color: #999;">
+                Ambiente seguro. Cancele quando quiser (plano mensal).
+            </p>
+        </div>
+    </div>
 
     <!-- Costs Chart Modal -->
     <div id="costsChartModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem;">
@@ -3571,24 +3786,26 @@
                 align-items: center;
             }
             .chart-container-modal {
-                position: relative; 
-                height: 500px; 
-                width: 100%;
-            }
-            @media (max-width: 768px) {
-                .costs-modal-content {
-                    padding: 1.5rem;
-                    max-height: 85vh;
-                    overflow-y: auto;
+                    position: relative; 
+                    height: 500px; 
+                    width: 100%;
                 }
-                .chart-container-modal {
-                    height: 300px;
+                @media (max-width: 768px) {
+                    .costs-modal-content {
+                        padding: 1rem;
+                        max-height: 85vh;
+                        overflow-y: auto;
+                    }
+                    .chart-container-modal {
+                        height: 30vh;
+                        min-height: 200px;
+                        max-height: 300px;
+                    }
+                    #costsChartModal h2 {
+                        font-size: 1.2rem !important;
+                        margin-bottom: 0.5rem !important;
+                    }
                 }
-                #costsChartModal h2 {
-                    font-size: 1.4rem !important;
-                    margin-bottom: 1rem !important;
-                }
-            }
         </style>
         <div class="costs-modal-content">
             <button onclick="closeCostsChartModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: #f5f5f5; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10;">
@@ -3661,6 +3878,28 @@
             </form>
         </div>
     </div>
+    <!-- Subscription Expired Modal -->
+    <div id="subscriptionExpiredModal" class="modal-overlay" style="z-index: 10000;">
+        <div class="modal-content" style="max-width: 450px; text-align: center; padding: 2.5rem; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="width: 80px; height: 80px; background: #FFF4E5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #CD7A3E;">
+                <i data-lucide="alert-triangle" style="width: 40px; height: 40px;"></i>
+            </div>
+            <h2 style="color: #32221D; margin-bottom: 1rem;">Assinatura Expirada</h2>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 2rem;">
+                Seu período de acesso ao Fluxo de Caixa expirou.<br>Para continuar gerenciando suas vendas e custos, renove sua assinatura.
+            </p>
+            <p style="font-weight: 600; color: #32221D; margin-bottom: 2rem; font-size: 0.9rem; background: #f9f9f9; padding: 10px; border-radius: 8px;">
+                Seus dados permanecem salvos e seguros.
+            </p>
+            <button onclick="window.open('https://pay.cakto.com.br/3agzzyq_753128', '_blank')" style="width: 100%; padding: 1rem; background: #4CAF50; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);">
+                RENOVAR AGORA
+            </button>
+            <div style="margin-top: 1.5rem;">
+                 <a href="/membros" style="color: #999; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #ddd;">Voltar para área de membros</a>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
                 </div>

@@ -64,6 +64,54 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// Middleware: Check Subscription Status
+const checkSubscription = async (req, res, next) => {
+    try {
+        // req.user is set by authenticateToken (contains _id)
+        if (!req.user || !req.user._id) return res.status(401).json({ error: 'Unauthorized' });
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const now = new Date();
+        
+        // Check Expiration for ALL users who have a subscription date
+        if (user.subscriptionExpiresAt) {
+            // Check if expired
+            if (now > new Date(user.subscriptionExpiresAt)) {
+                // Auto-update status if needed
+                if (user.subscriptionStatus !== 'expired') {
+                    user.subscriptionStatus = 'expired';
+                    await user.save();
+                }
+                
+                return res.status(403).json({ 
+                    error: 'Sua assinatura expirou.', 
+                    code: 'SUBSCRIPTION_EXPIRED',
+                    expiredAt: user.subscriptionExpiresAt 
+                });
+            }
+        }
+        
+        // Check Status
+        if (user.subscriptionStatus === 'expired') {
+             return res.status(403).json({ 
+                error: 'Sua assinatura expirou.', 
+                code: 'SUBSCRIPTION_EXPIRED',
+                expiredAt: user.subscriptionExpiresAt 
+            });
+        }
+        
+        // Optional: Block 'inactive' users if necessary
+        // if (user.subscriptionStatus === 'inactive') { ... }
+        
+        next();
+    } catch (err) {
+        console.error('Subscription check error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 // --- Routes ---
 
 // Serve HTML Views
@@ -156,7 +204,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 });
 
 // API: Products
-app.get('/api/products', authenticateToken, async (req, res) => {
+app.get('/api/products', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const products = await Product.find({ user: req.user._id });
         res.json(products);
@@ -165,7 +213,7 @@ app.get('/api/products', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/products', authenticateToken, async (req, res) => {
+app.post('/api/products', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const { name, salePrice, variableCost } = req.body;
         const product = new Product({
@@ -182,7 +230,7 @@ app.post('/api/products', authenticateToken, async (req, res) => {
 });
 
 // API: Sales
-app.get('/api/sales', authenticateToken, async (req, res) => {
+app.get('/api/sales', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const { limit, startDate, endDate, productId } = req.query;
         console.log(`👤 Fetching sales for user: ${req.user.name} (${req.user._id})`); // DEBUG LOG
@@ -217,7 +265,7 @@ app.get('/api/sales', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/sales', authenticateToken, async (req, res) => {
+app.post('/api/sales', authenticateToken, checkSubscription, async (req, res) => {
     try {
         if (!req.user || !req.user._id) {
             console.error('❌ User not authenticated or missing ID');
@@ -263,7 +311,7 @@ app.post('/api/sales', authenticateToken, async (req, res) => {
 });
 
 // Update Sale
-app.put('/api/sales/:id', authenticateToken, async (req, res) => {
+app.put('/api/sales/:id', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const { productId, quantity, date, paymentMethod, platformFee = 0, deliveryFee = 0, notes } = req.body;
         
@@ -298,7 +346,7 @@ app.put('/api/sales/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete Sale
-app.delete('/api/sales/:id', authenticateToken, async (req, res) => {
+app.delete('/api/sales/:id', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const sale = await Sale.findOneAndDelete({ _id: req.params.id, user: req.user._id });
         if (!sale) return res.status(404).json({ error: 'Venda não encontrada' });
@@ -310,7 +358,7 @@ app.delete('/api/sales/:id', authenticateToken, async (req, res) => {
 });
 
 // API: Fixed Costs
-app.get('/api/fixed-costs', authenticateToken, async (req, res) => {
+app.get('/api/fixed-costs', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const costs = await FixedCost.find({ user: req.user._id });
         res.json(costs);
@@ -319,7 +367,7 @@ app.get('/api/fixed-costs', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/fixed-costs', authenticateToken, async (req, res) => {
+app.post('/api/fixed-costs', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const { name, amount, recurrenceType, installments, date } = req.body;
         const cost = new FixedCost({
@@ -337,7 +385,7 @@ app.post('/api/fixed-costs', authenticateToken, async (req, res) => {
     }
 });
 
-app.delete('/api/fixed-costs/:id', authenticateToken, async (req, res) => {
+app.delete('/api/fixed-costs/:id', authenticateToken, checkSubscription, async (req, res) => {
     try {
         await FixedCost.findOneAndDelete({ _id: req.params.id, user: req.user._id });
         res.json({ message: 'Deleted' });
@@ -347,7 +395,7 @@ app.delete('/api/fixed-costs/:id', authenticateToken, async (req, res) => {
 });
 
 // API: Dashboard Stats (Simplified for brevity, full logic in real app)
-app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
+app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const { start, end, productId, monthStart, monthEnd } = req.query;
         console.log(`📊 Dashboard stats req: User=${req.user.name}, Range=${start} to ${end}`); // DEBUG LOG
@@ -551,7 +599,7 @@ app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
 
 
 // API: Transcribe Audio (Voice to Text for New Sale)
-app.post('/api/transcribe', authenticateToken, upload.single('audio'), async (req, res) => {
+app.post('/api/transcribe', authenticateToken, checkSubscription, upload.single('audio'), async (req, res) => {
     let filePath = '';
     try {
         if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
@@ -769,6 +817,57 @@ app.post('/api/dicas-vendas', async (req, res) => {
     } catch (err) {
         console.error('❌ Error in /api/dicas-vendas:', err);
         res.status(500).json({ success: false, message: 'Erro ao processar solicitação.' });
+    }
+});
+
+// Webhook for Cakto (Payment Integration)
+app.post('/api/webhook/cakto', async (req, res) => {
+    try {
+        const data = req.body;
+        console.log('Webhook Cakto received:', JSON.stringify(data));
+        
+        // Check for paid status (adjust based on actual payload)
+        // Common patterns: status: 'paid', 'approved', 'completed'
+        // 'pix_generated' added for compatibility with existing test-webhook.js, but typically we want 'paid'
+        const status = data.status || data.current_status || '';
+        const isPaid = ['paid', 'approved', 'completed', 'pix_generated'].includes(status.toLowerCase());
+        
+        if (isPaid) {
+             const email = data.customer?.email || data.payer?.email;
+             if (email) {
+                 let user = await User.findOne({ email });
+                 
+                 // If user doesn't exist, create one?
+                 if (!user) {
+                     // Generate temp password
+                     const tempPass = Math.random().toString(36).slice(-8);
+                     const hashed = await bcrypt.hash(tempPass, 10);
+                     user = new User({
+                        name: data.customer?.name || 'Cliente',
+                        email: email,
+                        password: hashed,
+                        plan: 'complete', // Bonus Plan (Gratuito) - Acesso Completo
+                        subscriptionStatus: 'active',
+                        subscriptionType: 'bonus', // Initial purchase = Bonus
+                        subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+                    });
+                } else {
+                    // Update existing user (Renewal)
+                    user.plan = 'complete'; 
+                    user.subscriptionStatus = 'active';
+                    user.subscriptionType = 'paid'; // Renewal = Paid Subscription
+                    // Add 30 days to NOW (Reset timer)
+                    user.subscriptionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                }
+                await user.save();
+                console.log(`User ${email} updated with 30 days access (${user.subscriptionType}).`);
+             }
+        }
+        
+        res.json({ received: true });
+    } catch (err) {
+        console.error('Webhook error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 

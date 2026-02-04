@@ -346,59 +346,38 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </div>
 
     <!-- Upsell Modal -->
-    <div id="upsellModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem; overflow-y: auto;">
-        <div style="position: relative; width: 100%; max-width: 380px; animation: slideUp 0.3s ease-out; margin: auto;">
+    <div id="upsellModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
+        <div style="position: relative; width: 100%; max-width: 550px; background: white; border-radius: 16px; overflow: hidden; animation: slideUp 0.3s ease-out; margin: auto; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid var(--primary-yellow);">
             
-            <style>
-                .upgrade-modal-title {
-                    display: none;
-                    text-align: center;
-                    color: white;
-                    margin-bottom: 0.5rem;
-                    font-size: 1.5rem;
-                    font-weight: 700;
-                }
-                @media (max-width: 768px) {
-                    .upgrade-modal-title {
-                        display: block;
-                    }
-                }
-            </style>
-            
-            <h2 class="upgrade-modal-title">Realizar Upgrade</h2>
-
-            <div style="text-align: center; color: white; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">
-                Aproveite nosso plano de acesso completo
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #32221D, #5D3A29); padding: 1.5rem 1rem 1rem 1rem; text-align: center; position: relative;">
+                <button onclick="closeUpsellModal()" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 5px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+                <h2 style="margin: 0; color: white; font-size: 1.6rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Realizar Upgrade</h2>
+                <p style="margin: 0.5rem 0 0 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">Desbloqueie todo o potencial!</p>
             </div>
 
-            <!-- Close Button -->
-            <button onclick="closeUpsellModal()" style="position: absolute; top: -15px; right: -15px; background: white; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 100;">
-                <i data-lucide="x" style="width: 20px; height: 20px; color: #666;"></i>
-            </button>
-
-            <!-- The Card (Exactly as in index) -->
-            <div class="pricing-table featured" style="width: 100%; margin: 0;">
-                <div class="table-title">Acesso Completo</div>
-                <div class="table-price">
-                    R$ 39,90 <span>/único</span>
+            <!-- Content -->
+            <div style="padding: 1.5rem; overflow-y: auto; background: white;">
+                <div class="table-price" style="font-size: calc(2rem + 1px); margin-bottom: 0.5rem; text-align: center; color: #333; font-weight: 900;">
+                    R$ 39,90 <span style="font-size: 0.9rem; color: #666; font-weight: normal;">/único</span>
                 </div>
-                <ul class="table-features">
-                    <li><i data-lucide="check"></i> Acesso Imediato à Planilha</li>
-                    <li><i data-lucide="check"></i> Aulas de Explicação</li>
-                    <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
-                    <li><i data-lucide="check"></i> Acesso Vitalício a Planilha</li>
-                    <li class="whatsapp-support">
-                        <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                
+                <ul class="table-features" style="margin-bottom: 1.5rem;">
+                    <li><i data-lucide="check"></i> Tudo do Plano Básico</li>
+                    <li class="whatsapp-support" style="background: #E8F5E9; border: 1px solid #4CAF50; color: #2E7D32; font-weight: 600;">
+                        <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; margin-right: 8px; fill: currentColor;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                         Suporte Whatsapp
                     </li>
-                    <li class="highlight-feature">
+                    <li class="highlight-feature" style="border: 2px dashed var(--primary-yellow); padding: 0.4rem; border-radius: 12px; margin: 0.2rem 0; display: block; background: var(--dark-card);">
                         <span class="bonus-label">Bônus exclusivo</span>
                         <div class="bonus-content">
                             <i data-lucide="gift" class="gift-bonus-icon"></i>
                             Ferramenta para cálculo de ponto de equilíbrio com IA integrada
                         </div>
                     </li>
-                    <li class="highlight-feature">
+                    <li class="highlight-feature" style="border: 2px dashed var(--primary-yellow); padding: 0.4rem; border-radius: 12px; margin: 0.2rem 0; display: block; background: var(--dark-card);">
                         <span class="bonus-label">Bônus exclusivo #2</span>
                         <div class="bonus-content">
                             <i data-lucide="gift" class="gift-bonus-icon"></i>
@@ -406,16 +385,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         </div>
                     </li>
                 </ul>
-                <a href="https://pay.cakto.com.br/984m3jr_738897" class="btn-cta cakto-checkout-btn" target="_blank">
-                    QUERO ESTE
-                </a>
-            </div>
 
-            <!-- Decline Link -->
-            <div style="text-align: center; margin-top: 1rem;">
-                <a href="/upgrade" style="color: white; font-size: 0.9rem; text-decoration: underline; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">
-                    Não, prefiro perder os bônus e ficar com o básico
+                <a href="https://pay.cakto.com.br/984m3jr_738897" class="btn-cta cakto-checkout-btn" target="_blank" style="display: block; width: 100%; text-align: center; padding: 1rem; background: #4CAF50; color: white; border-radius: 8px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); transition: transform 0.2s;">
+                    QUERO O PACOTE COMPLETO
                 </a>
+                
+                 <div style="text-align: center; margin-top: 1rem;">
+                    <a href="/upgrade" style="color: #000; font-size: 0.85rem; font-weight: 600; text-decoration: underline; cursor: pointer;">
+                        Não, quero ficar apenas com o básico
+                    </a>
+                </div>
             </div>
         </div>
     </div>
