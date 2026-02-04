@@ -2316,6 +2316,8 @@
                     // Format Name with Installment info
                     let displayName = c.name;
                     if (c.recurrenceType === 'installment' && c.installments > 1 && c.currentInstallment) {
+                        // Clean existing (Parcela ...) from name to avoid duplication
+                        displayName = displayName.replace(/\s*\(\s*Parcela.*?\)/gi, '').trim();
                         displayName += ` (Parcela ${c.currentInstallment}/${c.installments})`;
                     }
 
