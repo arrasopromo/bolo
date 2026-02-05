@@ -973,7 +973,8 @@ app.post('/api/webhook/cakto', async (req, res) => {
         // "PLANILHA PRECIFICAÇÃO - ACESSO COMPLETO" -> complete
         // "PLANILHA PRECIFICAÇÃO" -> basic
         let planType = 'basic';
-        if (offerName.includes('COMPLETO')) {
+        const keywords = ['COMPLETO', 'UPGRADE', 'VITALÍCIO', 'LIFETIME', 'PREMIUM'];
+        if (keywords.some(k => offerName.includes(k))) {
             planType = 'complete';
         }
         console.log(`📋 [WEBHOOK] Plan determined: ${planType} (Offer: ${offerName})`);
@@ -1012,7 +1013,16 @@ app.post('/api/webhook/cakto', async (req, res) => {
             console.log('🆕 [WEBHOOK] User created:', email);
         } else {
             // Update existing user
-            // Always update token and plan on new purchase/webhook event
+            // Always update token on new purchase/webhook event
+            // Logic to prevent downgrade: If user is already 'complete', don't revert to 'basic'
+            // unless the new plan is explicitly 'complete' (redundant) or we decide to allow downgrades.
+            // But usually we want to KEEP complete.
+            
+            if (user.plan === 'complete' && planType === 'basic') {
+                console.log(`🛡️ [WEBHOOK] Prevented downgrade for ${email}. Keeping 'complete' plan.`);
+                planType = 'complete';
+            }
+
             user.plan = planType;
             user.token = userToken;
             user.subscriptionStatus = 'active';
