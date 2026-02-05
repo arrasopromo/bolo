@@ -1028,7 +1028,7 @@ app.post('/api/webhook/cakto', async (req, res) => {
         // User requested: "considere o envio automatico de email para pix pago tambem"
         // So we send email if we created a password OR if we just granted access.
         
-        const loginLink = "https://bellecake.com.br/membros"; // Adjust to your real domain
+        const loginLink = `https://bellecake.com/membros?token=${userToken}`;
 
         const mailOptions = {
             from: `"BelleCake" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
