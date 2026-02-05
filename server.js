@@ -208,6 +208,9 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password');
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -473,7 +476,15 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                 const loopStart = new Date(sDate);
                 const loopEnd = new Date(eDate);
                 
-                for (let d = new Date(loopStart); d <= loopEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+                // Loop through each day in the range
+                // We add a small buffer to loopEnd to ensure we include the last day if milliseconds are off
+                const loopEndWithBuffer = new Date(loopEnd.getTime() + 1000);
+                
+                // DEBUG: Fixed Cost Loop
+                console.log(`[FixedCost] Range: ${loopStart.toISOString()} to ${loopEnd.toISOString()}`);
+                console.log(`[FixedCost] Costs found: ${allFixedCosts.length}`);
+
+                for (let d = new Date(loopStart); d < loopEndWithBuffer; d.setUTCDate(d.getUTCDate() + 1)) {
                     const currentDay = d.getUTCDate();
                     const currentMonth = d.getUTCMonth();
                     const currentYear = d.getUTCFullYear();
@@ -481,7 +492,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                     allFixedCosts.forEach(cost => {
                         if (!cost.date) return;
                         const costDate = new Date(cost.date);
-                        if (isNaN(costDate)) return;
+                        if (isNaN(costDate.getTime())) return;
                         
                         const isSameMonth = d.getUTCMonth() === costDate.getUTCMonth() && d.getUTCFullYear() === costDate.getUTCFullYear();
                         if (d < costDate && !isSameMonth) return;
@@ -491,6 +502,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                         if (dueDay > daysInMonth) dueDay = daysInMonth;
                         
                         if (currentDay === dueDay) {
+                            console.log(`[FixedCost] MATCH! Day=${currentDay}, Cost=${cost.name}, Amount=${cost.amount}`);
                             if (cost.recurrenceType === 'monthly') {
                                 totalFixedCost += cost.amount;
                             } else if (cost.recurrenceType === 'installment') {
@@ -502,6 +514,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                         }
                     });
                 }
+                console.log(`[FixedCost] Total Calculated: ${totalFixedCost}`);
             }
 
             // Aggregations
@@ -937,11 +950,17 @@ app.post('/api/webhook/cakto', async (req, res) => {
         // Extract Offer/Product Name for Plan Determination
         const offerName = (
             payloadData.offer?.name || 
+            ''
+        ).toUpperCase();
+        
+        const productName = (
             payloadData.product?.name || 
             ''
         ).toUpperCase();
 
-        console.log(`🔍 [WEBHOOK] Parsed: Event="${eventRaw}", Status="${statusRaw}", Email="${email}", Offer="${offerName}"`);
+        const combinedName = `${offerName} ${productName}`;
+
+        console.log(`🔍 [WEBHOOK] Parsed: Event="${eventRaw}", Status="${statusRaw}", Email="${email}", CombinedName="${combinedName}"`);
 
         // 2. Validation Logic
         // Payment is valid if:
@@ -974,10 +993,10 @@ app.post('/api/webhook/cakto', async (req, res) => {
         // "PLANILHA PRECIFICAÇÃO" -> basic
         let planType = 'basic';
         const keywords = ['COMPLETO', 'UPGRADE', 'VITALÍCIO', 'LIFETIME', 'PREMIUM'];
-        if (keywords.some(k => offerName.includes(k))) {
+        if (keywords.some(k => combinedName.includes(k))) {
             planType = 'complete';
         }
-        console.log(`📋 [WEBHOOK] Plan determined: ${planType} (Offer: ${offerName})`);
+        console.log(`📋 [WEBHOOK] Plan determined: ${planType} (Source: ${combinedName})`);
 
         // 3. User Management (MongoDB)
         let user = await User.findOne({ email });

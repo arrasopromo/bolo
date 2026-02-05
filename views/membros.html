@@ -219,7 +219,7 @@
                 <div style="text-align: left;">
                     <div style="margin-bottom: 0.5rem;">
                         <div style="font-size: 0.8rem; color: var(--text-muted);">Status da Conta</div>
-                        <div style="font-weight: 700; color: var(--heading-color);">ACESSO COMPLETO</div>
+                        <div id="accountStatus" style="font-weight: 700; color: var(--heading-color);">ACESSO COMPLETO</div>
                     </div>
                     <div>
                         <div style="font-size: 0.65rem; color: var(--text-muted);">Membro desde</div>
@@ -513,8 +513,20 @@
                     const res = await fetch('/api/auth/me', {
                         headers: { 'Authorization': `Bearer ${storedToken}` }
                     });
+                    
+                    if (res.status === 404) {
+                        // Token valid but user deleted from DB -> Logout
+                        console.warn('User not found. Logging out...');
+                        localStorage.removeItem('bellecake_token');
+                        window.location.reload();
+                        return;
+                    }
+
                     if (res.ok) {
                         const userData = await res.json();
+                        
+                        if (!userData) return; // Safety check
+
                         const nameDisplay = document.getElementById('userNameDisplay');
                         if (nameDisplay && userData.name) {
                             nameDisplay.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
@@ -530,6 +542,9 @@
 
                         // Check Plan and Lock Cards if Basic
                         if (userData.plan === 'basic') {
+                            const statusEl = document.getElementById('accountStatus');
+                            if (statusEl) statusEl.innerText = 'ACESSO BÁSICO';
+
                             const cardsToLock = ['card-ia', 'card-fluxo', 'card-massas', 'card-suporte'];
                             
                             cardsToLock.forEach(id => {
