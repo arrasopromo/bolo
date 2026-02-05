@@ -560,7 +560,8 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                 .slice(0, 5);
 
             const grossProfit = totalRevenue - totalVariableCost;
-            const netProfit = grossProfit - totalFixedCost;
+            // Recalculate Net Profit treating Fixed Cost as a debit (Revenue - Variable - Fixed)
+            const netProfit = totalRevenue - totalVariableCost - totalFixedCost;
             const ticketAverage = totalSalesCount > 0 ? (totalRevenue / totalSalesCount) : 0;
 
             return {
