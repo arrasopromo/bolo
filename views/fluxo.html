@@ -2776,13 +2776,14 @@
                     const s = new Date(start); s.setHours(0,0,0,0);
                     const e = new Date(end); e.setHours(23,59,59,999);
                     
-                    query = `?start=${s.toISOString()}&end=${e.toISOString()}`;
+                    // Use YYYY-MM-DD format to ensure server handles it as a full day range in UTC
+                    query = `?start=${formatDateLocal(s)}&end=${formatDateLocal(e)}`;
                 } else {
                     // Default to This Month
                     const now = new Date();
                     const s = new Date(now.getFullYear(), now.getMonth(), 1); s.setHours(0,0,0,0);
                     const e = new Date(now.getFullYear(), now.getMonth() + 1, 0); e.setHours(23,59,59,999);
-                    query = `?start=${s.toISOString()}&end=${e.toISOString()}`;
+                    query = `?start=${formatDateLocal(s)}&end=${formatDateLocal(e)}`;
                 }
 
                 if (productId && productId !== 'all') {

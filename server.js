@@ -454,6 +454,10 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
 
             query.date = { $gte: sDate, $lte: eDate };
             
+            // LOGS DE DEBUG PARA CUSTO FIXO
+            console.log(`[DashboardStats] sDate (UTC): ${sDate.toISOString()}`);
+            console.log(`[DashboardStats] eDate (UTC): ${eDate.toISOString()}`);
+
             if (filterProductId && filterProductId !== 'all') {
                 query.product = filterProductId;
             }
@@ -495,6 +499,12 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                         if (isNaN(costDate.getTime())) return;
                         
                         const isSameMonth = d.getUTCMonth() === costDate.getUTCMonth() && d.getUTCFullYear() === costDate.getUTCFullYear();
+                        
+                        // LOG PARA CUSTO ESPECÍFICO
+                        // if (cost.name.includes('Teste')) {
+                        //     console.log(`[FixedCost-Debug] Checking cost ${cost.name} for day ${d.toISOString()}. CostDate: ${costDate.toISOString()}`);
+                        // }
+
                         if (d < costDate && !isSameMonth) return;
 
                         let dueDay = costDate.getUTCDate();
@@ -502,7 +512,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                         if (dueDay > daysInMonth) dueDay = daysInMonth;
                         
                         if (currentDay === dueDay) {
-                            console.log(`[FixedCost] MATCH! Day=${currentDay}, Cost=${cost.name}, Amount=${cost.amount}`);
+                            console.log(`[FixedCost] MATCH! Day=${currentDay}/${currentMonth + 1}, Cost=${cost.name}, Amount=${cost.amount}`);
                             if (cost.recurrenceType === 'monthly') {
                                 totalFixedCost += cost.amount;
                             } else if (cost.recurrenceType === 'installment') {
