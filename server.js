@@ -1034,44 +1034,44 @@ app.post('/api/webhook/cakto', async (req, res) => {
         }
 
         // 4. Email Notification (Nodemailer)
-        // Only send email if it's a new user OR they explicitly asked for it (we send for new users usually)
-        // User requested: "considere o envio automatico de email para pix pago tambem"
-        // So we send email if we created a password OR if we just granted access.
-        
-        const loginLink = `https://bellecake.com/membros?token=${userToken}`;
+        // Only send email if it's a new user. Existing users upgrading don't need a new email.
+        if (isNewUser) {
+            const loginLink = `https://bellecake.com/membros?token=${userToken}`;
 
-        const mailOptions = {
-            from: `"BelleCake" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
-            to: email,
-            subject: 'Seu Acesso ao BelleCake Chegou! 🍰',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #d4a373;">Parabéns pela compra!</h2>
-                    <p>Olá, <strong>${name}</strong>!</p>
-                    <p>Seu pagamento foi confirmado e seu acesso ao <strong>BelleCake</strong> está liberado.</p>
-                    
-                    <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                        <p><strong>Login:</strong> ${email}</p>
-                        ${isNewUser ? `<p><strong>Senha:</strong> ${password}</p>` : '<p>Use sua senha atual para entrar.</p>'}
-                        <p style="margin-top: 15px;">
-                            <a href="${loginLink}" style="background-color: #d4a373; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Acessar Área de Membros</a>
-                        </p>
+            const mailOptions = {
+                from: `"BelleCake" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
+                to: email,
+                subject: 'Seu Acesso ao BelleCake Chegou! 🍰',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color: #d4a373;">Parabéns pela compra!</h2>
+                        <p>Olá, <strong>${name}</strong>!</p>
+                        <p>Seu pagamento foi confirmado e seu acesso ao <strong>BelleCake</strong> está liberado.</p>
+                        
+                        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <p><strong>Login:</strong> ${email}</p>
+                            <p><strong>Senha:</strong> ${password}</p>
+                            <p style="margin-top: 15px;">
+                                <a href="${loginLink}" style="background-color: #d4a373; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Acessar Área de Membros</a>
+                            </p>
+                        </div>
+
+                        <p>Se precisar de ajuda, responda este e-mail.</p>
+                        <p>Com carinho,<br>Equipe BelleCake</p>
                     </div>
+                `
+            };
 
-                    <p>Se precisar de ajuda, responda este e-mail.</p>
-                    <p>Com carinho,<br>Equipe BelleCake</p>
-                </div>
-            `
-        };
-
-        transporter.sendMail(mailOptions, (err, info) => {
-            if (err) {
-                console.error('❌ [WEBHOOK] Email send error:', err);
-                // We don't return error to webhook because user is already created/updated
-            } else {
-                console.log('📧 [WEBHOOK] Email sent:', info.messageId);
-            }
-        });
+            transporter.sendMail(mailOptions, (err, info) => {
+                if (err) {
+                    console.error('❌ [WEBHOOK] Email send error:', err);
+                } else {
+                    console.log('📧 [WEBHOOK] Email sent:', info.messageId);
+                }
+            });
+        } else {
+            console.log('📧 [WEBHOOK] Email skipped for existing user update.');
+        }
 
         return res.json({ received: true, user_created: isNewUser });
 
