@@ -759,7 +759,7 @@
                         </div>
                         
                         <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500;">
-                            <span>Vendido: <span id="beCurrentValue" style="color: var(--secondary-caramel);">R$ 0,00</span></span>
+                            <span>Faturado (Mês): <span id="beCurrentValue" style="color: var(--secondary-caramel);">R$ 0,00</span></span>
                             <span id="bePercentage">0%</span>
                         </div>
                         <div id="beDates" style="margin-top: 10px; font-size: 0.85rem; color: #666; display: flex; justify-content: space-between;"></div>
@@ -2640,6 +2640,10 @@
             startOfToday.setHours(0,0,0,0);
             datePicker.setDate([startOfToday, now]);
             
+            // Mark Today preset as active initially
+            const todayBtn = document.querySelector('.period-preset[data-period="today"]');
+            if (todayBtn) todayBtn.classList.add('active');
+            
             // Initial Load
             loadProducts(); // Load products for filter
             loadDashboard();
@@ -2707,10 +2711,22 @@
         // Duplicate setSalesPeriod removed
 
         // Load Dashboard Data
-        function updateBreakEvenCard(revenue, fixedCost, variableCost, goalMetDate) {
-            const totalCost = fixedCost + variableCost;
-            // Allow percentage to go above 100%
-            const percentage = totalCost > 0 ? (revenue / totalCost) * 100 : (revenue > 0 ? 100 : 0);
+        function updateBreakEvenCard(revenue, fixedCost, variableCost, goalMetDate, savedBreakEvenPoint) {
+            const now = new Date();
+            const currentMonth = now.toLocaleDateString('pt-BR', { month: 'long' });
+            const monthName = currentMonth.charAt(0).toUpperCase() + currentMonth.slice(1);
+            
+            // Validate saved point (MUST be the Saved Goal, never a dynamic cost sum)
+            const validSavedPoint = (savedBreakEvenPoint && Number(savedBreakEvenPoint) > 0) ? Number(savedBreakEvenPoint) : 0;
+            
+            // STRICT: Only use the Saved Goal. If 0, user must define it.
+            let goalValue = validSavedPoint;
+            
+            // If no goal is saved, we show "Definir Meta" link.
+            const showDefineMeta = (validSavedPoint === 0);
+
+            // Calculate percentage (0 if no goal)
+            const percentage = goalValue > 0 ? (revenue / goalValue) * 100 : 0;
             
             const goalEl = document.getElementById('beGoalValue');
             const fixedEl = document.getElementById('beFixedValue');
@@ -2720,21 +2736,29 @@
             const card = document.getElementById('breakEvenGoalCard');
             const datesEl = document.getElementById('beDates');
 
-            if (goalEl) goalEl.innerText = totalCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            if (goalEl) {
+                if (showDefineMeta) {
+                    goalEl.innerHTML = '<a href="/equilibrio" style="font-size: 1rem; color: var(--secondary-caramel); text-decoration: underline;">Definir Meta</a>';
+                } else {
+                    goalEl.innerText = goalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                }
+            }
             if (fixedEl) fixedEl.innerText = fixedCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             if (currentEl) currentEl.innerText = revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             if (percentageEl) percentageEl.innerText = percentage.toFixed(1) + '%';
             if (progressBar) progressBar.style.width = Math.min(percentage, 100) + '%';
             
             // Add Date Info
-            const todayStr = new Date().toLocaleDateString('pt-BR');
-            let metaText = `Hoje: ${todayStr}`;
+            let metaText = `Resumo de ${monthName}`; // Ex: Resumo de Fevereiro
             
-            if (goalMetDate) {
-                const metDate = new Date(goalMetDate);
-                metaText += ` | Meta batida em: ${metDate.toLocaleDateString('pt-BR')}`;
-            } else if (percentage >= 100) {
-                 metaText += ` | Meta batida!`;
+            // Only show "Meta batida" if percentage is actually 100% or more
+            if (percentage >= 100) {
+                if (goalMetDate) {
+                    const metDate = new Date(goalMetDate);
+                    metaText += ` | Meta batida em: ${metDate.toLocaleDateString('pt-BR')}`;
+                } else {
+                    metaText += ` | Meta batida!`;
+                }
             }
 
             if (!datesEl) {
@@ -2768,6 +2792,10 @@
                 const selectedDates = datePicker ? datePicker.selectedDates : [];
                 let query = '';
                 
+                // Determine Filter Type
+                const activePreset = document.querySelector('.period-preset.active');
+                const filterType = activePreset ? activePreset.dataset.period : 'custom';
+
                 if (selectedDates.length > 0) {
                     let start = selectedDates[0];
                     let end = selectedDates.length > 1 ? selectedDates[1] : start;
@@ -2777,13 +2805,15 @@
                     const e = new Date(end); e.setHours(23,59,59,999);
                     
                     // Use YYYY-MM-DD format to ensure server handles it as a full day range in UTC
-                    query = `?start=${formatDateLocal(s)}&end=${formatDateLocal(e)}`;
+                    query = `?start=${formatDateLocal(s)}&end=${formatDateLocal(e)}&filterType=${filterType}`;
                 } else {
                     // Default to This Month
                     const now = new Date();
                     const s = new Date(now.getFullYear(), now.getMonth(), 1); s.setHours(0,0,0,0);
                     const e = new Date(now.getFullYear(), now.getMonth() + 1, 0); e.setHours(23,59,59,999);
-                    query = `?start=${formatDateLocal(s)}&end=${formatDateLocal(e)}`;
+                    // If no dates selected (fallback), assume 'thismonth' if logic dictates, but usually we have dates.
+                    // If fallback is hit, let's assume 'thismonth' for safety or 'custom'.
+                    query = `?start=${formatDateLocal(s)}&end=${formatDateLocal(e)}&filterType=thismonth`;
                 }
 
                 if (productId && productId !== 'all') {
@@ -2824,7 +2854,26 @@
                 if (stats.topProducts) updateTopProducts(stats.topProducts);
                 
                 const monthly = data.monthlyStats;
-                updateBreakEvenCard(monthly.totalRevenue, monthly.totalFixedCost, monthly.totalVariableCost, monthly.goalMetDate);
+                
+                // FALLBACK: If breakEvenPoint is missing (0), try to fetch it directly from the dedicated API
+                let finalBreakEven = data.breakEvenPoint;
+                if (!finalBreakEven || finalBreakEven === 0) {
+                     try {
+                        console.warn('⚠️ BreakEven missing in stats. Fetching directly...');
+                        const beRes = await authFetch('/api/break-even');
+                        if (beRes.ok) {
+                            const beData = await beRes.json();
+                            if (beData.breakEvenPoint) {
+                                finalBreakEven = beData.breakEvenPoint;
+                                console.log('✅ BreakEven recovered:', finalBreakEven);
+                            }
+                        }
+                     } catch (e) {
+                         console.error('Failed to recover BreakEven:', e);
+                     }
+                }
+
+                updateBreakEvenCard(monthly.totalRevenue, monthly.totalFixedCost, monthly.totalVariableCost, monthly.goalMetDate, finalBreakEven);
             } catch (error) {
                 console.error('Error loading dashboard:', error);
                 if(document.getElementById('totalSales')) {

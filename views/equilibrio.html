@@ -348,19 +348,19 @@
                 <form id="calcFormStep1">
                     <div class="form-group">
                         <label>Custos Fixos Mensais (R$)</label>
-                        <input type="number" id="fixedCosts" placeholder="Ex: 1500,00" step="0.01" required>
+                        <input type="text" id="fixedCosts" placeholder="Ex: 1.500,00" required oninput="formatCurrencyInput(this)">
                         <small>Aluguel, luz, internet, MEI, salários, etc.</small>
                     </div>
 
                     <div class="form-group">
                         <label>Faturamento Total de um Mês Exemplo (R$)</label>
-                        <input type="number" id="avgRevenue" placeholder="Ex: 10000,00" step="0.01" required>
+                        <input type="text" id="avgRevenue" placeholder="Ex: 10.000,00" required oninput="formatCurrencyInput(this)">
                         <small>Quanto você vendeu no total em um mês típico?</small>
                     </div>
 
                     <div class="form-group">
                         <label>Custos Variáveis desse Mês (R$) <i data-lucide="info" class="info-icon" id="variableCostInfo"></i></label>
-                        <input type="number" id="avgVariableCost" placeholder="Ex: 6000,00" step="0.01" required>
+                        <input type="text" id="avgVariableCost" placeholder="Ex: 6.000,00" required oninput="formatCurrencyInput(this)">
                         <small>Quanto gastou de material (ingredientes, embalagens) para fazer essas vendas?</small>
                     </div>
 
@@ -385,7 +385,7 @@
                 <form id="calcFormStep2">
                     <div class="form-group">
                         <label>Faturamento Atual (R$)</label>
-                        <input type="number" id="salesCurrent" placeholder="Ex: 3000,00" step="0.01" required>
+                        <input type="text" id="salesCurrent" placeholder="Ex: 3.000,00" required oninput="formatCurrencyInput(this)">
                     </div>
 
                     <div style="display: flex; gap: 1rem;">
@@ -436,9 +436,36 @@
 
     <script>
         lucide.createIcons();
+        
+        let metaFaturamento = 0; // Define globally at the top
+
+        // Helper: Format input as currency (BRL)
+        function formatCurrencyInput(input) {
+            let value = input.value.replace(/\D/g, ''); // Remove non-digits
+            value = (Number(value) / 100).toFixed(2); // Convert to decimal
+            value = value.replace('.', ','); // Replace dot with comma
+            value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'); // Add thousands separator
+            input.value = value;
+        }
+
+        // Helper: Parse BRL currency string to Number
+        function parseCurrency(valueStr) {
+            if (!valueStr) return 0;
+            if (typeof valueStr === 'number') return valueStr;
+            // Remove dots, replace comma with dot
+            let cleanStr = valueStr.toString().replace(/\./g, '').replace(',', '.');
+            return parseFloat(cleanStr);
+        }
+
+        // Helper: Format Number to BRL input string
+        function formatNumberToInput(num) {
+            if (!num) return '';
+            return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
         // Auth & User Info
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM Loaded. Fetching user info...');
             const token = localStorage.getItem('bellecake_token');
             if (token) {
                 try {
@@ -450,6 +477,43 @@
                         const nameDisplay = document.getElementById('userNameDisplay');
                         if (nameDisplay && userData.name) {
                             nameDisplay.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
+                        }
+                        
+                        // Load saved Break-Even Data
+                        try {
+                            console.log('Fetching saved break-even data...');
+                            // Add timestamp to prevent caching
+                            const breakEvenRes = await fetch(`/api/break-even?t=${Date.now()}`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            
+                            if (breakEvenRes.ok) {
+                                const beData = await breakEvenRes.json();
+                                console.log('Break-even data received:', beData);
+                                
+                                if (beData.breakEvenPoint) {
+                                    // Restore global variable
+                                    metaFaturamento = Number(beData.breakEvenPoint);
+                                    console.log('Restored metaFaturamento:', metaFaturamento);
+                                    
+                                    // Restore Inputs (Format as BRL)
+                                    if (document.getElementById('fixedCosts')) document.getElementById('fixedCosts').value = formatNumberToInput(beData.fixedCosts);
+                                    if (document.getElementById('avgRevenue')) document.getElementById('avgRevenue').value = formatNumberToInput(beData.avgRevenue);
+                                    if (document.getElementById('avgVariableCost')) document.getElementById('avgVariableCost').value = formatNumberToInput(beData.avgVariableCost);
+                                    
+                                    // Update Result Display
+                                    const peResult = document.getElementById('pe-result');
+                                    if (peResult) {
+                                        peResult.textContent = metaFaturamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                                    }
+                                } else {
+                                    console.log('No break-even point saved.');
+                                }
+                            } else {
+                                console.warn('Failed to fetch break-even data:', breakEvenRes.status);
+                            }
+                        } catch (err) {
+                            console.error('Erro ao carregar dados salvos:', err);
                         }
                     }
                 } catch (e) {
@@ -487,23 +551,33 @@
         
         // Cost Classification Logic REMOVED
 
-        let metaFaturamento = 0;
+        // Remove redundant declaration since we moved it to top
+        // let metaFaturamento = 0;
 
         // Step 1 Submission
-        document.getElementById('calcFormStep1').addEventListener('submit', function(e) {
+        document.getElementById('calcFormStep1').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const fixedCosts = parseFloat(document.getElementById('fixedCosts').value);
-            const avgRevenue = parseFloat(document.getElementById('avgRevenue').value);
-            const avgVariableCost = parseFloat(document.getElementById('avgVariableCost').value);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Calculando e Salvando...';
+
+            const fixedCosts = parseCurrency(document.getElementById('fixedCosts').value);
+            const avgRevenue = parseCurrency(document.getElementById('avgRevenue').value);
+            const avgVariableCost = parseCurrency(document.getElementById('avgVariableCost').value);
 
             if (avgRevenue <= 0 || avgVariableCost < 0) {
                 alert('Por favor, insira valores válidos para faturamento e custos.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
                 return;
             }
 
             if (avgVariableCost >= avgRevenue) {
                 alert('O custo variável não pode ser maior ou igual ao faturamento. Assim você teria prejuízo em cada venda!');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
                 return;
             }
 
@@ -519,7 +593,7 @@
             try {
                 const token = localStorage.getItem('bellecake_token');
                 if (token) {
-                    fetch('/api/break-even', {
+                    const saveRes = await fetch('/api/break-even', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -531,15 +605,28 @@
                             avgRevenue: avgRevenue,
                             avgVariableCost: avgVariableCost
                         })
-                    }).catch(err => console.error('Erro ao salvar ponto de equilíbrio:', err));
+                    });
+                    
+                    if (!saveRes.ok) {
+                        const errData = await saveRes.json();
+                        console.warn('Erro ao salvar meta:', errData);
+                        alert('Aviso: Não foi possível salvar sua meta no servidor. Verifique sua conexão ou tente fazer login novamente. O cálculo abaixo é apenas visual.');
+                    }
+                } else {
+                     alert('Você não está logado. O cálculo será exibido, mas não será salvo.');
                 }
             } catch (e) {
-                console.error('Erro auth:', e);
+                console.error('Erro conexão ao salvar:', e);
+                alert('Erro de conexão ao tentar salvar a meta. Verifique sua internet.');
             }
 
             // Update UI
             document.getElementById('pe-result').textContent = metaFaturamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
+            // Restore button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+
             // Go to next step
             goToStep(2);
         });
@@ -548,7 +635,7 @@
         document.getElementById('calcFormStep2').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const salesCurrent = parseFloat(document.getElementById('salesCurrent').value);
+            const salesCurrent = parseCurrency(document.getElementById('salesCurrent').value);
             
             // Show loading
             const loading = document.getElementById('ai-loading');
@@ -585,7 +672,8 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    document.getElementById('ai-tip-content').innerText = data.message;
+                    // Backend returns 'dica' on success, 'message' on error/fallback
+                    document.getElementById('ai-tip-content').innerText = data.dica || data.message;
                     tipContainer.style.display = 'block';
                 } else {
                     alert('Erro ao buscar dicas: ' + data.message);

@@ -436,11 +436,13 @@ app.delete('/api/fixed-costs/:id', authenticateToken, checkSubscription, async (
 // API: Dashboard Stats (Simplified for brevity, full logic in real app)
 app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req, res) => {
     try {
-        const { start, end, productId, monthStart, monthEnd } = req.query;
-        console.log(`📊 Dashboard stats req: User=${req.user.name}, Range=${start} to ${end}`); // DEBUG LOG
+        // Fetch full user data for Break Even Point
+        const user = await User.findById(req.user._id);
+        const { start, end, productId, monthStart, monthEnd, filterType } = req.query;
+        console.log(`📊 Dashboard stats req: User=${req.user.name}, BreakEven=${user ? user.breakEvenPoint : 'NULL'}, Range=${start} to ${end}, Filter=${filterType}`); // DEBUG LOG
 
         // Helper: Calculate Stats for a Date Range
-        const calculateStats = async (rangeStart, rangeEnd, filterProductId = null) => {
+        const calculateStats = async (rangeStart, rangeEnd, filterProductId = null, forceFixedCosts = false) => {
             let query = { user: req.user._id };
             
             const sDate = new Date(rangeStart);
@@ -455,8 +457,8 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
             query.date = { $gte: sDate, $lte: eDate };
             
             // LOGS DE DEBUG PARA CUSTO FIXO
-            console.log(`[DashboardStats] sDate (UTC): ${sDate.toISOString()}`);
-            console.log(`[DashboardStats] eDate (UTC): ${eDate.toISOString()}`);
+            // console.log(`[DashboardStats] sDate (UTC): ${sDate.toISOString()}`);
+            // console.log(`[DashboardStats] eDate (UTC): ${eDate.toISOString()}`);
 
             if (filterProductId && filterProductId !== 'all') {
                 query.product = filterProductId;
@@ -466,7 +468,9 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
 
             // Fixed Costs
             let totalFixedCost = 0;
-            if (!filterProductId || filterProductId === 'all') {
+            // ONLY calculate Fixed Costs if filterType is explicitly 'thismonth' OR forced
+            // User requirement: "deve aparecer o custo fixo somente na filtragem de este mes"
+            if (forceFixedCosts || ((!filterProductId || filterProductId === 'all') && filterType === 'thismonth')) {
                 const allFixedCosts = await FixedCost.find({ user: req.user._id });
                 
                 // Fixed Cost Calculation Loop (simplified for performance, but keeping logic)
@@ -547,12 +551,24 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                 totalRevenue += amount;
                 totalVariableCost += variableCost;
                 
-                // For Goal Met Check (Revenue >= Fixed + Variable)
-                // Note: Fixed Cost is "Total for the period". We assume it exists from day 1 for the break-even target.
+                // For Goal Met Check
                 runningRevenue += amount;
                 runningVariableCost += variableCost;
                 
-                if (!goalMetDate && runningRevenue >= (totalFixedCost + runningVariableCost)) {
+                // CRITICAL FIX: Determine Goal Met Date
+                // If user has a Saved Break Even Point, we use that as the target.
+                // If NOT, we fallback to (Fixed + Running Variable).
+                // But for the Meta Card (which is monthly), we generally want to use the Saved Point if it exists.
+                
+                let targetGoal = 0;
+                if (user && user.breakEvenPoint && user.breakEvenPoint > 0) {
+                    targetGoal = user.breakEvenPoint;
+                } else {
+                    targetGoal = totalFixedCost + runningVariableCost;
+                }
+                
+                // Only mark as met if we actually cross the target AND the target > 0
+                if (!goalMetDate && targetGoal > 0 && runningRevenue >= targetGoal) {
                     goalMetDate = sale.date;
                 }
 
@@ -609,7 +625,8 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
         const currentMonthStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
         const currentMonthEnd = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999));
         
-        const monthlyStats = await calculateStats(currentMonthStart.toISOString(), currentMonthEnd.toISOString(), null);
+        // Force Fixed Costs to be included for monthly stats, even if filterType is different
+        const monthlyStats = await calculateStats(currentMonthStart.toISOString(), currentMonthEnd.toISOString(), null, true);
 
         // Prepare Chart Data from Main Stats
         const sortedDays = Object.keys(mainStats.salesByDay).sort();
@@ -649,7 +666,8 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                 labels: chartLabels,
                 revenue: chartRevenueData,
                 ticket: chartTicketData
-            }
+            },
+            breakEvenPoint: (user && user.breakEvenPoint) ? Number(user.breakEvenPoint) : 0
         });
     } catch (err) {
         console.error('Error in dashboard stats:', err);
@@ -657,6 +675,111 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
     }
 });
 
+
+// API: Break Even Point (Save/Get)
+app.get('/api/break-even', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        res.json({
+            breakEvenPoint: user.breakEvenPoint || 0,
+            fixedCosts: user.fixedCostsInput || 0,
+            avgRevenue: user.avgRevenueInput || 0,
+            avgVariableCost: user.avgVariableCostInput || 0,
+            calculatedAt: user.breakEvenCalculatedAt
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/break-even', authenticateToken, async (req, res) => {
+    console.log(`💾 [BREAK-EVEN] Saving for user ${req.user.name} (${req.user._id})`);
+    console.log('📦 Payload:', req.body);
+    try {
+        const { breakEvenPoint, fixedCosts, avgRevenue, avgVariableCost } = req.body;
+        
+        // Validate inputs to prevent "NaN" or bad data
+        if (isNaN(breakEvenPoint) || isNaN(fixedCosts)) {
+            console.error('❌ [BREAK-EVEN] Invalid data received');
+            return res.status(400).json({ error: 'Dados inválidos' });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.user._id, {
+            breakEvenPoint,
+            fixedCostsInput: fixedCosts,
+            avgRevenueInput: avgRevenue,
+            avgVariableCostInput: avgVariableCost,
+            breakEvenCalculatedAt: new Date()
+        }, { new: true }); // Return updated doc
+        
+        console.log('✅ [BREAK-EVEN] Saved. New Point:', updatedUser.breakEvenPoint);
+        res.json({ success: true, message: 'Dados de Ponto de Equilíbrio salvos.' });
+    } catch (err) {
+        console.error('❌ [BREAK-EVEN] Error saving:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: Dicas de Vendas (AI Tip for Break-Even Progress)
+app.post('/api/dicas-vendas', authenticateToken, async (req, res) => {
+    try {
+        const { metaFaturamento, vendasAtuais } = req.body;
+        
+        if (!metaFaturamento || metaFaturamento <= 0) {
+            return res.json({ success: true, dica: 'Defina sua meta primeiro para receber dicas personalizadas!' });
+        }
+
+        const percentage = (vendasAtuais / metaFaturamento) * 100;
+        
+        const prompt = `
+        Aja como uma consultora financeira especialista em confeitaria (Belle Cake).
+        A usuária tem uma meta de Ponto de Equilíbrio de R$ ${Number(metaFaturamento).toFixed(2)}.
+        Atualmente ela faturou R$ ${Number(vendasAtuais).toFixed(2)} (${percentage.toFixed(1)}% da meta).
+        
+        Dê uma dica CURTA (máximo 30 palavras) e MOTIVADORA.
+        - Se < 50%: Dica de ação rápida para vender hoje (ex: promoção relâmpago, oferta no WhatsApp).
+        - Se 50-90%: "Falta pouco!", sugira focar nos produtos mais vendidos.
+        - Se > 100%: Parabenize e sugira focar em lucro (reduzir desperdício).
+        Tom amigável e direto.
+        `;
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 100,
+            temperature: 0.7
+        });
+
+        const dica = completion.choices[0].message.content.trim();
+        res.json({ success: true, dica });
+
+    } catch (err) {
+        console.error('❌ [DICAS] Error generating tip:', err);
+        // Fallback message so UI doesn't break
+        res.json({ success: false, message: 'Continue firme! Revise seus custos e foque nas vendas.' });
+    }
+});
+
+app.get('/api/break-even', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        console.log(`📤 [BREAK-EVEN] Sending data for ${user.name}: Point=${user.breakEvenPoint}`);
+        
+        res.json({
+            breakEvenPoint: user.breakEvenPoint || 0,
+            fixedCosts: user.fixedCostsInput || 0,
+            avgRevenue: user.avgRevenueInput || 0,
+            avgVariableCost: user.avgVariableCostInput || 0
+        });
+    } catch (err) {
+        console.error('❌ [BREAK-EVEN] Error fetching:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // API: Transcribe Audio (Voice to Text for New Sale)
 app.post('/api/transcribe', authenticateToken, checkSubscription, upload.single('audio'), async (req, res) => {
@@ -763,6 +886,22 @@ app.post('/api/dicas-vendas', async (req, res) => {
         const vendasFormatted = formatter.format(vendasAtuais);
         const faltamFormatted = formatter.format(Math.max(0, faltam));
 
+        // Calcular Ritmo (Projeção)
+        const daysPassed = Math.max(1, hoje.getDate()); // Avoid division by zero
+        const daysInMonth = ultimoDiaMes.getDate();
+        const dailyAvg = vendasAtuais / daysPassed;
+        const projectedRevenue = dailyAvg * daysInMonth;
+        const projectedFormatted = formatter.format(projectedRevenue);
+        
+        const isOnTrack = projectedRevenue >= metaFaturamento;
+        
+        let paceText = '';
+        if (isOnTrack) {
+            paceText = `🚀 Ritmo Excelente: Se continuar assim, você fechará o mês com aprox. ${projectedFormatted} (acima da meta de ${metaFormatted}).`;
+        } else {
+            paceText = `⚠️ Atenção ao Ritmo: No ritmo atual, a projeção é fechar com ${projectedFormatted}. Precisamos acelerar!`;
+        }
+
         // Determinar cenário e buscar estratégias
         let scenario = 'below_break_even';
         let goalText = `Faltam faturar: ${faltamFormatted} para atingir o ponto de equilíbrio.`;
@@ -772,35 +911,44 @@ app.post('/api/dicas-vendas', async (req, res) => {
             scenario = 'above_break_even';
             goalText = `A meta foi atingida! O faturamento atual é ${vendasFormatted} (acima da meta de ${metaFormatted}). O objetivo agora é lucrar mais e crescer.`;
             systemRole = "Você é um consultor especialista em expansão de negócios e gestão de lucros para confeitarias.";
+        } else if (isOnTrack) {
+             // If below goal but on track (early in the month), adjust tone
+             scenario = 'on_track';
+             goalText = `Você ainda não bateu a meta, mas está no caminho certo! ${paceText}`;
+             systemRole = "Você é um consultor motivacional e estrategista para manter o ritmo de vendas.";
+        } else {
+             goalText += `\n${paceText}`;
         }
 
         // Buscar estratégias no "Mini-DB"
         let strategies = [];
         try {
-            strategies = await FinancialStrategy.find({ scenario });
+            // Map 'on_track' back to 'below_break_even' strategies for now, or mix
+            const searchScenario = scenario === 'on_track' ? 'below_break_even' : scenario;
+            strategies = await FinancialStrategy.find({ scenario: searchScenario });
         } catch (dbError) {
             console.error('Erro ao buscar estratégias (DB):', dbError);
-            // Fallback will handle empty strategies
         }
         
         // Buscar produtos do usuário para contexto
         let userProducts = [];
         try {
-            // Check if user is authenticated before accessing req.user
             if (req.user && req.user.id) {
-                userProducts = await Product.find({ user: req.user.id }).limit(5);
+                userProducts = await Product.find({ user: req.user.id }).limit(10); // Increased limit
             }
         } catch (err) {
             console.warn('Erro ao buscar produtos para dica:', err.message);
         }
         
-        const productsText = userProducts.length > 0 
+        const hasProducts = userProducts.length > 0;
+        
+        const productsText = hasProducts
             ? userProducts.map(p => {
                 const custo = p.totalCost !== undefined && p.totalCost !== null ? Number(p.totalCost) : 0;
                 const preco = p.sellingPrice !== undefined && p.sellingPrice !== null ? Number(p.sellingPrice) : 0;
-                return `${p.name} (Custo: R$${custo.toFixed(2)}, Preço: R$${preco.toFixed(2)})`;
-            }).join(', ')
-            : 'Nenhum produto cadastrado ainda.';
+                return `- ${p.name} (Custo: R$${custo.toFixed(2)}, Preço: R$${preco.toFixed(2)})`;
+            }).join('\n')
+            : 'NENHUM PRODUTO CADASTRADO.';
 
         // Fallback if no strategies found
         if (!strategies || strategies.length === 0) {
@@ -827,25 +975,24 @@ app.post('/api/dicas-vendas', async (req, res) => {
             - Vendas realizadas até hoje (dia ${hoje.getDate()}): ${vendasFormatted}.
             - ${goalText}
             - Dias restantes no mês: ${diasRestantes} dias.
-            - Produtos Principais Cadastrados: ${productsText}
             
-            Base de Conhecimento (Estratégias Recomendadas para este cenário):
+            Produtos Disponíveis (Inventário):
+            ${productsText}
+            
+            Base de Conhecimento (Estratégias Genéricas):
             ${strategiesText}
             
-            Ação:
-            Com base no contexto e usando a Base de Conhecimento como inspiração, dê uma dica curta, prática e valiosa (máximo 2 parágrafos).
+            Instruções CRITICAS:
+            1. Analise o RITMO de vendas. Se estiver bom (projetado > meta), parabenize e sugira manter/escalar. Se estiver ruim, sugira ações de correção imediata.
+            2. SOBRE OS PRODUTOS:
+               - SE existirem produtos na lista acima: USE APENAS ELES em seus exemplos. Não invente produtos. Diga algo como "Use o [Nome do Produto] para fazer um combo...".
+               - SE NÃO existirem produtos (Lista vazia): Você DEVE sugerir a criação de 2 produtos novos (ex: "Sugiro criar um Bolo no Pote por R$ 15,00 e um Brigadeiro Gourmet por R$ 5,00") para ajudar a bater a meta.
+            3. Dê uma dica curta, prática e valiosa (máximo 2 parágrafos).
             
             IMPORTANTE - Contexto do Público:
-            - O público são confeiteiras que vendem principalmente por WhatsApp, Instagram (Direct/Stories) e boca a boca.
-            - O "checkout" muitas vezes é manual (conversa no WhatsApp). NÃO use termos como "upsell no checkout" ou "carrinho de compras".
-            - Sugira estratégias de vendas conversacionais ou promoções manuais (ex: "Ofereça no WhatsApp", "Poste no Instagram").
-            - Se houver produtos cadastrados, TENTE mencionar uma estratégia específica usando um dos produtos (ex: "Faça uma promoção com o [Nome do Produto]").
-            
-            ${scenario === 'below_break_even' 
-                ? 'Foque em ações rápidas para gerar caixa imediato.' 
-                : 'Foque em reinvestimento, reserva de emergência ou fidelização.'}
-            
-            Seja amigável, direto e use emojis.
+            - Confeiteiras que vendem por WhatsApp/Instagram.
+            - Vendas manuais (sem checkout automático complexo).
+            - Seja direta, amigável e use emojis.
         `;
 
         // Fallback local generator
