@@ -414,7 +414,7 @@
                         </div>
                     </li>
                 </ul>
-                <a href="https://pay.cakto.com.br/us3z2ty" class="btn-cta cakto-checkout-btn" target="_blank">
+                <a href="https://pay.cakto.com.br/us3z2ty" class="btn-cta cakto-checkout-btn" target="_blank" style="color: white !important;">
                     OBTER PACOTE COMPLETO
                 </a>
                 <div style="text-align: center; margin-top: 0.8rem;">
@@ -431,6 +431,19 @@
     </main>
 
     <script src="/js/main.js"></script>
+    <!-- Mobile Sticky CTA -->
+    <div class="mobile-bottom-cta">
+        <div class="cta-left-content">
+            <div class="cta-timer" id="ctaTimer" data-duration="300" data-context="upgrade">05:00</div>
+            <div class="cta-prices">
+                <span class="old" style="text-decoration: none; font-weight: 600;">Acesso completo <span style="text-decoration: line-through;">R$ 39,90</span></span>
+                <span class="new" style="font-size: 1.05rem;">R$ 29,90</span>
+            </div>
+        </div>
+        <button onclick="window.open('https://pay.cakto.com.br/us3z2ty', '_blank')">
+            QUERO AGORA
+        </button>
+    </div>
     <script>
         lucide.createIcons();
 

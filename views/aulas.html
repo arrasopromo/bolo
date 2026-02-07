@@ -68,6 +68,18 @@
             box-shadow: none !important;
             border: 4px solid #C0C0C0 !important;
             margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .video-wrapper.vertical {
+            aspect-ratio: 9/16;
+            max-width: 450px;
+        }
+
+        .video-wrapper.vertical iframe {
+            aspect-ratio: 9/16;
+            width: 100%;
+            height: 100%;
         }
 
         .video-wrapper iframe {
@@ -224,6 +236,18 @@
                 aspect-ratio: 16/9;
             }
 
+            .video-wrapper.vertical {
+                aspect-ratio: 9/16 !important;
+                max-width: 100%;
+                height: auto;
+            }
+
+            .video-wrapper.vertical iframe {
+                height: 100%;
+                width: 100%;
+                aspect-ratio: 9/16;
+            }
+
             .lesson-info {
                 padding: 1.5rem; /* More breathing room */
             }
@@ -336,7 +360,7 @@
                     <i data-lucide="chevron-down"></i>
                 </div>
                 <div class="module-content">
-                    <div class="lesson-item" onclick="playLesson('0ssHU_PpqPA', 'Aula 5: Baixando e configurando planilha', 'Aprenda a baixar e configurar a planilha no iPhone/iPad.<br><br><a href=\'https://apps.apple.com/br/app/microsoft-excel/id586683407\' target=\'_blank\' style=\'color: var(--secondary-caramel); font-weight: bold; text-decoration: underline;\'>BAIXAR EXCEL NA APP STORE</a>', this)">
+                    <div class="lesson-item" onclick="playLesson('0ssHU_PpqPA', 'Aula 5: Baixando e configurando planilha', 'Aprenda a baixar e configurar a planilha no iPhone/iPad.<br><br><a href=\'https://apps.apple.com/br/app/microsoft-excel/id586683407\' target=\'_blank\' style=\'color: var(--secondary-caramel); font-weight: bold; text-decoration: underline;\'>BAIXAR EXCEL NA APP STORE</a>', this, true)">
                         <i data-lucide="play-circle" class="lesson-icon"></i>
                         <span>Aula 5: Baixando e configurando planilha</span>
                     </div>
@@ -420,21 +444,33 @@
 
         function toggleModule(header) {
             const content = header.nextElementSibling;
-            const icon = header.querySelector('i');
+            const currentIcon = header.querySelector('[data-lucide]');
             
             if (content.classList.contains('active')) {
                 content.classList.remove('active');
-                icon.setAttribute('data-lucide', 'chevron-right');
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-right');
+                if (currentIcon) currentIcon.replaceWith(newIcon);
             } else {
                 content.classList.add('active');
-                icon.setAttribute('data-lucide', 'chevron-down');
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-down');
+                if (currentIcon) currentIcon.replaceWith(newIcon);
             }
             lucide.createIcons();
         }
 
-        function playLesson(videoId, title, desc, element) {
-            // Update Video
-            document.getElementById('videoPlayer').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        function playLesson(videoId, title, desc, element, isVertical = false) {
+            // Update Video Wrapper Style
+            const wrapper = document.querySelector('.video-wrapper');
+            if (isVertical) {
+                wrapper.classList.add('vertical');
+            } else {
+                wrapper.classList.remove('vertical');
+            }
+
+            // Update Video with HD preference
+            document.getElementById('videoPlayer').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&vq=hd1080&rel=0`;
             document.getElementById('lessonTitle').textContent = title;
             document.getElementById('lessonDesc').innerHTML = desc;
 

@@ -279,18 +279,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerElement = document.getElementById('ctaTimer');
     if (!timerElement) return;
 
-    // Set initial duration (15 minutes)
-    let duration = 15 * 60;
+    // Get duration from data attribute or default to 15 minutes
+    const initialDuration = parseInt(timerElement.getAttribute('data-duration')) || 15 * 60;
+    let duration = initialDuration;
     
     // Check if there's a stored timestamp
-    const savedEndTime = localStorage.getItem('ctaTimerEnd');
+    // Use a unique key based on the page or ID to avoid sharing timers across different pages with different durations
+    const storageKey = 'ctaTimerEnd_' + (timerElement.getAttribute('data-context') || 'default');
+    const savedEndTime = localStorage.getItem(storageKey);
     const now = Date.now();
 
     if (savedEndTime && now < parseInt(savedEndTime)) {
         duration = Math.floor((parseInt(savedEndTime) - now) / 1000);
     } else {
         // Set new end time
-        localStorage.setItem('ctaTimerEnd', (now + duration * 1000).toString());
+        localStorage.setItem(storageKey, (now + duration * 1000).toString());
     }
 
     function updateTimer() {
@@ -303,8 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
             duration--;
         } else {
             // Loop timer for constant urgency
-            duration = 15 * 60; 
-            localStorage.setItem('ctaTimerEnd', (Date.now() + duration * 1000).toString());
+            duration = initialDuration; 
+            localStorage.setItem(storageKey, (Date.now() + duration * 1000).toString());
         }
     }
 
