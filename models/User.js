@@ -19,7 +19,10 @@ const UserSchema = new mongoose.Schema({
     avgVariableCostInput: { type: Number },
     breakEvenCalculatedAt: { type: Date },
 
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    
+    // Permissions / Order Bumps
+    massasPerfeitasAccess: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('User', UserSchema);

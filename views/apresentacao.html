@@ -323,7 +323,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício a Planilha</li>
                 </ul>
-                <a href="javascript:void(0)" onclick="openUpsellModal()" class="btn-cta" id="btn-pacote-basico-anchor">
+                <a href="javascript:void(0)" onclick="openUpsellModal()" class="btn-cta" id="btn-pacote-basico-anchor" style="scroll-margin-top: 150px;">
                     OBTER PACOTE BASICO
                 </a>
             </div>
@@ -394,9 +394,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <div class="mobile-bottom-cta">
         <div class="cta-left-content">
             <div class="cta-timer" id="ctaTimer">15:00</div>
-            <div class="cta-prices" style="display: flex; flex-direction: column; gap: 0; align-items: flex-start; justify-content: center;">
-                <span class="old-price" style="font-size: 0.7rem; text-decoration: line-through; opacity: 0.8; line-height: 1; color: white;">R$ 79,90</span>
-                <span class="new" style="line-height: 1;">R$ 39,90</span>
+            <div class="cta-prices" style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start; justify-content: center;">
+                <span class="old-price" style="font-size: 0.75rem; text-decoration: line-through; opacity: 0.8; line-height: 1; color: white; white-space: nowrap;">R$ 79,90</span>
+                <span class="new" style="line-height: 1; font-size: 1.1rem; font-weight: 800; white-space: nowrap;">R$ 39,90</span>
             </div>
         </div>
         <div style="display: flex; flex-direction: column; width: 100%; gap: 5px;">
@@ -425,11 +425,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                 </button>
                 <h2 style="margin: 0; color: white; font-size: 1.6rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Realizar Upgrade</h2>
-                <p style="margin: 0.5rem 0 0 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">Desbloqueie todo o potencial!</p>
+                <!-- Subtitle removed -->
             </div>
 
             <!-- Content -->
-            <div style="padding: 1.5rem; overflow-y: auto; background: white;">
+            <div style="padding: 1.5rem; overflow-y: auto; background: white; position: relative;">
+                 <!-- Scroll Indicator -->
+                <div id="scrollIndicator" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10; flex-direction: column; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s;">
+                     <div style="width: 20px; height: 32px; border: 2px solid #CD7A3E; border-radius: 12px; position: relative;">
+                        <div style="width: 4px; height: 8px; background: #CD7A3E; border-radius: 2px; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); animation: scrollWheel 1.5s infinite;"></div>
+                     </div>
+                     <span style="font-size: 0.7rem; color: #CD7A3E; font-weight: 700; margin-top: 4px; text-transform: uppercase;">Arraste</span>
+                </div>
+
                 <div class="table-price" style="font-size: calc(2rem + 1px); margin-bottom: 0.5rem; text-align: center; color: #333; font-weight: 900;">
                     R$ 39,90 <span style="font-size: 0.9rem; color: #666; font-weight: normal;">/único</span>
                 </div>
@@ -482,6 +490,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        @keyframes scrollWheel {
+            0% { top: 4px; opacity: 1; }
+            100% { top: 16px; opacity: 0; }
+        }
     </style>
 
     <!-- Order Modal removed as requested -->
@@ -490,10 +502,37 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script>
         lucide.createIcons();
 
+        let scrollTimeout;
+
         function openUpsellModal() {
             const modal = document.getElementById('upsellModal');
             modal.style.display = 'flex';
             lucide.createIcons();
+
+            // Mobile Scroll Indicator Logic
+            if (window.innerWidth <= 768) {
+                const indicator = document.getElementById('scrollIndicator');
+                if (indicator) {
+                    // Reset
+                    indicator.style.display = 'none';
+                    indicator.style.opacity = '0';
+                    clearTimeout(scrollTimeout);
+
+                    // Show after 3 seconds
+                    scrollTimeout = setTimeout(() => {
+                        indicator.style.display = 'flex';
+                        // Force reflow
+                        void indicator.offsetWidth; 
+                        indicator.style.opacity = '1';
+
+                        // Hide after 4 seconds of being visible
+                        setTimeout(() => {
+                            indicator.style.opacity = '0';
+                            setTimeout(() => { indicator.style.display = 'none'; }, 500);
+                        }, 4000);
+                    }, 3000);
+                }
+            }
         }
 
         function closeUpsellModal() {

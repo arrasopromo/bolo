@@ -518,6 +518,11 @@
                         // Token valid but user deleted from DB -> Logout
                         console.warn('User not found. Logging out...');
                         localStorage.removeItem('bellecake_token');
+                        
+                        // Clear URL params to prevent infinite loop
+                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                        window.history.replaceState({path: newUrl}, '', newUrl);
+                        
                         window.location.reload();
                         return;
                     }
@@ -567,6 +572,27 @@
                                 }
                             });
                             setTimeout(() => lucide.createIcons(), 100);
+                        }
+
+                        // Check Massas Perfeitas Access (Order Bump)
+                        // Even for Complete users, this might be locked if they didn't buy the order bump
+                        if (!userData.massasPerfeitasAccess) {
+                            const massasCard = document.getElementById('card-massas');
+                            if (massasCard && !massasCard.classList.contains('locked')) {
+                                massasCard.classList.add('locked');
+                                const btn = massasCard.querySelector('.access-btn');
+                                if (btn) {
+                                    btn.innerHTML = '<i data-lucide="lock"></i> BLOQUEADO (Adquira)';
+                                    btn.style.backgroundColor = '#555';
+                                    btn.href = '/upgrade'; 
+                                }
+                                massasCard.onclick = (e) => {
+                                    e.preventDefault();
+                                    window.location.href = '/upgrade';
+                                };
+                                // Re-render icons only if we locked it here
+                                setTimeout(() => lucide.createIcons(), 100);
+                            }
                         }
                     }
                 } catch (e) {

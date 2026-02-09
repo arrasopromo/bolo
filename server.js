@@ -1168,6 +1168,13 @@ app.post('/api/webhook/cakto', async (req, res) => {
         }
         console.log(`📋 [WEBHOOK] Plan determined: ${planType} (Source: ${combinedName})`);
 
+        // Check for "Massas Perfeitas" (Order Bump)
+        let massasPerfeitasAccess = false;
+        if (combinedName.includes('MASSAS PERFEITAS')) {
+            massasPerfeitasAccess = true;
+            console.log('🍰 [WEBHOOK] Massas Perfeitas Access Granted!');
+        }
+
         // --- Subscription Logic for Fluxo de Caixa ---
         let subType = 'paid'; // default
         let subExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // default 1 year
@@ -1213,7 +1220,8 @@ app.post('/api/webhook/cakto', async (req, res) => {
                 token: userToken, // Save Token
                 subscriptionStatus: 'active',
                 subscriptionType: subType,
-                subscriptionExpiresAt: subExpires
+                subscriptionExpiresAt: subExpires,
+                massasPerfeitasAccess: massasPerfeitasAccess
             });
             await user.save();
             isNewUser = true;
@@ -1235,6 +1243,11 @@ app.post('/api/webhook/cakto', async (req, res) => {
             user.subscriptionStatus = 'active';
             user.subscriptionType = subType;
             user.subscriptionExpiresAt = subExpires;
+            
+            // Grant access if detected in this webhook, but do NOT revoke if it was already true
+            if (massasPerfeitasAccess) {
+                user.massasPerfeitasAccess = true;
+            }
             
             await user.save();
             console.log('🔄 [WEBHOOK] User updated (Plan & Token):', email);
