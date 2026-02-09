@@ -1469,9 +1469,13 @@
                     try {
                         const errData = await clone.json();
                         if (errData.code === 'SUBSCRIPTION_EXPIRED') {
+                            console.warn('[Auth] Assinatura expirada. Mostrando modal...');
                             const modal = document.getElementById('subscriptionExpiredModal');
-                            if (modal) modal.style.display = 'flex';
-                            throw new Error('Assinatura expirada');
+                            if (modal) modal.classList.add('open');
+                            
+                            // Return the response immediately to prevent redirect logic below
+                            // The caller will see res.ok = false and handle accordingly (or ignore)
+                            return res;
                         }
                     } catch (e) {
                         // Ignore JSON error
@@ -1503,7 +1507,7 @@
         }
 
         // Global User Data
-        let currentUserData = null;
+        window.currentUserData = null; // Expose globally
 
         // Load User Info
         async function loadUserInfo() {
@@ -1512,7 +1516,16 @@
                 if (res.ok) {
                     const user = await res.json();
                     console.log('User Data:', user); // DEBUG
-                    currentUserData = user; // Store globally
+                    window.currentUserData = user; // Store globally on window
+
+                    // CHECK EXPIRATION IMMEDIATELY
+                    // Now that GET requests return 200 for expired users, we must check the user object explicitly
+                    if (user.subscriptionStatus === 'expired') {
+                        console.warn('[LoadUserInfo] User is expired. Showing modal.');
+                        const modal = document.getElementById('subscriptionExpiredModal');
+                        if (modal) modal.classList.add('open');
+                    }
+
                     const topName = document.getElementById('topUserName');
                     if (topName) {
                         const nameToUse = user.name || user.email || 'Confeiteira';
@@ -1538,6 +1551,9 @@
                             if (type === 'bonus') {
                                 subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E0E0E0; padding:2px 6px; border-radius:4px; color:#666; vertical-align: middle; text-transform: uppercase;">GRATUITO</span>';
                                 subStatusText.style.color = '#4CAF50';
+                            } else if (type === 'lifetime') {
+                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E3F2FD; padding:2px 6px; border-radius:4px; color:#1565C0; vertical-align: middle; border: 1px solid #90CAF9; text-transform: uppercase;">VITALÍCIO</span>';
+                                subStatusText.style.color = '#1565C0';
                             } else {
                                 // Paid
                                 subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#FFF8E1; padding:2px 6px; border-radius:4px; color:#F57F17; vertical-align: middle; border: 1px solid #FFD54F; text-transform: uppercase;">PREMIUM</span>';
@@ -1549,17 +1565,23 @@
                             
                             // Show modal immediately if expired
                             const modal = document.getElementById('subscriptionExpiredModal');
-                            if (modal) modal.style.display = 'flex';
+                            if (modal) modal.classList.add('open');
                         } else {
                             subStatusText.textContent = 'Inativo';
                             subStatusText.style.color = '#999';
                         }
 
                         // 2. Date Display
-                        if (expiresAt) {
+                        if (type === 'lifetime') {
+                            subExpiresText.textContent = 'VITALÍCIO';
+                            subExpiresText.style.fontWeight = 'bold';
+                            subExpiresText.style.color = '#1565C0';
+                        } else if (expiresAt) {
                             const d = new Date(expiresAt);
                             if (!isNaN(d.getTime())) {
                                 subExpiresText.textContent = d.toLocaleDateString('pt-BR');
+                                subExpiresText.style.fontWeight = 'normal';
+                                subExpiresText.style.color = 'inherit';
                             } else {
                                 subExpiresText.textContent = '-';
                             }
@@ -1600,21 +1622,38 @@
                                     actionBtn.style.background = '#4CAF50';
                                     actionBtn.style.cursor = 'pointer';
                                     actionBtn.onclick = () => openPlanSelectionModal();
+                                } else if (type === 'lifetime') {
+                                    // Lifetime Active
+                                    subDescriptionText.innerHTML = `
+                                        Você possui acesso <strong>VITALÍCIO</strong> ao Fluxo de Caixa. 
+                                        Aproveite todos os recursos sem se preocupar com renovações.
+                                    `;
+                                    actionArea.style.background = '#E3F2FD';
+                                    actionTitle.textContent = 'Acesso Vitalício Garantido';
+                                    actionTitle.style.color = '#1565C0';
+                                    
+                                    actionBtn.innerHTML = '<i data-lucide="infinity" style="width: 18px; vertical-align: middle;"></i> VITALÍCIO';
+                                    actionBtn.disabled = true;
+                                    actionBtn.style.background = '#64B5F6';
+                                    actionBtn.style.cursor = 'default';
+                                    actionBtn.onclick = null;
+                                    setTimeout(() => lucide.createIcons(), 100);
                                 } else {
                                     // Paid Active
                                     subDescriptionText.innerHTML = `
                                         Você possui uma <strong>Assinatura Mensal</strong> ativa. 
-                                        Aproveite todos os recursos da ferramenta de Fluxo de Caixa.
+                                        <br>Deseja não pagar mais mensalidade?
                                     `;
-                                    actionArea.style.background = '#E8F5E9';
-                                    actionTitle.textContent = 'Sua assinatura está ativa';
-                                    actionTitle.style.color = '#2E7D32';
+                                    actionArea.style.background = '#FFFDE7'; // Fundo amarelado suave
+                                    actionTitle.textContent = 'Oferta Especial: Vitalício';
+                                    actionTitle.style.color = '#F57F17';
                                     
-                                    actionBtn.innerHTML = '<i data-lucide="check-circle" style="width: 18px; vertical-align: middle;"></i> ASSINATURA EM USO';
-                                    actionBtn.disabled = true;
-                                    actionBtn.style.background = '#81C784';
-                                    actionBtn.style.cursor = 'default';
-                                    actionBtn.onclick = null;
+                                    actionBtn.textContent = 'TORNAR VITALÍCIO';
+                                    actionBtn.disabled = false;
+                                    actionBtn.style.background = '#FFC107';
+                                    actionBtn.style.color = '#32221D';
+                                    actionBtn.style.cursor = 'pointer';
+                                    actionBtn.onclick = () => redirectToCheckout('lifetime');
                                     setTimeout(() => lucide.createIcons(), 100);
                                 }
                             }
@@ -4095,80 +4134,94 @@
         </div>
     </div>
     <!-- Subscription Expired Modal -->
-    <div id="subscriptionExpiredModal" class="modal-overlay" style="z-index: 10000;">
-        <div class="modal-content" style="max-width: 450px; text-align: center; padding: 2.5rem; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+    <div id="subscriptionExpiredModal" class="modal-overlay" style="z-index: 10000; backdrop-filter: blur(8px); background: rgba(0,0,0,0.85);">
+        <div class="modal-content" style="max-width: 500px; text-align: center; padding: 2.5rem; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
             <div style="width: 80px; height: 80px; background: #FFF4E5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #CD7A3E;">
                 <i data-lucide="alert-triangle" style="width: 40px; height: 40px;"></i>
             </div>
-            <h2 style="color: #32221D; margin-bottom: 1rem;">Assinatura Expirada</h2>
-            <p style="color: #666; line-height: 1.6; margin-bottom: 2rem;">
-                Seu período de acesso ao Fluxo de Caixa expirou.<br>Para continuar gerenciando suas vendas e custos, renove sua assinatura.
+            <h2 style="color: #32221D; margin-bottom: 0.5rem; font-size: 1.8rem;">Assinatura Expirada</h2>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 2rem; font-size: 1rem;">
+                Seu acesso ao painel foi pausado. Para continuar gerenciando seu negócio, escolha uma das opções abaixo:
             </p>
-            <p style="font-weight: 600; color: #32221D; margin-bottom: 2rem; font-size: 0.9rem; background: #f9f9f9; padding: 10px; border-radius: 8px;">
-                Seus dados permanecem salvos e seguros.
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+                <!-- Monthly Option -->
+                <div onclick="redirectToCheckout('monthly')" 
+                     style="border: 2px solid #E0E0E0; border-radius: 16px; padding: 1.2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; text-align: left;"
+                     onmouseover="this.style.borderColor='#4CAF50'; this.style.background='#F1F8E9'" 
+                     onmouseout="this.style.borderColor='#E0E0E0'; this.style.background='white'">
+                    <div>
+                        <div style="font-weight: 700; color: #32221D; font-size: 1.1rem;">Plano Mensal</div>
+                        <div style="font-size: 0.9rem; color: #666;">Renovação automática</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; color: #4CAF50; font-size: 1.3rem;">R$ 12,50</div>
+                        <div style="font-size: 0.8rem; font-weight: 500; color: #888;">/mês</div>
+                    </div>
+                </div>
+
+                <!-- Lifetime Option -->
+                <div onclick="redirectToCheckout('lifetime')" 
+                     style="border: 2px solid #FFC107; border-radius: 16px; padding: 1.2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; text-align: left; background: #FFFDE7;"
+                     onmouseover="this.style.transform='scale(1.02)'; this.style.borderColor='#CD7A3E'" 
+                     onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#FFC107'">
+                    <div>
+                        <div style="font-weight: 700; color: #32221D; font-size: 1.1rem;">Acesso Vitalício</div>
+                        <div style="font-size: 0.9rem; color: #666;">Pagamento único</div>
+                    </div>
+                    <div style="font-weight: 800; color: #CD7A3E; font-size: 1.3rem;">R$ 127,00</div>
+                </div>
+            </div>
+
+            <p style="font-weight: 600; color: #32221D; margin-bottom: 1.5rem; font-size: 0.85rem; background: #f9f9f9; padding: 10px; border-radius: 8px;">
+                <i data-lucide="lock" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 5px;"></i> Seus dados permanecem salvos e seguros.
             </p>
-            <button onclick="window.open('https://pay.cakto.com.br/3agzzyq_753128', '_blank')" style="width: 100%; padding: 1rem; background: #4CAF50; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);">
-                RENOVAR AGORA
-            </button>
-            <div style="margin-top: 1.5rem;">
-                 <a href="/membros" style="color: #999; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #ddd;">Voltar para área de membros</a>
+            
+            <div>
+                 <a href="/membros" style="color: #999; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #ddd; padding-bottom: 2px;">Voltar para área de membros</a>
             </div>
         </div>
     </div>
 
     <script>
-        // Edit Fixed Cost Form Submission
+        // Move modal to body end to avoid z-index stacking context issues
         document.addEventListener('DOMContentLoaded', () => {
-            const editForm = document.getElementById('editFixedCostForm');
-            if (editForm) {
-                editForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    const id = document.getElementById('modalEditCostId').value;
-                    const name = document.getElementById('modalCostName').value;
-                    const amount = parseFloat(document.getElementById('modalCostAmount').value);
-                    const recurrenceType = document.querySelector('input[name="modalRecurrenceType"]:checked').value;
-                    
-                    let installments = 1;
-                    let date = null;
-                    
-                    if (recurrenceType === 'installment') {
-                        installments = parseInt(document.getElementById('modalCostInstallments').value);
-                        date = document.getElementById('modalCostPurchaseDate').value;
-                    }
-                    
-                    const btn = e.target.querySelector('button[type="submit"]');
-                    const originalText = btn.innerText;
-                    btn.innerText = 'Salvando...';
-                    btn.disabled = true;
-
-                    try {
-                        const res = await authFetch(`/api/fixed-costs/${id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ name, amount, recurrenceType, installments, date })
-                        });
-                        
-                        if (res.ok) {
-                            closeEditCostModal();
-                            loadFixedCosts();
-                            if (typeof loadDashboard === 'function') loadDashboard();
-                            alert('Custo atualizado com sucesso!');
-                        } else {
-                            const data = await res.json();
-                            alert('Erro ao atualizar: ' + (data.error || 'Erro desconhecido'));
-                        }
-                    } catch (error) {
-                        console.error('Error updating cost:', error);
-                        alert('Erro ao salvar alterações.');
-                    } finally {
-                        btn.innerText = originalText;
-                        btn.disabled = false;
-                    }
-                });
+            const modal = document.getElementById('subscriptionExpiredModal');
+            if (modal && modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
             }
         });
+
+        async function redirectToCheckout(plan) {
+            let emailQuery = '';
+            
+            // Try to get email from global currentUserData first (sync, reliable)
+            if (window.currentUserData && window.currentUserData.email) {
+                emailQuery = '?email=' + encodeURIComponent(window.currentUserData.email);
+            } 
+            // Fallback: try to fetch if not available
+            else {
+                 try {
+                     const res = await fetch('/api/user/me', {
+                         headers: { 'Authorization': 'Bearer ' + localStorage.getItem('bellecake_token') }
+                     });
+                     if (res.ok) {
+                         const data = await res.json();
+                         if (data.email) {
+                             emailQuery = '?email=' + encodeURIComponent(data.email);
+                         }
+                     }
+                 } catch (e) {
+                     console.error('Error fetching user email for checkout:', e);
+                 }
+            }
+
+            if (plan === 'monthly') {
+                window.open('https://pay.cakto.com.br/3agzzyq_753128' + emailQuery, '_blank');
+            } else if (plan === 'lifetime') {
+                window.open('https://pay.cakto.com.br/9gh3y82_753500' + emailQuery, '_blank');
+            }
+        }
     </script>
 </body>
-</html>
 </html>

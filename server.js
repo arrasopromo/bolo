@@ -69,7 +69,10 @@ const authenticateToken = (req, res, next) => {
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Forbidden' });
+        if (err) {
+            console.error('[Auth] Verification Failed:', err.message);
+            return res.status(403).json({ error: 'Forbidden' });
+        }
         req.user = user;
         next();
     });
@@ -86,31 +89,41 @@ const checkSubscription = async (req, res, next) => {
 
         const now = new Date();
         
+        // DEBUG LOG
+        // console.log(`[CheckSub] User: ${user.email}, Status: ${user.subscriptionStatus}, Method: ${req.method}, Exp: ${user.subscriptionExpiresAt}`);
+
         // Check Expiration for ALL users who have a subscription date
         if (user.subscriptionExpiresAt) {
             // Check if expired
             if (now > new Date(user.subscriptionExpiresAt)) {
+                console.log(`[CheckSub] User ${user.email} is expired (Date Check). Method: ${req.method}`);
                 // Auto-update status if needed
                 if (user.subscriptionStatus !== 'expired') {
                     user.subscriptionStatus = 'expired';
                     await user.save();
                 }
                 
-                return res.status(403).json({ 
-                    error: 'Sua assinatura expirou.', 
-                    code: 'SUBSCRIPTION_EXPIRED',
-                    expiredAt: user.subscriptionExpiresAt 
-                });
+                // Allow GET requests (read-only) for expired users so they can see data behind the modal
+                if (req.method !== 'GET') {
+                    return res.status(403).json({ 
+                        error: 'Sua assinatura expirou.', 
+                        code: 'SUBSCRIPTION_EXPIRED',
+                        expiredAt: user.subscriptionExpiresAt 
+                    });
+                }
             }
         }
         
         // Check Status
         if (user.subscriptionStatus === 'expired') {
-             return res.status(403).json({ 
-                error: 'Sua assinatura expirou.', 
-                code: 'SUBSCRIPTION_EXPIRED',
-                expiredAt: user.subscriptionExpiresAt 
-            });
+             // Allow GET requests (read-only)
+             if (req.method !== 'GET') {
+                 return res.status(403).json({ 
+                    error: 'Sua assinatura expirou.', 
+                    code: 'SUBSCRIPTION_EXPIRED',
+                    expiredAt: user.subscriptionExpiresAt 
+                });
+            }
         }
         
         // Optional: Block 'inactive' users if necessary
@@ -1149,11 +1162,29 @@ app.post('/api/webhook/cakto', async (req, res) => {
         // "PLANILHA PRECIFICAÇÃO - ACESSO COMPLETO" -> complete
         // "PLANILHA PRECIFICAÇÃO" -> basic
         let planType = 'basic';
-        const keywords = ['COMPLETO', 'UPGRADE', 'VITALÍCIO', 'LIFETIME', 'PREMIUM'];
+        const keywords = ['COMPLETO', 'UPGRADE', 'VITALÍCIO', 'VITALICIO', 'LIFETIME', 'PREMIUM', 'FLUXO'];
         if (keywords.some(k => combinedName.includes(k))) {
             planType = 'complete';
         }
         console.log(`📋 [WEBHOOK] Plan determined: ${planType} (Source: ${combinedName})`);
+
+        // --- Subscription Logic for Fluxo de Caixa ---
+        let subType = 'paid'; // default
+        let subExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // default 1 year
+
+        // Specific Logic for Fluxo de Caixa
+         if (combinedName.includes('FLUXO')) {
+             if (combinedName.includes('VITALÍCIO') || combinedName.includes('VITALICIO') || combinedName.includes('LIFETIME')) {
+                 subType = 'lifetime';
+                 subExpires = new Date('2099-12-31T23:59:59.999Z'); // Effectively forever
+                 console.log('♾️ [WEBHOOK] Detected Lifetime Fluxo Plan');
+             } else {
+                 // Monthly
+                 subType = 'paid';
+                 subExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 Days
+                 console.log('📅 [WEBHOOK] Detected Monthly Fluxo Plan (30 days)');
+             }
+         }
 
         // 3. User Management (MongoDB)
         let user = await User.findOne({ email });
@@ -1181,8 +1212,8 @@ app.post('/api/webhook/cakto', async (req, res) => {
                 plan: planType,
                 token: userToken, // Save Token
                 subscriptionStatus: 'active',
-                subscriptionType: 'paid',
-                subscriptionExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year access
+                subscriptionType: subType,
+                subscriptionExpiresAt: subExpires
             });
             await user.save();
             isNewUser = true;
@@ -1202,8 +1233,8 @@ app.post('/api/webhook/cakto', async (req, res) => {
             user.plan = planType;
             user.token = userToken;
             user.subscriptionStatus = 'active';
-            user.subscriptionType = 'paid';
-            user.subscriptionExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+            user.subscriptionType = subType;
+            user.subscriptionExpiresAt = subExpires;
             
             await user.save();
             console.log('🔄 [WEBHOOK] User updated (Plan & Token):', email);

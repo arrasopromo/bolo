@@ -50,9 +50,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             </a>
         </div>
         <!-- Nav links removed as requested -->
-        <button class="btn-primary small" onclick="location.href='#tabela-de-precos'">
+        <a href="javascript:void(0)" onclick="document.getElementById('tabela-de-precos').scrollIntoView({ behavior: 'smooth' });" class="btn-primary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
             <i data-lucide="table" class="icon-small"></i> GARANTIR PLANILHA
-        </button>
+        </a>
         
         <!-- Theme Toggle Button -->
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar Tema" style="margin-left: 0.5rem; color: white;">
@@ -100,7 +100,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         R$ 19,90
                     </div>
                     
-                    <button class="btn-cta pulse" onclick="location.href='#tabela-de-precos'">
+                    <div style="margin-bottom: 10px; text-align: center;">
+                        <a href="https://pay.cakto.com.br/3aoidkh_738778" target="_blank" style="font-size: 0.8rem; color: #888; text-decoration: underline; font-weight: 500;">
+                            Quero apenas o plano básico
+                        </a>
+                    </div>
+                    
+                    <button class="btn-cta pulse" onclick="document.getElementById('tabela-de-precos').scrollIntoView({ behavior: 'smooth' });">
                         GARANTIR PLANILHA
                         <i data-lucide="table" class="icon-btn"></i>
                     </button>
@@ -262,7 +268,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício a Planilha</li>
                 </ul>
-                <a href="javascript:void(0)" onclick="openUpsellModal()" class="btn-cta">
+                <a href="javascript:void(0)" onclick="openUpsellModal()" class="btn-cta" id="btn-pacote-basico-anchor">
                     OBTER PACOTE BASICO
                 </a>
             </div>
@@ -326,7 +332,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
     <!-- Rodapé -->
     <footer class="site-footer">
-        <div style="color: var(--text-muted); font-size: 0.9rem;">
+        <div style="color: var(--text-muted); font-size: 0.9rem; display: flex; flex-direction: column; gap: 10px; align-items: center;">
             <p>&copy; Todos direitos reservados 2026</p>
         </div>
     </footer>
@@ -335,19 +341,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <div class="mobile-bottom-cta">
         <div class="cta-left-content">
             <div class="cta-timer" id="ctaTimer">15:00</div>
-            <div class="cta-prices">
-                <span class="old">R$ 49,90</span>
-                <span class="new">R$ 19,90</span>
+            <div class="cta-prices" style="display: flex; flex-direction: column; gap: 0; align-items: flex-start; justify-content: center;">
+                <span class="old-price" style="font-size: 0.7rem; text-decoration: line-through; opacity: 0.8; line-height: 1; color: white;">R$ 79,90</span>
+                <span class="new" style="line-height: 1;">R$ 39,90</span>
             </div>
         </div>
-        <button onclick="location.href='#tabela-de-precos'">
-            Garantir planilha
-        </button>
+        <div style="display: flex; flex-direction: column; width: 100%; gap: 5px;">
+             <button onclick="document.getElementById('btn-pacote-basico-anchor').scrollIntoView({ behavior: 'smooth', block: 'start' });">
+                Garantir planilha
+            </button>
+        </div>
     </div>
 
     <!-- Upsell Modal -->
     <div id="upsellModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
-        <div style="position: relative; width: auto; height: 90vh; aspect-ratio: 9/16; max-width: 100%; background: white; border-radius: 16px; overflow: hidden; animation: slideUp 0.3s ease-out; margin: auto; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid var(--primary-yellow);">
+        <div style="position: relative; width: 100%; max-width: 400px; max-height: 90vh; height: auto; background: white; border-radius: 16px; overflow: hidden; animation: slideUp 0.3s ease-out; margin: auto; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid var(--primary-yellow);">
             
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #32221D, #5D3A29); padding: 1.5rem 1rem 1rem 1rem; text-align: center; position: relative;">

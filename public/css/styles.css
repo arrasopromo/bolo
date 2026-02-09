@@ -1508,7 +1508,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
         width: 100%;
         background: linear-gradient(135deg, var(--raw-sienna), var(--falu-red));
         color: white;
-        padding: 0.5rem 1rem;
+        padding: 0.3rem 1rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
