@@ -858,7 +858,7 @@
                         
                         <div id="subscriptionActionArea" style="display: none; background: #FFF4E5; padding: 1.2rem; border-radius: 12px; text-align: center;">
                             <p id="subscriptionActionTitle" style="font-weight: 700; color: #CD7A3E; margin-bottom: 0.8rem; font-size: 0.95rem;"></p>
-                            <button id="subscriptionActionButton" onclick="window.open('https://pay.cakto.com.br/3agzzyq_753128', '_blank')" style="background: #4CAF50; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s;">
+                            <button id="subscriptionActionButton" onclick="openPlanSelectionModal()" style="background: #4CAF50; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s;">
                                 RENOVAR ASSINATURA
                             </button>
                         </div>
@@ -1520,7 +1520,13 @@
 
                     // CHECK EXPIRATION IMMEDIATELY
                     // Now that GET requests return 200 for expired users, we must check the user object explicitly
-                    if (user.subscriptionStatus === 'expired') {
+                    const now = new Date();
+                    const createdAt = new Date(user.createdAt || Date.now());
+                    const diffTime = Math.abs(now - createdAt);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const isTrialExpired = (user.plan === 'basic' && diffDays > 7);
+
+                    if (isTrialExpired) {
                         console.warn('[LoadUserInfo] User is expired. Showing modal.');
                         const modal = document.getElementById('subscriptionExpiredModal');
                         if (modal) modal.classList.add('open');
@@ -1541,124 +1547,134 @@
                     const actionTitle = document.getElementById('subscriptionActionTitle');
                     const actionBtn = document.getElementById('subscriptionActionButton');
 
-                    if (subStatusText && subExpiresText) {
-                        const status = user.subscriptionStatus || 'inactive';
-                        const type = user.subscriptionType || 'bonus'; 
-                        const expiresAt = user.subscriptionExpiresAt;
+                    if (subStatusText && subExpiresText && subDescriptionText) {
+                        const now = new Date();
+                        const createdAt = new Date(user.createdAt || Date.now());
                         
-                        // 1. Status Display
-                        if (status === 'active') {
-                            if (type === 'bonus') {
-                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E0E0E0; padding:2px 6px; border-radius:4px; color:#666; vertical-align: middle; text-transform: uppercase;">GRATUITO</span>';
+                        // Lógica de 7 dias de teste para plano BASIC
+                        const diffTime = Math.abs(now - createdAt);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                        
+                        // Determina se é trial ativo
+                        // Se o plano for 'complete', não é trial (é premium/vitalício)
+                        const isBasic = (user.plan === 'basic');
+                        const isTrialActive = isBasic && diffDays <= 7;
+                        const isTrialExpired = isBasic && diffDays > 7;
+
+                        // Data de expiração do trial (createdAt + 7 dias)
+                        const trialExpirationDate = new Date(createdAt);
+                        trialExpirationDate.setDate(trialExpirationDate.getDate() + 7);
+
+                        // --- 1. STATUS ---
+                        if (!isBasic) {
+                            // COMPLETE / PREMIUM
+                             
+                             // Check if Lifetime (no expiration or far future > 2090)
+                             const isLifetime = !user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt).getFullYear() > 2090;
+
+                             if (isLifetime) {
+                                 subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E3F2FD; padding:2px 6px; border-radius:4px; color:#1565C0; vertical-align: middle; border: 1px solid #90CAF9; text-transform: uppercase;">VITALÍCIO</span>';
+                                 subStatusText.style.color = '#1565C0';
+                                 subExpiresText.textContent = 'Sem validade';
+                                 subDescriptionText.textContent = "Você possui acesso vitalício e ilimitado ao Fluxo de Caixa.";
+                                 if (actionArea) actionArea.style.display = 'none';
+                             } else {
+                                 // Expiring Premium (Bonus 1 Month or Monthly Sub)
+                                 subStatusText.innerHTML = 'Ativo';
+                                 subStatusText.style.color = '#2E7D32';
+                                 
+                                 const d = new Date(user.subscriptionExpiresAt);
+                                 subExpiresText.textContent = d.toLocaleDateString('pt-BR');
+                                 
+                                 subDescriptionText.innerHTML = `
+                                     Seu acesso expira em <strong>${d.toLocaleDateString('pt-BR')}</strong>.<br>
+                                     Para continuar utilizando o Fluxo de Caixa após este período, renove sua assinatura.
+                                 `;
+                                 
+                                 if (actionArea) {
+                                    actionArea.style.display = 'block';
+                                    actionArea.style.background = 'transparent'; // Remove background to look cleaner or keep it? User didn't specify, but "como era antes" implies maybe cleaner. Let's keep it simple.
+                                    actionArea.innerHTML = `
+                                        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                            <button onclick="openPlanSelectionModal()" 
+                                                style="background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);">
+                                                RENOVAR ASSINATURA
+                                            </button>
+                                        </div>
+                                    `;
+                                 }
+                             }
+
+                        } else {
+                            // BASIC (TRIAL ou EXPIRADO)
+                            if (isTrialActive) {
+                                // TESTE GRÁTIS ATIVO
+                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E0E0E0; padding:2px 6px; border-radius:4px; color:#666; vertical-align: middle; text-transform: uppercase;">TESTE GRÁTIS</span>';
                                 subStatusText.style.color = '#4CAF50';
-                            } else if (type === 'lifetime') {
-                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E3F2FD; padding:2px 6px; border-radius:4px; color:#1565C0; vertical-align: middle; border: 1px solid #90CAF9; text-transform: uppercase;">VITALÍCIO</span>';
-                                subStatusText.style.color = '#1565C0';
-                            } else {
-                                // Paid
-                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#FFF8E1; padding:2px 6px; border-radius:4px; color:#F57F17; vertical-align: middle; border: 1px solid #FFD54F; text-transform: uppercase;">PREMIUM</span>';
-                                subStatusText.style.color = '#2E7D32';
-                            }
-                        } else if (status === 'expired') {
-                            subStatusText.textContent = 'Expirado';
-                            subStatusText.style.color = '#F44336';
-                            
-                            // Show modal immediately if expired
-                            const modal = document.getElementById('subscriptionExpiredModal');
-                            if (modal) modal.classList.add('open');
-                        } else {
-                            subStatusText.textContent = 'Inativo';
-                            subStatusText.style.color = '#999';
-                        }
-
-                        // 2. Date Display
-                        if (type === 'lifetime') {
-                            subExpiresText.textContent = 'VITALÍCIO';
-                            subExpiresText.style.fontWeight = 'bold';
-                            subExpiresText.style.color = '#1565C0';
-                        } else if (expiresAt) {
-                            const d = new Date(expiresAt);
-                            if (!isNaN(d.getTime())) {
-                                subExpiresText.textContent = d.toLocaleDateString('pt-BR');
-                                subExpiresText.style.fontWeight = 'normal';
-                                subExpiresText.style.color = 'inherit';
-                            } else {
-                                subExpiresText.textContent = '-';
-                            }
-                        } else {
-                            subExpiresText.textContent = '-';
-                        }
-
-                        // 3. Description Text & Button Logic
-                        if (actionArea && actionBtn && subDescriptionText) {
-                            actionArea.style.display = 'block'; 
-                            
-                            if (status === 'expired') {
-                                // Expired State
-                                subDescriptionText.innerHTML = `Sua assinatura expirou. Renove agora para recuperar o acesso.`;
-                                actionArea.style.background = '#FFF0F0';
-                                actionTitle.textContent = 'Acesso Bloqueado';
-                                actionTitle.style.color = '#D32F2F';
                                 
-                                actionBtn.textContent = 'RENOVAR AGORA';
-                                actionBtn.disabled = false;
-                                actionBtn.style.background = '#F44336';
-                                actionBtn.style.cursor = 'pointer';
-                                actionBtn.onclick = () => openPlanSelectionModal();
-                            } 
-                            else if (status === 'active') {
-                                if (type === 'bonus') {
-                                    // Bonus Active
-                                    subDescriptionText.innerHTML = `
-                                        Você possui o <strong style="color: var(--secondary-caramel);">Plano Bônus (Gratuito)</strong>.
-                                        <br>Aproveite para realizar a assinatura completa e garantir acesso contínuo.
+                                subExpiresText.textContent = trialExpirationDate.toLocaleDateString('pt-BR');
+                                
+                                subDescriptionText.innerHTML = `
+                                    Você está aproveitando seus <strong>7 dias de acesso gratuito</strong>.<br>
+                                    Após ${trialExpirationDate.toLocaleDateString('pt-BR')}, será necessário assinar para continuar editando.
+                                `;
+                                
+                                // Mostrar opções de assinatura
+                                if (actionArea) {
+                                    actionArea.style.display = 'block';
+                                    actionArea.style.background = '#FFFDE7';
+                                    actionArea.innerHTML = `
+                                        <p style="font-weight: 700; color: #CD7A3E; margin-bottom: 0.8rem; font-size: 0.95rem;">
+                                            Garanta seu acesso contínuo:
+                                        </p>
+                                        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                            <button onclick="openPlanSelectionModal()" 
+                                                style="background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);">
+                                                RENOVAR ASSINATURA
+                                            </button>
+                                        </div>
                                     `;
-                                    actionArea.style.background = '#FFF4E5';
-                                    actionTitle.textContent = 'Garanta seu acesso contínuo';
-                                    actionTitle.style.color = '#CD7A3E';
-                                    
-                                    actionBtn.textContent = 'FAZER ASSINATURA';
-                                    actionBtn.disabled = false;
-                                    actionBtn.style.background = '#4CAF50';
-                                    actionBtn.style.cursor = 'pointer';
-                                    actionBtn.onclick = () => openPlanSelectionModal();
-                                } else if (type === 'lifetime') {
-                                    // Lifetime Active
-                                    subDescriptionText.innerHTML = `
-                                        Você possui acesso <strong>VITALÍCIO</strong> ao Fluxo de Caixa. 
-                                        Aproveite todos os recursos sem se preocupar com renovações.
+                                }
+
+                            } else {
+                                // EXPIRADO
+                                subStatusText.textContent = 'Expirado';
+                                subStatusText.style.color = '#F44336';
+                                
+                                subExpiresText.textContent = trialExpirationDate.toLocaleDateString('pt-BR');
+                                
+                                subDescriptionText.innerHTML = `
+                                    Seu período de teste gratuito encerrou em ${trialExpirationDate.toLocaleDateString('pt-BR')}.<br>
+                                    Realize uma assinatura para voltar a registrar vendas e custos.
+                                `;
+                                
+                                // Mostrar opções de assinatura (Estilo Alerta)
+                                if (actionArea) {
+                                    actionArea.style.display = 'block';
+                                    actionArea.style.background = '#FFEBEE';
+                                    actionArea.innerHTML = `
+                                         <p style="font-weight: 700; color: #C62828; margin-bottom: 0.8rem; font-size: 0.95rem;">
+                                            Reative seu acesso agora:
+                                        </p>
+                                        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                            <button onclick="openPlanSelectionModal()" 
+                                                style="background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);">
+                                                RENOVAR ASSINATURA
+                                            </button>
+                                        </div>
                                     `;
-                                    actionArea.style.background = '#E3F2FD';
-                                    actionTitle.textContent = 'Acesso Vitalício Garantido';
-                                    actionTitle.style.color = '#1565C0';
-                                    
-                                    actionBtn.innerHTML = '<i data-lucide="infinity" style="width: 18px; vertical-align: middle;"></i> VITALÍCIO';
-                                    actionBtn.disabled = true;
-                                    actionBtn.style.background = '#64B5F6';
-                                    actionBtn.style.cursor = 'default';
-                                    actionBtn.onclick = null;
-                                    setTimeout(() => lucide.createIcons(), 100);
-                                } else {
-                                    // Paid Active
-                                    subDescriptionText.innerHTML = `
-                                        Você possui uma <strong>Assinatura Mensal</strong> ativa. 
-                                        <br>Deseja não pagar mais mensalidade?
-                                    `;
-                                    actionArea.style.background = '#FFFDE7'; // Fundo amarelado suave
-                                    actionTitle.textContent = 'Oferta Especial: Vitalício';
-                                    actionTitle.style.color = '#F57F17';
-                                    
-                                    actionBtn.textContent = 'TORNAR VITALÍCIO';
-                                    actionBtn.disabled = false;
-                                    actionBtn.style.background = '#FFC107';
-                                    actionBtn.style.color = '#32221D';
-                                    actionBtn.style.cursor = 'pointer';
-                                    actionBtn.onclick = () => redirectToCheckout('lifetime');
-                                    setTimeout(() => lucide.createIcons(), 100);
+                                }
+
+                                // Abrir modal de expiração se não estiver aberto
+                                const modal = document.getElementById('subscriptionExpiredModal');
+                                if (modal && !modal.classList.contains('open')) {
+                                    // Opcional: só abrir se o usuário tentar ação, mas pode abrir de cara
+                                    // modal.style.display = 'flex'; // Descomentar se quiser forçar popup
                                 }
                             }
                         }
                     }
+
 
                     // Trigger dashboard update to render meta card with user data
                     if(typeof loadDashboard === 'function') loadDashboard();
@@ -2777,7 +2793,7 @@
 
             if (goalEl) {
                 if (showDefineMeta) {
-                    goalEl.innerHTML = '<a href="/equilibrio" style="font-size: 1rem; color: var(--secondary-caramel); text-decoration: underline;">Definir Meta</a>';
+                    goalEl.innerHTML = '<a href="/equilibrio" style="font-size: 0.85rem; color: var(--secondary-caramel); text-decoration: underline;">Definir Meta</a>';
                 } else {
                     goalEl.innerText = goalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 }
@@ -4009,7 +4025,7 @@
             
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <!-- Monthly Plan -->
-                <div onclick="window.open('https://pay.cakto.com.br/3agzzyq_753128', '_blank')" style="border: 2px solid #E0E0E0; border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between;" onmouseover="this.style.borderColor='#4CAF50'; this.style.background='#F1F8E9'" onmouseout="this.style.borderColor='#E0E0E0'; this.style.background='white'">
+                <div onclick="redirectToCheckout('monthly')" style="border: 2px solid #E0E0E0; border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between;" onmouseover="this.style.borderColor='#4CAF50'; this.style.background='#F1F8E9'" onmouseout="this.style.borderColor='#E0E0E0'; this.style.background='white'">
                     <div style="text-align: left;">
                         <div style="font-weight: 700; color: var(--text-brown); font-size: 1.1rem;">Assinatura Mensal</div>
                         <div style="font-size: 0.9rem; color: #666;">Renova a cada mês</div>
@@ -4021,7 +4037,7 @@
                 </div>
 
                 <!-- Lifetime Plan -->
-                <a href="https://pay.cakto.com.br/9gh3y82_753500" target="_blank" style="text-decoration: none; border: 2px solid var(--primary-yellow); border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between; background: #FFFDE7;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                <a href="javascript:void(0)" onclick="redirectToCheckout('lifetime')" style="text-decoration: none; border: 2px solid var(--primary-yellow); border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between; background: #FFFDE7;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                     <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--primary-yellow); color: var(--seal-brown); font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 10px;">MAIS VANTAJOSO</div>
                     <div style="text-align: left;">
                         <div style="font-weight: 700; color: var(--text-brown); font-size: 1.1rem;">Acesso Vitalício</div>

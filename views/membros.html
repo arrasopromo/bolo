@@ -261,10 +261,11 @@
             <!-- Card 3: IA Bonus -->
             <div class="content-card" id="card-ia" style="border: 1px solid var(--primary-yellow);">
                 <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #CD7A3E);">
+                    <div id="badge-ia" class="trial-badge" style="display: none; background: #4CAF50; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 12px; position: absolute; top: 10px; right: 10px; font-weight: 700; z-index: 10;">TESTE GRÁTIS 7 DIAS</div>
                     <img src="/images/ponto%20equilibrio.png" alt="Capa IA">
                 </div>
                 <div class="card-body">
-                    <h3 class="card-title">Cálculo com IA</h3>
+                    <h3 class="card-title">Ponto de Equilíbrio</h3>
                     <p class="card-desc">Descubra seu ponto de equilíbrio e receba dicas de vendas personalizadas com nossa Inteligência Artificial.</p>
                     <a href="/equilibrio" class="access-btn" target="_blank">
                         <i data-lucide="zap"></i> ACESSAR FERRAMENTA
@@ -275,6 +276,7 @@
             <!-- Card 4: Fluxo de Caixa -->
             <div class="content-card" id="card-fluxo">
                 <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #4CAF50);">
+                    <div id="badge-fluxo" class="trial-badge" style="display: none; background: #4CAF50; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 12px; position: absolute; top: 10px; right: 10px; font-weight: 700; z-index: 10;">TESTE GRÁTIS 7 DIAS</div>
                     <img src="/images/fluxo%20caixa%20(1).png" alt="Capa Fluxo de Caixa">
                 </div>
                 <div class="card-body">
@@ -550,7 +552,36 @@
                             const statusEl = document.getElementById('accountStatus');
                             if (statusEl) statusEl.innerText = 'ACESSO BÁSICO';
 
-                            const cardsToLock = ['card-ia', 'card-fluxo', 'card-massas', 'card-suporte'];
+                            // Check for 7-Day Trial (Fluxo & Ponto de Equilíbrio)
+                            const createdAt = new Date(userData.createdAt || new Date());
+                            const now = new Date();
+                            const diffTime = Math.abs(now - createdAt);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            const isTrialActive = diffDays <= 7;
+
+                            // Default locked cards
+                            let cardsToLock = ['card-ia', 'card-fluxo', 'card-massas', 'card-suporte'];
+
+                            if (isTrialActive) {
+                                // If trial is active, remove Fluxo and IA from locked list
+                                cardsToLock = ['card-massas', 'card-suporte'];
+                                
+                                // Optional: Update status text
+                                if (statusEl) statusEl.innerHTML = 'ACESSO BÁSICO';
+                                
+                                // Ensure badges are visible (already in HTML but good to confirm)
+                                const trialBadges = document.querySelectorAll('.trial-badge');
+                                trialBadges.forEach(b => b.style.display = 'block');
+                            } else {
+                                // Trial expired - hide badges? Or keep them to show what they missed?
+                                // Better to hide or change text to "Trial Expirado"
+                                const trialBadges = document.querySelectorAll('.trial-badge');
+                                trialBadges.forEach(b => {
+                                    b.style.display = 'block';
+                                    b.style.backgroundColor = '#999';
+                                    b.innerText = 'TRIAL EXPIRADO';
+                                });
+                            }
                             
                             cardsToLock.forEach(id => {
                                 const card = document.getElementById(id);

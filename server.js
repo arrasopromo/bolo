@@ -89,6 +89,34 @@ const checkSubscription = async (req, res, next) => {
 
         const now = new Date();
         
+        // --- LOGICA DE TRIAL (7 DIAS) ---
+        // Se o plano for 'basic', verificamos se está dentro dos 7 dias gratuitos
+        if (user.plan === 'basic') {
+            const createdAt = new Date(user.createdAt || now);
+            const diffTime = Math.abs(now - createdAt);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Se estiver dentro do período de 7 dias, PERMITIR ACESSO TOTAL
+            if (diffDays <= 7) {
+                // Trial Ativo
+                return next();
+            } 
+            
+            // Se passou dos 7 dias (Trial Expirado)
+            // Bloquear operações de escrita (POST, PUT, DELETE)
+            if (req.method !== 'GET') {
+                return res.status(403).json({ 
+                    error: 'Seu período de teste gratuito de 7 dias expirou. Assine para continuar utilizando este recurso.', 
+                    code: 'TRIAL_EXPIRED',
+                    isTrialExpired: true
+                });
+            }
+            
+            // Permitir GET (Leitura) para visualização limitada/bloqueada no front
+            return next();
+        }
+        // --- FIM LOGICA TRIAL ---
+
         // DEBUG LOG
         // console.log(`[CheckSub] User: ${user.email}, Status: ${user.subscriptionStatus}, Method: ${req.method}, Exp: ${user.subscriptionExpiresAt}`);
 
@@ -1177,7 +1205,8 @@ app.post('/api/webhook/cakto', async (req, res) => {
 
         // --- Subscription Logic for Fluxo de Caixa ---
         let subType = 'paid'; // default
-        let subExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // default 1 year
+        // Default to 30 days (1 month) as per requirement for Complete plan users
+        let subExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); 
 
         // Specific Logic for Fluxo de Caixa
          if (combinedName.includes('FLUXO')) {
@@ -1186,7 +1215,7 @@ app.post('/api/webhook/cakto', async (req, res) => {
                  subExpires = new Date('2099-12-31T23:59:59.999Z'); // Effectively forever
                  console.log('♾️ [WEBHOOK] Detected Lifetime Fluxo Plan');
              } else {
-                 // Monthly
+                 // Monthly (Explicit)
                  subType = 'paid';
                  subExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 Days
                  console.log('📅 [WEBHOOK] Detected Monthly Fluxo Plan (30 days)');
