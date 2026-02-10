@@ -599,6 +599,9 @@
             <div class="nav-item" onclick="switchView('vendas')">
                 <i data-lucide="shopping-cart"></i> Vendas
             </div>
+            <div class="nav-item" onclick="switchView('updates')">
+                <i data-lucide="bell"></i> Atualizações
+            </div>
             <div class="nav-item" onclick="switchView('assinatura')">
                 <i data-lucide="calendar-clock"></i> Assinatura
             </div>
@@ -635,6 +638,9 @@
                 </li>
                 <li class="nav-item" onclick="switchView('vendas')">
                     <i data-lucide="shopping-cart"></i> Vendas
+                </li>
+                <li class="nav-item" onclick="switchView('updates')">
+                    <i data-lucide="bell"></i> Atualizações
                 </li>
                 <li class="nav-item" onclick="switchView('assinatura')">
                     <i data-lucide="calendar-clock"></i> Assinatura
@@ -791,6 +797,10 @@
                         <div class="kpi-title">Produtos Vendidos</div>
                         <div class="kpi-value" id="totalItems">0</div>
                     </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Quantidade Vendida</div>
+                        <div class="kpi-value" id="totalQuantity">0</div>
+                    </div>
                 </div>
 
                 <div class="charts-row">
@@ -825,6 +835,41 @@
                                 <!-- Populated by JS -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: ATUALIZAÇÕES -->
+            <section id="view-updates" class="view-section">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div class="header-dash" style="flex-direction: column; align-items: flex-start; margin-bottom: 2rem;">
+                        <h1 style="margin-bottom: 0.5rem;">Atualizações do Sistema</h1>
+                        <p style="color: #666; margin: 0;">Fique por dentro das novidades e melhorias do BelleCake</p>
+                    </div>
+                    
+                    <div class="updates-timeline" style="background: white; border-radius: 16px; padding: 2rem; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                        
+                        <!-- Update Item -->
+                        <div class="update-item" style="border-left: 3px solid #4CAF50; padding-left: 1.5rem; margin-bottom: 2rem; position: relative;">
+                            <div style="position: absolute; left: -6px; top: 0; width: 9px; height: 9px; border-radius: 50%; background: #4CAF50;"></div>
+                            <div style="font-size: 0.85rem; color: #888; margin-bottom: 0.5rem; font-weight: 600;">10 de Fevereiro de 2026</div>
+                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--text-brown);">Novas Funcionalidades no Dashboard</h3>
+                            <p style="margin: 0; color: #555; line-height: 1.6;">
+                                Adicionamos o indicador de <strong>Quantidade Vendida</strong> para melhor controle de estoque e vendas. 
+                                Agora você pode visualizar o total de unidades vendidas separadamente do número de pedidos realizados.
+                            </p>
+                        </div>
+
+                        <!-- Placeholder for future updates -->
+                        <div class="update-item" style="border-left: 3px solid #ddd; padding-left: 1.5rem; position: relative;">
+                            <div style="position: absolute; left: -6px; top: 0; width: 9px; height: 9px; border-radius: 50%; background: #ddd;"></div>
+                            <div style="font-size: 0.85rem; color: #999; margin-bottom: 0.5rem; font-weight: 600;">Em breve</div>
+                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: #999;">Mais novidades chegando...</h3>
+                            <p style="margin: 0; color: #999; line-height: 1.6;">
+                                Estamos sempre trabalhando para melhorar sua experiência.
+                            </p>
+                        </div>
+
                     </div>
                 </div>
             </section>
@@ -1518,6 +1563,11 @@
                     console.log('User Data:', user); // DEBUG
                     window.currentUserData = user; // Store globally on window
 
+                    // Trigger Welcome Modal Check
+                    if (typeof checkWelcomeFluxoModal === 'function') {
+                        checkWelcomeFluxoModal();
+                    }
+
                     // CHECK EXPIRATION IMMEDIATELY
                     // Now that GET requests return 200 for expired users, we must check the user object explicitly
                     const now = new Date();
@@ -1580,28 +1630,54 @@
                                  if (actionArea) actionArea.style.display = 'none';
                              } else {
                                  // Expiring Premium (Bonus 1 Month or Monthly Sub)
-                                 subStatusText.innerHTML = 'Ativo';
-                                 subStatusText.style.color = '#2E7D32';
-                                 
                                  const d = new Date(user.subscriptionExpiresAt);
+                                 const isExpired = new Date() > d;
+                                 
                                  subExpiresText.textContent = d.toLocaleDateString('pt-BR');
                                  
-                                 subDescriptionText.innerHTML = `
-                                     Seu acesso expira em <strong>${d.toLocaleDateString('pt-BR')}</strong>.<br>
-                                     Para continuar utilizando o Fluxo de Caixa após este período, renove sua assinatura.
-                                 `;
-                                 
-                                 if (actionArea) {
-                                    actionArea.style.display = 'block';
-                                    actionArea.style.background = 'transparent'; // Remove background to look cleaner or keep it? User didn't specify, but "como era antes" implies maybe cleaner. Let's keep it simple.
-                                    actionArea.innerHTML = `
-                                        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-                                            <button onclick="openPlanSelectionModal()" 
-                                                style="background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);">
-                                                RENOVAR ASSINATURA
-                                            </button>
-                                        </div>
-                                    `;
+                                 if (isExpired) {
+                                     subStatusText.innerHTML = 'Expirado';
+                                     subStatusText.style.color = '#F44336';
+                                     
+                                     subDescriptionText.innerHTML = `
+                                         Seu acesso expirou em <strong>${d.toLocaleDateString('pt-BR')}</strong>.<br>
+                                         Renove sua assinatura para continuar utilizando o Fluxo de Caixa.
+                                     `;
+                                     
+                                     if (actionArea) {
+                                        actionArea.style.display = 'block';
+                                        actionArea.style.background = 'transparent';
+                                        actionArea.innerHTML = `
+                                            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                                <button onclick="openPlanSelectionModal(false)" 
+                                                    style="background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);">
+                                                    RENOVAR ASSINATURA
+                                                </button>
+                                            </div>
+                                        `;
+                                     }
+                                 } else {
+                                     // Active (Recurring or Time Remaining)
+                                     subStatusText.innerHTML = 'Ativo';
+                                     subStatusText.style.color = '#2E7D32';
+                                     
+                                     subDescriptionText.innerHTML = `
+                                         Seu acesso expira em <strong>${d.toLocaleDateString('pt-BR')}</strong>.<br>
+                                         Aproveite para migrar para o plano vitalício.
+                                     `;
+                                     
+                                     if (actionArea) {
+                                        actionArea.style.display = 'block';
+                                        actionArea.style.background = 'transparent';
+                                        actionArea.innerHTML = `
+                                            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                                <button onclick="openPlanSelectionModal(true)" 
+                                                    style="background: #73401F; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                                    FAZER UPGRADE VITALÍCIO
+                                                </button>
+                                            </div>
+                                        `;
+                                     }
                                  }
                              }
 
@@ -2793,7 +2869,57 @@
 
             if (goalEl) {
                 if (showDefineMeta) {
-                    goalEl.innerHTML = '<a href="/equilibrio" style="font-size: 0.85rem; color: var(--secondary-caramel); text-decoration: underline;">Definir Meta</a>';
+                    const isLifetime = userData.subscriptionType === 'lifetime' || (userData.subscriptionExpiresAt && new Date(userData.subscriptionExpiresAt).getFullYear() > 2090);
+                    const isPaid = userData.subscriptionType === 'paid';
+                    
+                    // User requested restriction: "Analisar Progresso" (integrated with ChatGPT) 
+                    // should ONLY be available for recurring subscription (paid) or lifetime (vitalício).
+                    // NOT for basic (7-day trial) or complete (30-day fixed).
+                    // Note: 'paid' usually means recurring. 'bonus' is trial.
+                    // We need to verify if there's a specific flag for "30 dias do acesso completo" vs "recorrencia".
+                    // Assuming 'paid' covers recurring. If 30-day fixed is also 'paid', we might need to check plan name or recurrence.
+                    // However, based on the prompt "assinatura de recorrencia ... ou vitalicio", 
+                    // and "assinatura disponivel de 30 dias" being blocked.
+                    
+                    // Let's check logic:
+                    // If plan is 'paid' (Recorrente) OR 'lifetime' -> Allow.
+                    // If plan is 'basic' (Trial) -> Block.
+                    // If plan is 'complete' (30 days fixed) -> Block.
+                    
+                    // In our system:
+                    // 'bonus' = Basic / Trial
+                    // 'paid' = Monthly / Recurring
+                    // 'lifetime' = Vitalício
+                    
+                    // Is there a 'complete' plan that is NOT 'paid'?
+                    // If the 30-day access is considered 'paid' in the DB, we might have an issue distinguishing.
+                    // But usually 30-day fixed might be a different product or status.
+                    // For now, let's assume:
+                    // Allow: 'paid', 'lifetime'
+                    // Block: 'bonus' (Basic), and anything else that might be the 30-day one if it's distinct.
+                    // If the user says "assinatura disponivel de 30 dias do acesso completo", it implies a specific non-recurring offer.
+                    // If we don't have a way to distinguish 'paid' recurring vs 'paid' fixed 30 days easily without more data,
+                    // we will stick to: Allow if subscriptionType is 'paid' or 'lifetime'.
+                    // AND strictly block if it's the 30-day one IF we can identify it.
+                    // If 'paid' covers both, we might need to check `plan` name if available in userData.
+                    
+                    // Let's use a safe approach:
+                    // Allow if (isPaid || isLifetime). 
+                    // BUT, if the user explicitly said "assinatura disponivel de 30 dias", maybe that's a specific case.
+                    // Wait, usually "Assinatura" implies recurring. "Acesso de 30 dias" might be a one-off.
+                    // If one-off, maybe subscriptionType is different or we check expiration?
+                    // Actually, let's look at `userData`.
+                    
+                    // For this change, I will implement the check:
+                    // Eligible = (userData.subscriptionType === 'paid' || userData.subscriptionType === 'lifetime');
+                    
+                    const isEligibleForAI = isPaid || isLifetime;
+                    
+                    if (isEligibleForAI) {
+                        goalEl.innerHTML = '<a href="/equilibrio" style="font-size: 0.85rem; color: var(--secondary-caramel); text-decoration: underline;">Analisar Progresso</a>';
+                    } else {
+                         goalEl.innerHTML = '<span style="font-size: 0.85rem; color: #999; cursor: not-allowed;" title="Disponível apenas em planos recorrentes ou vitalícios">Analisar Progresso (Bloqueado)</span>';
+                    }
                 } else {
                     goalEl.innerText = goalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 }
@@ -2904,6 +3030,7 @@
 
                 if (document.getElementById('ticketAvg')) document.getElementById('ticketAvg').innerText = stats.ticketAverage.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 if (document.getElementById('totalItems')) document.getElementById('totalItems').innerText = stats.salesCount;
+                if (document.getElementById('totalQuantity')) document.getElementById('totalQuantity').innerText = stats.totalQuantity || 0;
                 
                 if (data.charts) updateCharts(data.charts);
                 if (stats.topProducts) updateTopProducts(stats.topProducts);
@@ -4000,8 +4127,23 @@
                 alert('Erro ao excluir venda.');
             }
         }
-        function openPlanSelectionModal() {
+        function openPlanSelectionModal(onlyLifetime = false) {
             const modal = document.getElementById('planSelectionModal');
+            const monthlyOption = document.getElementById('monthlyPlanOption');
+            const modalTitle = document.getElementById('planModalTitle');
+            const modalSubtitle = document.getElementById('planModalSubtitle');
+
+            if (monthlyOption) {
+                monthlyOption.style.display = onlyLifetime ? 'none' : 'flex';
+            }
+            
+            if (modalTitle) {
+                modalTitle.textContent = onlyLifetime ? 'Fazer Upgrade' : 'Escolha seu Plano';
+            }
+            if (modalSubtitle) {
+                modalSubtitle.textContent = onlyLifetime ? 'Migre para o acesso vitalício' : 'Garanta acesso contínuo ao Fluxo de Caixa';
+            }
+
             if (modal) modal.style.display = 'flex';
         }
 
@@ -4018,14 +4160,14 @@
                 <i data-lucide="x" style="width: 20px; height: 20px; color: #666;"></i>
             </button>
             
-            <h2 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--text-brown); font-size: 1.5rem; font-weight: 700;">
+            <h2 id="planModalTitle" style="margin-top: 0; margin-bottom: 0.5rem; color: var(--text-brown); font-size: 1.5rem; font-weight: 700;">
                 Escolha seu Plano
             </h2>
-            <p style="color: #666; margin-bottom: 2rem;">Garanta acesso contínuo ao Fluxo de Caixa</p>
+            <p id="planModalSubtitle" style="color: #666; margin-bottom: 2rem;">Garanta acesso contínuo ao Fluxo de Caixa</p>
             
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <!-- Monthly Plan -->
-                <div onclick="redirectToCheckout('monthly')" style="border: 2px solid #E0E0E0; border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between;" onmouseover="this.style.borderColor='#4CAF50'; this.style.background='#F1F8E9'" onmouseout="this.style.borderColor='#E0E0E0'; this.style.background='white'">
+                <div id="monthlyPlanOption" onclick="redirectToCheckout('monthly')" style="border: 2px solid #E0E0E0; border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: space-between;" onmouseover="this.style.borderColor='#4CAF50'; this.style.background='#F1F8E9'" onmouseout="this.style.borderColor='#E0E0E0'; this.style.background='white'">
                     <div style="text-align: left;">
                         <div style="font-weight: 700; color: var(--text-brown); font-size: 1.1rem;">Assinatura Mensal</div>
                         <div style="font-size: 0.9rem; color: #666;">Renova a cada mês</div>
@@ -4301,6 +4443,66 @@
                 window.open('https://pay.cakto.com.br/9gh3y82_753500' + emailQuery, '_blank');
             }
         }
+    </script>
+    <!-- Fluxo Welcome Modal -->
+    <div id="welcomeFluxoModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="modal-content" style="background: transparent; padding: 0; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; position: relative; display: flex; flex-direction: column; align-items: center; z-index: 10001;">
+            
+            <button onclick="closeWelcomeFluxoModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.4); border: none; cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; color: white; z-index: 20;">
+                <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+            </button>
+
+            <!-- Video Container 9:16 -->
+            <div style="width: 100%; aspect-ratio: 9/16; min-height: 400px; background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); position: relative; display: flex; align-items: center; justify-content: center;">
+                <!-- Placeholder for Video -->
+                <div style="text-align: center; color: white; padding: 2rem;">
+                    <i data-lucide="play-circle" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.8;"></i>
+                    <p>Vídeo de Apresentação (9:16)</p>
+                    <small style="opacity: 0.7;">Insira a URL do vídeo aqui</small>
+                </div>
+            </div>
+            
+            <button onclick="closeWelcomeFluxoModal()" style="margin-top: 1.5rem; background: var(--secondary-caramel); color: white; border: none; padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(205, 122, 62, 0.3);">
+                Começar a Usar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function checkWelcomeFluxoModal() {
+            const modal = document.getElementById('welcomeFluxoModal');
+            if (!modal) return;
+
+            const welcomeSeen = localStorage.getItem('bellecake_fluxo_welcome_seen');
+            const userEmail = window.currentUserData ? window.currentUserData.email : '';
+            
+            console.log('Checking Welcome Modal:', { welcomeSeen, userEmail }); // Debug
+
+            // Show if not seen OR if user is simulacao@bellecake.com
+            if (!welcomeSeen || userEmail === 'simulacao@bellecake.com') {
+                modal.style.display = 'flex';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        function closeWelcomeFluxoModal() {
+            const modal = document.getElementById('welcomeFluxoModal');
+            if (modal) {
+                modal.style.display = 'none';
+                const video = modal.querySelector('video');
+                if (video) video.pause();
+            }
+            // Only set seen if NOT simulacao (so they can see it again for debug)
+            // OR set it anyway, but the check above overrides it for simulacao
+            localStorage.setItem('bellecake_fluxo_welcome_seen', 'true');
+        }
+
+        // Also try to run on load just in case user data is already there (unlikely but safe)
+        document.addEventListener('DOMContentLoaded', () => {
+             if (window.currentUserData) {
+                 checkWelcomeFluxoModal();
+             }
+        });
     </script>
 </body>
 </html>

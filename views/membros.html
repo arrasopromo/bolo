@@ -346,7 +346,94 @@
     </div>
 
     <script src="/js/main.js"></script>
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="modal-content" style="background: white; padding: 1.5rem 1rem; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.4); animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column;">
+            <button onclick="closeWelcomeModal()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #999; padding: 5px; z-index: 10;">
+                <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+            </button>
+            
+            <div style="margin-bottom: 0.5rem;">
+                <img src="/images/logo preta bellecake.png" alt="Belle Cake" style="width: 140px; height: auto;">
+            </div>
+            
+            <h2 style="color: var(--text-brown); margin-bottom: 0.3rem; font-size: 1.3rem; line-height: 1.2;">Seja muito bem-vinda(o)!</h2>
+            
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.4; padding: 0 0.5rem;">
+                Muito obrigado pela sua confiança! Garantimos que você vai adorar tudo o que preparamos para você na área de membros.
+            </p>
+            
+            <div style="text-align: left; background: #FFFBF7; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #F5E6D3;">
+                <p style="margin-bottom: 0.5rem; display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; color: #555; line-height: 1.4;">
+                    <i data-lucide="check-circle-2" style="color: #4CAF50; width: 16px; flex-shrink: 0; margin-top: 3px;"></i>
+                    <span>O acesso às ferramentas é <strong>imediato</strong>.</span>
+                </p>
+                <p style="margin: 0; display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; color: #555; line-height: 1.4;">
+                    <i data-lucide="play-circle" style="color: var(--secondary-caramel); width: 16px; flex-shrink: 0; margin-top: 3px;"></i>
+                    <span>Assista a <strong>todas as aulas</strong>. Elas são rápidas e essenciais para o seu sucesso.</span>
+                </p>
+            </div>
+
+            <!-- Contact Info -->
+            <div style="margin-bottom: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                <p style="font-size: 0.8rem; color: #999; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Canais de Atendimento</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <a href="https://instagram.com/isbellecake" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #E1306C; font-weight: 600; font-size: 0.9rem; padding: 0.5rem; background: #FFF0F5; border-radius: 8px; transition: background 0.2s;">
+                        <i data-lucide="instagram" style="width: 16px; height: 16px;"></i> @isbellecake
+                    </a>
+                    
+                    <a href="mailto:suportebellecake@gmail.com" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: var(--text-brown); font-weight: 600; font-size: 0.9rem; padding: 0.5rem; background: #F5F5F5; border-radius: 8px; transition: background 0.2s;">
+                        <i data-lucide="mail" style="width: 16px; height: 16px;"></i> suportebellecake@gmail.com
+                    </a>
+                </div>
+            </div>
+
+            <label style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 1rem; cursor: pointer; color: #777; font-size: 0.8rem; user-select: none;">
+                <input type="checkbox" id="dontShowWelcomeAgain" style="width: 16px; height: 16px; accent-color: var(--secondary-caramel);"> Não exibir novamente
+            </label>
+            
+            <button onclick="closeWelcomeModal()" style="background: var(--secondary-caramel); color: white; border: none; padding: 0.8rem; border-radius: 10px; font-weight: 700; font-size: 0.95rem; width: 100%; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(205, 122, 62, 0.3);">
+                Começar Agora
+            </button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
     <script>
+        function closeWelcomeModal() {
+            const checkbox = document.getElementById('dontShowWelcomeAgain');
+            if (checkbox && checkbox.checked) {
+                localStorage.setItem('bellecake_welcome_seen', 'true');
+            }
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check welcome message
+            const welcomeSeen = localStorage.getItem('bellecake_welcome_seen');
+            if (!welcomeSeen) {
+                setTimeout(() => {
+                    const modal = document.getElementById('welcomeModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        lucide.createIcons();
+                    }
+                }, 1000);
+            }
+        });
+
+        // ... existing code ...
+
         lucide.createIcons();
 
         // Login Modal Logic

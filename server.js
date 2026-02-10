@@ -576,6 +576,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
             let totalRevenue = 0;
             let totalVariableCost = 0;
             let totalSalesCount = sales.length;
+            let totalQuantity = 0;
             let salesByMethod = { pix: 0, credit: 0, debit: 0, cash: 0 };
             let salesByDay = {};
             let productStats = {};
@@ -591,6 +592,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
 
                 totalRevenue += amount;
                 totalVariableCost += variableCost;
+                totalQuantity += (sale.quantity || 0);
                 
                 // For Goal Met Check
                 runningRevenue += amount;
@@ -651,6 +653,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                 netProfit,
                 ticketAverage,
                 salesCount: totalSalesCount,
+                totalQuantity,
                 salesByMethod,
                 salesByDay,
                 topProducts,
@@ -690,6 +693,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
                 netProfit: mainStats.netProfit,
                 ticketAverage: mainStats.ticketAverage,
                 salesCount: mainStats.salesCount,
+                totalQuantity: mainStats.totalQuantity,
                 salesByMethod: mainStats.salesByMethod,
                 topProducts: mainStats.topProducts
             },

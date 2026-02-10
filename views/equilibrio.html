@@ -478,6 +478,42 @@
                         if (nameDisplay && userData.name) {
                             nameDisplay.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
                         }
+
+                        // --- FEATURE RESTRICTION (Analisar Progresso / IA) ---
+                        // Only available for Recurring (paid) or Lifetime users.
+                        // Block for Basic (Trial) and Bonus (30 days one-off).
+                        const isBasic = userData.plan === 'basic';
+                        // Check for lifetime (explicit type OR far future date)
+                        const isLifetime = userData.subscriptionType === 'lifetime' || 
+                                          (userData.subscriptionExpiresAt && new Date(userData.subscriptionExpiresAt).getFullYear() > 2090);
+                        // Check for paid recurring (assuming 'paid' enum means recurring/monthly)
+                        const isPaid = userData.subscriptionType === 'paid';
+
+                        // Allow only if Paid (Recurring) or Lifetime
+                        const isEligibleForAI = isPaid || isLifetime;
+
+                        if (!isEligibleForAI) {
+                            const analyzeBtn = document.querySelector('#calcFormStep2 button[type="submit"]');
+                            if (analyzeBtn) {
+                                analyzeBtn.disabled = true;
+                                analyzeBtn.innerHTML = 'Exclusivo Assinatura/Vitalício <i data-lucide="lock"></i>';
+                                analyzeBtn.style.background = '#e0e0e0';
+                                analyzeBtn.style.color = '#888';
+                                analyzeBtn.style.cursor = 'not-allowed';
+                                analyzeBtn.style.boxShadow = 'none';
+                                analyzeBtn.title = 'Recurso disponível apenas para assinantes mensais ou vitalícios.';
+                                
+                                // Optional: Add a small message below
+                                const msg = document.createElement('p');
+                                msg.style.color = '#F44336';
+                                msg.style.fontSize = '0.8rem';
+                                msg.style.textAlign = 'center';
+                                msg.style.marginTop = '0.5rem';
+                                msg.innerText = 'Faça upgrade para acessar a análise com IA.';
+                                analyzeBtn.parentNode.appendChild(msg);
+                            }
+                        }
+                        // --- END RESTRICTION ---
                         
                         // Load saved Break-Even Data
                         try {
