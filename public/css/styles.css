@@ -343,10 +343,10 @@ body {
     font-size: 3.5rem;
     font-weight: 900;
     line-height: 1.1;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    text-shadow: none;
     color: var(--new-tan);
 }
 
@@ -358,7 +358,7 @@ body {
     font-family: 'Inter', sans-serif;
     color: var(--text-muted);
     font-size: 1.2rem; /* Increased font size */
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     line-height: 1.5;
 }

@@ -3764,10 +3764,6 @@
                 // Cycle through colors if needed
                 const colors = costs.map((_, i) => baseColors[i % baseColors.length]);
 
-                // Responsive Legend Position
-                const isMobile = window.innerWidth < 600;
-                const legendPosition = isMobile ? 'bottom' : 'right';
-
                 costsChartInstance = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
@@ -3788,16 +3784,7 @@
                         },
                         plugins: {
                             legend: {
-                                position: legendPosition,
-                                labels: {
-                                    boxWidth: 20,
-                                    padding: 15,
-                                    font: {
-                                        size: 14,
-                                        family: "'Inter', sans-serif"
-                                    },
-                                    color: '#5D4037'
-                                }
+                                display: false // Disable default legend
                             },
                             tooltip: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -3837,6 +3824,34 @@
                         }
                     }
                 });
+
+                // Generate Custom Legend
+                const legendContainer = document.getElementById('costsChartLegend');
+                if (legendContainer) {
+                    legendContainer.innerHTML = '';
+                    
+                    const totalAmount = data.reduce((a, b) => a + b, 0);
+                    
+                    labels.forEach((label, index) => {
+                        const amount = data[index];
+                        const color = colors[index];
+                        const percent = totalAmount > 0 ? ((amount / totalAmount) * 100).toFixed(1) : 0;
+                        
+                        const itemHtml = `
+                            <div class="legend-item">
+                                <div class="legend-info">
+                                    <div class="legend-color" style="background-color: ${color}"></div>
+                                    <div class="legend-label">${label}</div>
+                                </div>
+                                <div class="legend-values">
+                                    <div class="legend-amount">R$ ${amount.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                                    <div class="legend-percent">${percent}%</div>
+                                </div>
+                            </div>
+                        `;
+                        legendContainer.innerHTML += itemHtml;
+                    });
+                }
             } catch (err) {
                 console.error('Error rendering costs chart:', err);
             }
@@ -4026,56 +4041,104 @@
     </div>
 
     <!-- Costs Chart Modal -->
-    <div id="costsChartModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem;">
+    <div id="costsChartModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; justify-content: center; align-items: flex-start; padding: 4rem 1rem 1rem 1rem; overflow-y: auto;">
         <style>
             .costs-modal-content {
                 background: white; 
                 width: 100%; 
                 max-width: 800px; 
-                padding: 2.5rem; 
+                padding: 2rem; 
                 border-radius: 24px; 
                 box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
                 position: relative; 
                 display: flex; 
                 flex-direction: column; 
                 align-items: center;
+                margin: auto; /* Centers vertically if space allows */
             }
             .chart-container-modal {
-                    position: relative; 
-                    height: 500px; 
-                    width: 100%;
+                position: relative; 
+                height: 400px; 
+                width: 100%;
+                flex-shrink: 0; 
+            }
+            .custom-legend-container {
+                width: 100%;
+                margin-top: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem; /* Reduced gap */
+            }
+            .legend-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.5rem 0.8rem; /* Reduced padding */
+                background: #f9f9f9;
+                border-radius: 10px; /* Slightly smaller radius */
+                border: 1px solid #eee;
+            }
+            .legend-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .legend-color {
+                width: 12px; /* Smaller color box */
+                height: 12px;
+                border-radius: 3px;
+                flex-shrink: 0;
+            }
+            .legend-label {
+                font-weight: 600;
+                color: var(--text-brown);
+                font-size: 0.85rem; /* Smaller font */
+            }
+            .legend-values {
+                text-align: right;
+            }
+            .legend-amount {
+                font-weight: 700;
+                color: var(--text-brown);
+                font-size: 0.85rem; /* Smaller font */
+            }
+            .legend-percent {
+                font-size: 0.75rem; /* Smaller font */
+                color: #888;
+            }
+
+            @media (max-width: 768px) {
+                .costs-modal-content {
+                    padding: 1.5rem;
+                    width: 95% !important;
                 }
-                @media (max-width: 768px) {
-                    .costs-modal-content {
-                        padding: 1rem;
-                        max-height: 85vh;
-                        overflow-y: auto;
-                    }
-                    .chart-container-modal {
-                        height: 30vh;
-                        min-height: 200px;
-                        max-height: 300px;
-                    }
-                    #costsChartModal h2 {
-                        font-size: 1.2rem !important;
-                        margin-bottom: 0.5rem !important;
-                    }
+                .chart-container-modal {
+                    height: 350px !important; 
+                    min-height: 300px;
                 }
+                #costsChartModal h2 {
+                    font-size: 1.4rem !important;
+                    margin-bottom: 1rem !important;
+                }
+            }
         </style>
         <div class="costs-modal-content">
             <button onclick="closeCostsChartModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: #f5f5f5; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10;">
                 <i data-lucide="x" style="width: 24px; height: 24px; color: #666;"></i>
             </button>
             
-            <h2 style="margin-top: 0; margin-bottom: 2rem; text-align: center; color: var(--text-brown); font-size: 1.8rem; font-weight: 700;">
+            <h2 style="margin-top: 0; margin-bottom: 1rem; text-align: center; color: var(--text-brown); font-size: 1.8rem; font-weight: 700;">
                 Distribuição de Custos Fixos
             </h2>
             
             <div class="chart-container-modal">
                 <canvas id="costsPieChart"></canvas>
             </div>
+
+            <!-- Custom Legend Container -->
+            <div id="costsChartLegend" class="custom-legend-container"></div>
             
-            <p style="margin-top: 1.5rem; color: #888; font-size: 0.9rem; text-align: center;">
+            <p style="margin-top: 2rem; color: #888; font-size: 0.9rem; text-align: center;">
                 * Valores baseados nos custos cadastrados para este mês.
             </p>
         </div>

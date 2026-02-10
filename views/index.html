@@ -22,11 +22,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         @media (max-width: 768px) {
             .pricing-card { display: none !important; }
             .mobile-video { 
-                display: block; 
-                width: 100%; 
-                padding: 1rem 1.5rem; 
                 display: flex; 
-                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+                width: 100%; 
+                padding: 0.5rem 1.5rem 1rem; 
             }
             .mobile-video .video-container { 
                 aspect-ratio: 9/16; 
@@ -71,22 +71,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             
             <div class="hero-text-side">
                 <h1 class="main-title">
-                    Planilha de precificação<br>
-                    <span>de confeitaria automática</span>
+                    Área de membros completa
                 </h1>
                 
                 <p class="subtitle">
-                    Pare de perder dinheiro! Calcule o preço exato dos seus bolos e doces em segundos.
+                    Veja demonstração do que terá acesso
                 </p>
 
                 <!-- Mobile vertical player (9:16) shown before photo/annotations -->
                 <div class="mobile-video">
                     <div class="video-container">
-                        <div class="video-placeholder" style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.4);">
-                            <i data-lucide="play-circle" style="width: 48px; height: 48px; color: white;"></i>
-                            <p style="color: white; margin-top: 0.5rem; font-size: 0.95rem;">GIF de demonstração (9:16)</p>
-                        </div>
+                        <img src="/images/index%20gif.gif" alt="Demonstração" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
+                    <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
                 </div>
 
                 <div class="pricing-card">
