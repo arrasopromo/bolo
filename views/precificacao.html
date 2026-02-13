@@ -454,8 +454,8 @@
             
             /* Modal adjustments for mobile */
             .modal-content {
-                max-height: calc(100vh - 100px);
-                margin: 80px auto 20px auto; /* Better spacing from top/bottom */
+                max-height: calc(100vh - 140px);
+                margin: 110px auto 30px auto; /* Push down below fixed header (80px + 30px) */
                 width: 95%;
                 padding: 1.5rem;
             }
@@ -465,11 +465,16 @@
                 font-size: 16px !important;
             }
             
-            /* Ingredient row mobile adjustment - Bigger cards */
+            /* Ingredient row mobile adjustment - Stacked layout for better visibility */
             .ingredient-row {
-                grid-template-columns: 1fr 90px 45px !important;
+                display: grid !important;
+                grid-template-columns: 1fr 50px !important;
                 gap: 0.8rem;
-                padding: 1rem !important; /* Larger touch area */
+                padding: 1.2rem !important;
+            }
+            
+            .ingredient-row .ing-select {
+                grid-column: 1 / -1 !important; /* Full width on top */
             }
 
             .mobile-header-actions {
@@ -490,6 +495,20 @@
                 background: rgba(255,255,255,0.15);
                 padding: 0.5rem 1rem;
                 border-radius: 20px;
+            }
+
+            /* Reorder Products Header on Mobile */
+            .products-header-controls {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .new-product-btn {
+                width: 100% !important;
+                order: -1; /* Move to top */
+            }
+            .search-sort-container {
+                width: 100% !important;
+                min-width: 0 !important;
             }
         }
     </style>
@@ -626,8 +645,8 @@
 
             <!-- View: Produtos -->
             <div id="tab-produtos" class="view-section" style="display: block;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 250px; display: flex; gap: 10px; align-items: stretch;">
+                <div class="products-header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;">
+                    <div class="search-sort-container" style="flex: 1; min-width: 250px; display: flex; gap: 10px; align-items: stretch;">
                         <div style="position: relative; flex: 1;">
                             <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; width: 18px; height: 18px;"></i>
                             <input type="text" id="productSearchInput" placeholder="Buscar produtos..." onkeyup="filterProducts()" 
@@ -656,7 +675,7 @@
                             </div>
                         </div>
                     </div>
-                    <button onclick="openProductModal()" class="btn-action-primary">
+                    <button onclick="openProductModal()" class="btn-action-primary new-product-btn">
                         <i data-lucide="plus"></i> Novo Produto
                     </button>
                 </div>
@@ -969,6 +988,16 @@
             // Mobile menu highlight
             const mobileNavItem = document.getElementById('mobile-nav-' + tabName);
             if (mobileNavItem) mobileNavItem.classList.add('active');
+
+            // Update Page Title
+            const pageTitle = document.getElementById('pageTitle');
+            if (pageTitle) {
+                if (tabName === 'ingredientes') {
+                    pageTitle.innerText = 'Ingredientes';
+                } else {
+                    pageTitle.innerText = 'Precificação de Produtos';
+                }
+            }
         }
 
         // --- Data Loading ---
