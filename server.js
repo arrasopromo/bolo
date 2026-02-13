@@ -187,7 +187,7 @@ app.get('/upgrade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'up
 // Redirects for direct access
 app.get('/ingredientes', (req, res) => res.redirect('/precificacao?tab=ingredientes'));
 app.get('/produtos', (req, res) => res.redirect('/precificacao?tab=produtos'));
-app.get('/estoque', (req, res) => res.redirect('/precificacao?tab=estoque'));
+app.get('/estoque', (req, res) => res.sendFile(path.join(__dirname, 'views', 'estoque.html')));
 
 // app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html'))); // Use modal instead
 
@@ -391,7 +391,12 @@ app.post('/api/ingredients', authenticateToken, checkSubscription, async (req, r
 app.put('/api/ingredients/:id', authenticateToken, checkSubscription, async (req, res) => {
     try {
         const { name, price, unit, quantityPackage, currentStock } = req.body;
-        const updateData = { name: capitalizeFirstLetter(name), price, unit, quantityPackage };
+        
+        const updateData = {};
+        if (name) updateData.name = capitalizeFirstLetter(name);
+        if (price !== undefined) updateData.price = price;
+        if (unit) updateData.unit = unit;
+        if (quantityPackage !== undefined) updateData.quantityPackage = quantityPackage;
         if (currentStock !== undefined) updateData.currentStock = currentStock;
 
         const ingredient = await Ingredient.findOneAndUpdate(

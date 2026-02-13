@@ -113,7 +113,7 @@
         }
 
         .sidebar-logo {
-            max-width: 140px;
+            max-width: 180px;
             height: auto;
             filter: brightness(0) invert(1);
         }
@@ -557,6 +557,71 @@
             box-shadow: 0 0 0 3px rgba(205, 122, 62, 0.1);
             outline: none;
         }
+
+        /* --- Bulk Mobile Layout (Card Style) --- */
+        @media (max-width: 768px) {
+            #bulkIngredientModal .data-table thead {
+                display: none;
+            }
+            #bulkIngredientModal .data-table tbody tr {
+                display: flex;
+                flex-wrap: wrap;
+                background: #f9f9f9;
+                margin-bottom: 1rem;
+                border-radius: 12px;
+                padding: 1rem;
+                border: 1px solid #eee;
+                gap: 8px;
+                position: relative;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            }
+            #bulkIngredientModal .data-table td {
+                display: block;
+                padding: 0 !important;
+                border: none !important;
+            }
+            
+            /* Name: Full Width */
+            #bulkIngredientModal .data-table td:nth-child(1) {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            #bulkIngredientModal .data-table td:nth-child(1)::before {
+                content: "Nome";
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #888;
+                display: block;
+                margin-bottom: 2px;
+                text-transform: uppercase;
+            }
+
+            /* Price, Qty, Unit: Side by Side (Grid-like) */
+            #bulkIngredientModal .data-table td:nth-child(2),
+            #bulkIngredientModal .data-table td:nth-child(3),
+            #bulkIngredientModal .data-table td:nth-child(4) {
+                flex: 1;
+                min-width: 80px;
+            }
+            
+            /* Add Mini Labels */
+            #bulkIngredientModal .data-table td:nth-child(2)::before { content: "Preço (R$)"; font-size: 0.7rem; color: #888; font-weight: 600; display: block; margin-bottom: 2px; }
+            #bulkIngredientModal .data-table td:nth-child(3)::before { content: "Qtd"; font-size: 0.7rem; color: #888; font-weight: 600; display: block; margin-bottom: 2px; }
+            #bulkIngredientModal .data-table td:nth-child(4)::before { content: "Unidade"; font-size: 0.7rem; color: #888; font-weight: 600; display: block; margin-bottom: 2px; }
+
+            /* Delete Button: Absolute Positioned Top Right */
+            #bulkIngredientModal .data-table td:nth-child(5) {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                width: auto;
+            }
+            #bulkIngredientModal .data-table td:nth-child(5) button {
+                padding: 5px;
+                background: #ffebee !important;
+                border-radius: 6px;
+            }
+        }
         
         /* Voice Cancel Button Animation */
         .voice-cancel-btn {
@@ -581,6 +646,22 @@
             transform: scale(1.1);
             background: #ff1744;
         }
+
+        /* Ingredients Header Actions Spacing */
+        .ingredients-header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 2.5rem; /* Mobile default */
+        }
+        @media (min-width: 900px) { /* Desktop */
+            .ingredients-header-actions {
+                margin-top: 12rem !important; /* Significantly increased spacing for desktop as requested */
+            }
+        }
     </style>
 </head>
 <body>
@@ -592,10 +673,7 @@
         </a>
         
         <div class="mobile-header-actions">
-            <a href="/fluxo" class="mobile-link">
-                <i data-lucide="layout-dashboard" style="width: 18px;"></i>
-                Fluxo de Caixa
-            </a>
+
             <button id="mobileMenuBtn" style="background:none; border:none; color:#FFFFFF; cursor: pointer;">
                 <i data-lucide="menu" size="28"></i>
             </button>
@@ -607,6 +685,9 @@
             </div>
             <div class="nav-item" id="mobile-nav-ingredientes" onclick="closeAllModals(); switchTab('ingredientes'); document.getElementById('mobileMenuDropdown').style.display='none'">
                 <i data-lucide="shopping-basket"></i> Ingredientes
+            </div>
+            <div class="nav-item" onclick="window.location.href='/estoque'">
+                <i data-lucide="package"></i> Estoque
             </div>
             <div class="nav-item" onclick="window.location.href='/membros'">
                 <i data-lucide="arrow-left"></i> Voltar Painel
@@ -632,9 +713,10 @@
                 </li>
             </ul>
             <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.8rem;">
-                <div class="nav-item" onclick="window.location.href='/fluxo'" style="color: rgba(255,255,255,0.7);">
-                    <i data-lucide="layout-dashboard"></i> Fluxo de Caixa
+                <div class="nav-item" onclick="window.location.href='/estoque'" style="color: rgba(255,255,255,0.7);">
+                    <i data-lucide="package"></i> Estoque
                 </div>
+
                 <div class="nav-item" onclick="window.location.href='/membros'" style="color: #FFFFFF;">
                     <i data-lucide="arrow-left"></i> Voltar Painel
                 </div>
@@ -673,6 +755,9 @@
                             </button>
                             
                             <div id="mobileSortMenu" style="display: none; position: absolute; top: 110%; right: 0; background: white; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 200px; z-index: 100; flex-direction: column; overflow: hidden;">
+                                <div onclick="applyMobileSort('recent')" style="padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+                                    Mais Recentes <i data-lucide="clock" style="width: 16px; color: #999;"></i>
+                                </div>
                                 <div onclick="applyMobileSort('name')" style="padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
                                     Nome <i data-lucide="a-arrow-down" style="width: 16px; color: #999;"></i>
                                 </div>
@@ -715,7 +800,7 @@
             <!-- View: Ingredientes -->
             <div id="tab-ingredientes" class="view-section" style="display: none;">
                 
-                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+                <div class="ingredients-header-actions">
                     <button onclick="openStandardIngredientsModal()" class="btn-submit" style="width: auto; padding: 0.8rem 1.5rem; background: var(--text-brown); height: 46px; display: flex; align-items: center;">
                         <i data-lucide="download"></i> Produtos Pré-cadastrados
                     </button>
@@ -932,10 +1017,13 @@
 
                 <div style="margin-top: 1.5rem; padding: 1rem; background: #f0f8ff; border-radius: 8px; font-size: 0.9rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
-                        <strong>Custo sobre Preço:</strong> <span id="prodCostPercent">0%</span>
+                        <strong>Custo (%):</strong> <span id="prodCostPercent">0%</span>
                     </div>
                     <div>
-                        <strong>Lucro Líquido:</strong> <span id="prodNetProfit" style="font-weight: bold;">R$ 0,00</span>
+                        <strong>Lucro (R$):</strong> <span id="prodNetProfit" style="font-weight: bold;">R$ 0,00</span>
+                    </div>
+                    <div style="grid-column: span 2; border-top: 1px solid #dae7f7; padding-top: 0.8rem; margin-top: 0.2rem;">
+                        <strong>Margem de Lucro:</strong> <span id="prodProfitMargin" style="font-weight: bold;">0%</span>
                     </div>
                 </div>
 
@@ -964,6 +1052,10 @@
             document.querySelectorAll('.modal-overlay').forEach(overlay => {
                 overlay.addEventListener('click', (e) => {
                     if (e.target === overlay) {
+                        // Prevent closing productModal when clicking outside on mobile (User Request)
+                        if (overlay.id === 'productModal' && window.innerWidth <= 900) {
+                            return;
+                        }
                         closeAllModals();
                     }
                 });
@@ -1108,7 +1200,8 @@
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 currentSort.field = field;
-                currentSort.direction = 'asc';
+                // Default direction: 'recent' = desc (newest first), others = asc
+                currentSort.direction = field === 'recent' ? 'desc' : 'asc';
             }
             renderProductsTable();
         }
@@ -1151,6 +1244,10 @@
                     } else if (currentSort.field === 'name') {
                         valA = a.name.toLowerCase();
                         valB = b.name.toLowerCase();
+                    } else if (currentSort.field === 'recent') {
+                        // Use _id for chronological sort
+                        valA = a._id || '';
+                        valB = b._id || '';
                     } else {
                         valA = a[currentSort.field];
                         valB = b[currentSort.field];
@@ -1496,6 +1593,10 @@
 
             const costPercent = salePrice > 0 ? (totalVariableCost / salePrice) * 100 : 0;
             document.getElementById('prodCostPercent').textContent = costPercent.toFixed(1) + '%';
+            
+            const profitMargin = salePrice > 0 ? (netProfit / salePrice) * 100 : 0;
+            const marginEl = document.getElementById('prodProfitMargin');
+            if(marginEl) marginEl.textContent = profitMargin.toFixed(1) + '%';
         }
 
         async function saveProduct(e) {
@@ -2172,11 +2273,15 @@
             btn.innerText = 'Salvando...';
             
             let successCount = 0;
+            let successNames = [];
             let errors = [];
             let remainingItems = [];
 
             try {
-                for (const item of bulkIngredients) {
+                // Clone array to avoid modification issues during iteration (though for-of is safe)
+                const itemsToProcess = [...bulkIngredients];
+
+                for (const item of itemsToProcess) {
                     try {
                         const res = await fetch('/api/ingredients', {
                             method: 'POST',
@@ -2186,6 +2291,7 @@
                         
                         if (res.ok) {
                             successCount++;
+                            successNames.push(item.name);
                         } else {
                             const err = await res.json();
                             errors.push(`${item.name}: ${err.error || 'Erro desconhecido'}`);
@@ -2198,24 +2304,32 @@
                 }
 
                 if (errors.length > 0) {
-                    alert(`Salvos: ${successCount}\nErros:\n${errors.join('\n')}`);
+                    let msg = '';
+                    if (successCount > 0) {
+                        msg += `✅ ${successCount} ITENS SALVOS:\n${successNames.join(', ')}\n\n`;
+                    }
+                    msg += `❌ ${errors.length} ERROS:\n${errors.join('\n')}\n\nVerifique os itens restantes na lista.`;
+                    
+                    alert(msg);
                     bulkIngredients = remainingItems;
                     renderBulkList();
                     loadIngredients();
-                    // Don't enable here, let finally handle it or specific logic
                 } else {
                     bulkIngredients = [];
                     renderBulkList();
                     closeModal('bulkIngredientModal');
                     loadIngredients();
-                    alert('Todos os ingredientes foram salvos com sucesso!');
+                    alert(`✅ Sucesso! Todos os ${successCount} ingredientes foram salvos:\n\n${successNames.join(', ')}`);
                 }
             } catch (err) {
                 console.error('Critical error in bulk save:', err);
-                alert('Erro crítico ao salvar. Tente novamente.');
+                alert('Erro crítico ao processar a lista. Verifique o console ou tente novamente.');
             } finally {
                 btn.disabled = false;
                 btn.innerText = `Salvar Todos (${bulkIngredients.length})`;
+                if (bulkIngredients.length === 0) {
+                    btn.disabled = true;
+                }
             }
         }
     </script>
