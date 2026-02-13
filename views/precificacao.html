@@ -454,16 +454,22 @@
             
             /* Modal adjustments for mobile */
             .modal-content {
-                max-height: 85vh;
-                margin-top: 100px; /* Prevent hiding behind header */
+                max-height: calc(100vh - 100px);
+                margin: 80px auto 20px auto; /* Better spacing from top/bottom */
                 width: 95%;
                 padding: 1.5rem;
             }
             
-            /* Ingredient row mobile adjustment */
+            /* Prevent iOS Zoom on inputs */
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+            
+            /* Ingredient row mobile adjustment - Bigger cards */
             .ingredient-row {
-                grid-template-columns: 1fr 80px 40px !important;
-                gap: 0.5rem;
+                grid-template-columns: 1fr 90px 45px !important;
+                gap: 0.8rem;
+                padding: 1rem !important; /* Larger touch area */
             }
 
             .mobile-header-actions {
@@ -564,10 +570,10 @@
         </div>
 
         <div class="mobile-menu-dropdown" id="mobileMenuDropdown">
-            <div class="nav-item" id="mobile-nav-produtos" onclick="switchTab('produtos'); document.getElementById('mobileMenuDropdown').style.display='none'">
+            <div class="nav-item" id="mobile-nav-produtos" onclick="closeAllModals(); switchTab('produtos'); document.getElementById('mobileMenuDropdown').style.display='none'">
                 <i data-lucide="package"></i> Produtos
             </div>
-            <div class="nav-item" id="mobile-nav-ingredientes" onclick="switchTab('ingredientes'); document.getElementById('mobileMenuDropdown').style.display='none'">
+            <div class="nav-item" id="mobile-nav-ingredientes" onclick="closeAllModals(); switchTab('ingredientes'); document.getElementById('mobileMenuDropdown').style.display='none'">
                 <i data-lucide="shopping-basket"></i> Ingredientes
             </div>
             <div class="nav-item" onclick="window.location.href='/membros'">
@@ -881,7 +887,7 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end;">
                     <div>
                         <label>Preço Sugerido</label>
                         <input type="number" id="prodSuggestedPrice" readonly style="background: #eee; color: #666;">
@@ -1142,6 +1148,10 @@
             document.getElementById(id).style.display = 'none';
         }
 
+        function closeAllModals() {
+            document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+        }
+
         // --- Ingredient Actions ---
         function checkDuplicateIngredient(name) {
             const errorSpan = document.getElementById('ingNameError');
@@ -1211,6 +1221,9 @@
             }
             
             modal.style.display = 'flex';
+            // Scroll to top fix for mobile
+            const content = modal.querySelector('.modal-content');
+            if (content) content.scrollTop = 0;
         }
 
         async function saveIngredient(e) {
@@ -1306,6 +1319,9 @@
             
             calculateProductTotals(); // Initial calc
             modal.style.display = 'flex';
+            // Scroll to top fix for mobile
+            const content = modal.querySelector('.modal-content');
+            if (content) content.scrollTop = 0;
         }
 
         function addIngredientRow(data = null) {
