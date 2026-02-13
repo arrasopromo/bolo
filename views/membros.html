@@ -735,5 +735,16 @@
             }
         });
     </script>
+    <script>
+        // Remove target="_blank" from card links on mobile (User Request)
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth <= 768) {
+                const cardLinks = document.querySelectorAll('.content-card .access-btn[target="_blank"]');
+                cardLinks.forEach(link => {
+                    link.removeAttribute('target');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
