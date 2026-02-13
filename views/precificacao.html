@@ -390,15 +390,17 @@
 
         /* Ingredient Row Styles */
         .ingredient-row {
-            display: grid;
-            grid-template-columns: 1fr 100px 40px;
-            gap: 0.8rem;
+            display: block; /* Changed from grid to block for new structure */
             margin-bottom: 0.8rem;
-            align-items: center;
             background: #fff;
-            padding: 0.5rem;
+            padding: 1rem;
             border-radius: 8px;
             border: 1px solid #f0f0f0;
+            
+            /* Center on Desktop */
+            max-width: 750px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .ing-select {
             width: 100%;
@@ -469,15 +471,17 @@
             
             /* Ingredient row mobile adjustment - Clean single line */
             .ingredient-row {
-                display: grid !important;
-                grid-template-columns: 1fr 70px 32px !important; /* Maximized Name space | Qty | Delete (minimized) */
+                display: block !important;
+                max-width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                
                 gap: 0.3rem; /* Reduced gap */
                 padding: 0.5rem 0 !important; /* Minimal vertical padding */
                 background: transparent !important; /* Remove card bg */
                 border: none !important; /* Remove border */
                 border-bottom: 1px solid #eee !important; /* Just a separator */
                 border-radius: 0 !important;
-                align-items: center;
             }
             
             .ingredient-row .ing-select {
@@ -1490,18 +1494,25 @@
             const div = document.createElement('div');
             div.className = 'ingredient-row';
             div.innerHTML = `
-                <select class="ing-select" onchange="calculateProductTotals()">
-                    <option value="">Selecione um ingrediente...</option>
-                    ${allIngredients.map(ing => `
-                        <option value="${ing._id}" data-price="${ing.price}" data-pkg="${ing.quantityPackage}" data-unit="${ing.unit}">
-                            ${ing.name}
-                        </option>
-                    `).join('')}
-                </select>
-                <input type="number" class="ing-qty" placeholder="Qtd" step="0.001" oninput="calculateProductTotals()">
-                <button type="button" class="btn-cancel" style="width: auto; padding: 0.5rem; color: #ef4444;" onclick="this.parentElement.remove(); calculateProductTotals()">
-                    <i data-lucide="trash"></i>
-                </button>
+                <div style="width: 100%;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select class="ing-select" onchange="calculateProductTotals()" style="flex: 1; width: 0;">
+                            <option value="">Selecione um ingrediente...</option>
+                            ${allIngredients.map(ing => `
+                                <option value="${ing._id}" data-price="${ing.price}" data-pkg="${ing.quantityPackage}" data-unit="${ing.unit}">
+                                    ${ing.name}
+                                </option>
+                            `).join('')}
+                        </select>
+                        <input type="number" class="ing-qty" placeholder="Qtd" step="0.001" oninput="calculateProductTotals()" style="width: 110px; flex-shrink: 0;">
+                        <button type="button" class="btn-cancel" style="width: auto; padding: 0.5rem; color: #ef4444; flex-shrink: 0;" onclick="this.parentElement.parentElement.remove(); calculateProductTotals()">
+                            <i data-lucide="trash"></i>
+                        </button>
+                    </div>
+                    <div class="ing-cost-display" style="font-size: 0.8rem; color: #666; margin-top: 4px; padding-left: 4px; font-weight: 500;">
+                        Custo: R$ 0,00
+                    </div>
+                </div>
             `;
             
             container.appendChild(div);
@@ -1523,15 +1534,28 @@
             rows.forEach(row => {
                 const select = row.querySelector('.ing-select');
                 const qtyInput = row.querySelector('.ing-qty');
+                const costDisplay = row.querySelector('.ing-cost-display');
                 const qty = parseFloat(qtyInput.value) || 0;
                 
+                let rowCost = 0;
+
                 if (select.value) {
                     const option = select.options[select.selectedIndex];
                     const price = parseFloat(option.getAttribute('data-price')) || 0;
                     const pkg = parseFloat(option.getAttribute('data-pkg')) || 1;
                     
-                    const cost = (price / pkg) * qty;
-                    totalIngredientsCost += cost;
+                    rowCost = (price / pkg) * qty;
+                    totalIngredientsCost += rowCost;
+                }
+
+                if (costDisplay) {
+                    costDisplay.textContent = `Custo: ${formatCurrency(rowCost)}`;
+                    // Highlight if cost is high
+                    if (rowCost > 0) {
+                        costDisplay.style.color = '#CD7A3E'; // secondary-caramel
+                    } else {
+                        costDisplay.style.color = '#666';
+                    }
                 }
             });
 
