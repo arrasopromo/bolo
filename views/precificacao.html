@@ -454,10 +454,12 @@
             
             /* Modal adjustments for mobile */
             .modal-content {
-                max-height: calc(100vh - 140px);
-                margin: 110px auto 30px auto; /* Push down below fixed header (80px + 30px) */
+                max-height: 80vh; /* Fixed height relative to viewport */
+                margin: 90px auto 20px auto;
                 width: 95%;
                 padding: 1.5rem;
+                overflow-y: scroll; /* Force scrollbar */
+                -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
             }
             
             /* Prevent iOS Zoom on inputs */
@@ -465,16 +467,27 @@
                 font-size: 16px !important;
             }
             
-            /* Ingredient row mobile adjustment - Stacked layout for better visibility */
+            /* Ingredient row mobile adjustment - Clean single line */
             .ingredient-row {
                 display: grid !important;
-                grid-template-columns: 1fr 50px !important;
-                gap: 0.8rem;
-                padding: 1.2rem !important;
+                grid-template-columns: 1fr 70px 40px !important; /* Name | Qty | Delete */
+                gap: 0.5rem;
+                padding: 0.5rem 0 !important; /* Minimal vertical padding */
+                background: transparent !important; /* Remove card bg */
+                border: none !important; /* Remove border */
+                border-bottom: 1px solid #eee !important; /* Just a separator */
+                border-radius: 0 !important;
+                align-items: center;
             }
             
             .ingredient-row .ing-select {
-                grid-column: 1 / -1 !important; /* Full width on top */
+                grid-column: auto !important; /* Reset stacked layout */
+                border: 1px solid #ddd; /* Keep input border */
+                background: white;
+            }
+            
+            .ingredient-row .ing-qty {
+                text-align: center;
             }
 
             .mobile-header-actions {
