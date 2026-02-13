@@ -457,7 +457,7 @@
                 max-height: 80vh; /* Fixed height relative to viewport */
                 margin: 90px auto 20px auto;
                 width: 95%;
-                padding: 1.5rem;
+                padding: 1rem; /* Reduced padding for more horizontal space */
                 overflow-y: scroll; /* Force scrollbar */
                 -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
             }
@@ -470,8 +470,8 @@
             /* Ingredient row mobile adjustment - Clean single line */
             .ingredient-row {
                 display: grid !important;
-                grid-template-columns: 1fr 70px 40px !important; /* Name | Qty | Delete */
-                gap: 0.5rem;
+                grid-template-columns: 1fr 70px 32px !important; /* Maximized Name space | Qty | Delete (minimized) */
+                gap: 0.3rem; /* Reduced gap */
                 padding: 0.5rem 0 !important; /* Minimal vertical padding */
                 background: transparent !important; /* Remove card bg */
                 border: none !important; /* Remove border */
