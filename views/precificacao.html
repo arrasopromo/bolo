@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belle Cake - Precificação</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/styles.css?v=1.2">
+    <style>
+        /* --- Global Resets & Fixes --- */
+        ul, ol { list-style: none; padding: 0; margin: 0; }
+        * { box-sizing: border-box; }
+        
+        /* Capitalization for inputs */
+        input[type="text"], textarea {
+            text-transform: capitalize;
+        }
+
+        /* Fix Button Alignments */
+        .btn-submit, .btn-cancel, .btn-action-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-action-primary {
+            width: 200px; /* Fixed width for consistency */
+            padding: 0.6rem 1.2rem; /* Reduced height as requested */
+            background: linear-gradient(135deg, var(--secondary-caramel) 0%, #b86b35 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(205, 122, 62, 0.4);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-action-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(205, 122, 62, 0.6);
+        }
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px; 
+            height: 32px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .action-btn:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        /* Ensure Icons have size */
+        .lucide { width: 1.2rem; height: 1.2rem; }
+        
+        /* Table Fixes */
+        .data-table td { vertical-align: middle; }
+
+        /* --- COPIED STYLES FROM fluxo.html (Base Layout) --- */
+        :root {
+            --bg-cream: #FFFBF7;
+            --text-brown: #32221D;
+            --card-white: #FFFFFF;
+            --border-light: #E5E5E5;
+            --primary-yellow: #FFC107;
+            --secondary-caramel: #CD7A3E;
+            --navbar-bg: #32221D;
+        }
+
+        body {
+            background: var(--bg-cream) !important;
+            color: var(--text-brown) !important;
+            margin: 0;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar (Desktop) */
+        .sidebar {
+            width: 260px;
+            background: #73401F;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-logo-container {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            max-width: 140px;
+            height: auto;
+            filter: brightness(0) invert(1);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .nav-item {
+            padding: 0.9rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s ease;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--secondary-caramel);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .nav-item i { width: 22px; height: 22px; }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            background-color: #73401F !important;
+            color: #FFFFFF;
+            height: 80px;
+            padding: 0 1.5rem;
+            justify-content: flex-end;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            overflow: visible !important;
+        }
+
+        .mobile-logo {
+            position: absolute;
+            height: 120px;
+            width: auto;
+            top: -15px;
+            left: 15px;
+            filter: brightness(0) invert(1);
+            z-index: 10000;
+        }
+
+        .mobile-menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: #73401F !important;
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            z-index: 10000;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+
+        .mobile-menu-dropdown .nav-item {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .mobile-menu-dropdown .nav-item:hover,
+        .mobile-menu-dropdown .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+
+        .mobile-menu-dropdown.open {
+            display: flex;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2.5rem;
+            background: #FFFFFF;
+            border-top-left-radius: 30px;
+            border-bottom-left-radius: 30px;
+            min-height: 100vh;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.02);
+            margin-top: 0;
+        }
+
+        /* Button & Form Styles Shared */
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: var(--secondary-caramel);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-submit:hover { background: #b86b35; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(205, 122, 62, 0.3); }
+
+        .btn-cancel {
+            width: 100%;
+            padding: 1rem;
+            background: #f0f0f0;
+            color: #555;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-cancel:hover { background: #e0e0e0; transform: translateY(-2px); }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.95rem; font-weight: 600; color: var(--text-brown); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.9rem;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            background: #fff;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--secondary-caramel);
+            box-shadow: 0 4px 12px rgba(205, 122, 62, 0.15);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .mobile-header { display: flex; }
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+                padding-top: 75px;
+                border-radius: 0;
+                background: var(--bg-cream);
+            }
+        }
+
+        /* --- SPECIFIC STYLES FOR PRECIFICACAO --- */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--secondary-caramel);
+            border-bottom-color: var(--secondary-caramel);
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .view-section[style*="block"] {
+            display: block !important;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        .data-table th, .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .data-table th {
+            background: #f9f9f9;
+            font-weight: 600;
+            color: var(--text-brown);
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s;
+        }
+        .action-btn:hover { color: var(--secondary-caramel); }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Duplicate class removed */
+        .btn-action-primary:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(205, 122, 62, 0.6);
+        }
+        .btn-action-primary i { width: 18px; height: 18px; }
+
+        /* Ingredient Row Styles */
+        .ingredient-row {
+            display: grid;
+            grid-template-columns: 1fr 100px 40px;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+            align-items: center;
+            background: #fff;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #f0f0f0;
+        }
+        .ing-select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        .ing-qty {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* Mobile Table Adjustments */
+        @media (max-width: 768px) {
+            .data-table, .data-table tbody, .data-table tr, .data-table td {
+                display: block;
+                width: 100%;
+            }
+            .data-table thead { display: none; }
+            .data-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                padding: 1rem;
+                background: white;
+                position: relative; /* For absolute positioning if needed */
+            }
+            .data-table td {
+                padding: 0.5rem 0;
+                text-align: right;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .data-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #888;
+                font-size: 0.85rem;
+            }
+            /* Action buttons closer on mobile */
+            .data-table td[data-label="Ações"] {
+                justify-content: flex-end;
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+                border-top: 1px solid #f9f9f9;
+                padding-top: 0.8rem;
+            }
+            
+            /* Modal adjustments for mobile */
+            .modal-content {
+                max-height: 85vh;
+                margin-top: 100px; /* Prevent hiding behind header */
+                width: 95%;
+                padding: 1.5rem;
+            }
+            
+            /* Ingredient row mobile adjustment */
+            .ingredient-row {
+                grid-template-columns: 1fr 80px 40px !important;
+                gap: 0.5rem;
+            }
+
+            .mobile-header-actions {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                margin-left: auto;
+            }
+
+            .mobile-link {
+                color: white;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: rgba(255,255,255,0.15);
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+            }
+        }
+    </style>
+    <style>
+        @media (max-width: 768px) {
+            .btn-action-primary, .btn-action-secondary, .btn-submit {
+                padding: 8px 12px !important;
+                font-size: 14px !important;
+                height: auto !important;
+                min-height: 36px !important;
+            }
+            .btn-action-primary i, .btn-action-secondary i, .btn-submit i {
+                width: 16px !important;
+                height: 16px !important;
+            }
+            .view-section {
+                padding: 1rem !important;
+            }
+        }
+        
+        /* Bulk Input Styles */
+        .bulk-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fff;
+        }
+        .bulk-input:focus {
+            border-color: var(--secondary-caramel);
+            box-shadow: 0 0 0 3px rgba(205, 122, 62, 0.1);
+            outline: none;
+        }
+        
+        /* Voice Cancel Button Animation */
+        .voice-cancel-btn {
+            position: absolute; 
+            top: -10px; 
+            right: -10px; 
+            background: #FF5252; 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            width: 32px; 
+            height: 32px; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+        .voice-cancel-btn:hover {
+            transform: scale(1.1);
+            background: #ff1744;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="/precificacao">
+            <img src="/images/LOGO%20BELLE%20CAKE.png" alt="Belle Cake" class="mobile-logo">
+        </a>
+        
+        <div class="mobile-header-actions">
+            <a href="/fluxo" class="mobile-link">
+                <i data-lucide="layout-dashboard" style="width: 18px;"></i>
+                Fluxo de Caixa
+            </a>
+            <button id="mobileMenuBtn" style="background:none; border:none; color:#FFFFFF; cursor: pointer;">
+                <i data-lucide="menu" size="28"></i>
+            </button>
+        </div>
+
+        <div class="mobile-menu-dropdown" id="mobileMenuDropdown">
+            <div class="nav-item" id="mobile-nav-produtos" onclick="switchTab('produtos'); document.getElementById('mobileMenuDropdown').style.display='none'">
+                <i data-lucide="package"></i> Produtos
+            </div>
+            <div class="nav-item" id="mobile-nav-ingredientes" onclick="switchTab('ingredientes'); document.getElementById('mobileMenuDropdown').style.display='none'">
+                <i data-lucide="shopping-basket"></i> Ingredientes
+            </div>
+            <div class="nav-item" onclick="window.location.href='/membros'">
+                <i data-lucide="arrow-left"></i> Voltar Painel
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo-container">
+                <a href="/precificacao">
+                    <img src="/images/LOGO%20BELLE%20CAKE.png" alt="Belle Cake Logo" class="sidebar-logo">
+                </a>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item" id="nav-produtos" onclick="switchTab('produtos')">
+                    <i data-lucide="package"></i> Produtos
+                </li>
+                <li class="nav-item" id="nav-ingredientes" onclick="switchTab('ingredientes')">
+                    <i data-lucide="shopping-basket"></i> Ingredientes
+                </li>
+            </ul>
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.8rem;">
+                <div class="nav-item" onclick="window.location.href='/fluxo'" style="color: rgba(255,255,255,0.7);">
+                    <i data-lucide="layout-dashboard"></i> Fluxo de Caixa
+                </div>
+                <div class="nav-item" onclick="window.location.href='/membros'" style="color: #FFFFFF;">
+                    <i data-lucide="arrow-left"></i> Voltar Painel
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Top User Bar -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 0.5rem 1rem; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                    <div style="width: 32px; height: 32px; background: #FFFBF7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--secondary-caramel);">
+                        <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <span id="topUserName" style="font-weight: 600; font-size: 0.95rem; color: var(--text-brown);">Olá</span>
+                </div>
+            </div>
+
+            <h1 id="pageTitle" style="margin-bottom: 2rem;">Precificação de Produtos</h1>
+
+            <!-- View: Produtos -->
+            <div id="tab-produtos" class="view-section" style="display: block;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px; display: flex; gap: 10px; align-items: stretch;">
+                        <div style="position: relative; flex: 1;">
+                            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; width: 18px; height: 18px;"></i>
+                            <input type="text" id="productSearchInput" placeholder="Buscar produtos..." onkeyup="filterProducts()" 
+                                   style="width: 100%; padding: 0.8rem 1rem 0.8rem 2.5rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem;">
+                        </div>
+                        
+                        <!-- Mobile Sort Button -->
+                        <div class="mobile-only" style="position: relative;">
+                            <button onclick="toggleMobileSortMenu()" style="height: 46px; width: 46px; border: 1px solid #ddd; border-radius: 8px; background: white; color: #555; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i data-lucide="arrow-up-down" style="width: 20px; height: 20px;"></i>
+                            </button>
+                            
+                            <div id="mobileSortMenu" style="display: none; position: absolute; top: 110%; right: 0; background: white; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 200px; z-index: 100; flex-direction: column; overflow: hidden;">
+                                <div onclick="applyMobileSort('name')" style="padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+                                    Nome <i data-lucide="a-arrow-down" style="width: 16px; color: #999;"></i>
+                                </div>
+                                <div onclick="applyMobileSort('salePrice')" style="padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+                                    Preço Venda <i data-lucide="dollar-sign" style="width: 16px; color: #999;"></i>
+                                </div>
+                                <div onclick="applyMobileSort('variableCost')" style="padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+                                    Custo Variável <i data-lucide="trending-down" style="width: 16px; color: #999;"></i>
+                                </div>
+                                <div onclick="applyMobileSort('margin')" style="padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+                                    Margem % <i data-lucide="percent" style="width: 16px; color: #999;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="openProductModal()" class="btn-action-primary">
+                        <i data-lucide="plus"></i> Novo Produto
+                    </button>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="toggleSort('name')" style="cursor: pointer;">Nome <i data-lucide="arrow-up-down" style="width: 14px; height: 14px; vertical-align: middle;"></i></th>
+                                <th onclick="toggleSort('variableCost')" style="cursor: pointer;">Custo Variável <i data-lucide="arrow-up-down" style="width: 14px; height: 14px; vertical-align: middle;"></i></th>
+                                <th onclick="toggleSort('salePrice')" style="cursor: pointer;">Preço Venda <i data-lucide="arrow-up-down" style="width: 14px; height: 14px; vertical-align: middle;"></i></th>
+                                <th onclick="toggleSort('profit')" style="cursor: pointer;">Lucro Bruto <i data-lucide="arrow-up-down" style="width: 14px; height: 14px; vertical-align: middle;"></i></th>
+                                <th onclick="toggleSort('margin')" style="cursor: pointer;">Margem <i data-lucide="arrow-up-down" style="width: 14px; height: 14px; vertical-align: middle;"></i></th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- View: Ingredientes -->
+            <div id="tab-ingredientes" class="view-section" style="display: none;">
+                
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+                    <button onclick="openStandardIngredientsModal()" class="btn-submit" style="width: auto; padding: 0.8rem 1.5rem; background: var(--text-brown); height: 46px; display: flex; align-items: center;">
+                        <i data-lucide="download"></i> Produtos Pré-cadastrados
+                    </button>
+                    <button onclick="openIngredientModal()" class="btn-action-primary" style="height: 46px; display: flex; align-items: center; min-width: 180px; justify-content: center;">
+                        <i data-lucide="plus"></i> Novo Ingrediente
+                    </button>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="ingredientsTable">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Preço Pago</th>
+                                <th>Quantidade (Emb.)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Ingrediente -->
+    <div class="modal-overlay" id="ingredientModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1.5rem;">Novo Ingrediente</h2>
+            
+            <!-- Voice Recording UI -->
+            <div style="margin-bottom: 1.5rem; text-align: center; padding-bottom: 1.5rem; border-bottom: 1px solid #eee;">
+                <button type="button" id="voiceRecordBtnIng" onclick="toggleIngredientRecording()" style="background: linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%); border: none; width: 64px; height: 64px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 4px 15px rgba(181, 107, 54, 0.3); transition: all 0.2s;">
+                    <i data-lucide="mic" style="width: 30px; height: 30px;"></i>
+                </button>
+                <p id="voiceStatusIng" style="margin-top: 12px; font-size: 0.95rem; color: #666; font-weight: 500;">Toque para falar o ingrediente</p>
+                <small style="color: #999; display: block; margin-top: 4px;">Ex: "Farinha de Trigo, 5 reais, pacote de 1 quilo"</small>
+                
+                <button type="button" onclick="openBulkIngredientModal()" style="margin-top: 15px; background: none; border: 1px solid #4A90E2; color: #4A90E2; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i data-lucide="layers" style="width: 14px; height: 14px;"></i> Cadastro em Massa
+                </button>
+            </div>
+
+            <form id="ingredientForm" onsubmit="saveIngredient(event)">
+                <input type="hidden" id="ingId">
+                <div class="form-group">
+                    <label>Nome do Ingrediente</label>
+                    <input type="text" id="ingName" required placeholder="Ex: Farinha de Trigo" oninput="checkDuplicateIngredient(this.value)" onblur="this.value = toTitleCase(this.value); checkDuplicateIngredient(this.value)">
+                    <span id="ingNameError" style="color: #d32f2f; font-size: 0.85rem; font-weight: 600; display: none; margin-top: 4px;">Este ingrediente já está cadastrado!</span>
+                </div>
+                <div class="form-group">
+                    <label>Preço Pago (R$)</label>
+                    <input type="number" id="ingPrice" step="0.01" required placeholder="0.00">
+                </div>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Quantidade Embalagem</label>
+                        <input type="number" id="ingQty" step="0.001" required placeholder="1000">
+                    </div>
+                    <div>
+                        <label>Unidade</label>
+                        <select id="ingUnit" required>
+                            <option value="g">Gramas (g)</option>
+                            <!-- <option value="ml">Mililitros (ml)</option> -->
+                            <option value="un">Unidade (un)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button type="button" onclick="closeModal('ingredientModal')" class="btn-cancel" style="flex: 1; margin-top: 1rem;">Cancelar</button>
+                    <button type="submit" id="btnSaveIngredient" class="btn-submit" style="flex: 1;">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Bulk Ingredients -->
+    <div class="modal-overlay" id="bulkIngredientModal">
+        <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2>Cadastro em Massa de Ingredientes</h2>
+                <button onclick="closeModal('bulkIngredientModal')" style="background: none; border: none; cursor: pointer; color: #666;">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <!-- Voice UI -->
+            <div style="margin-bottom: 1.5rem; text-align: center; padding: 1.5rem; background: #f9fafb; border-radius: 12px; border: 1px dashed #ddd; position: relative;">
+                <div style="position: relative; width: 64px; height: 64px; margin: 0 auto;">
+                    <button type="button" id="voiceRecordBtnBulk" onclick="toggleBulkIngredientRecording()" style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); border: none; width: 100%; height: 100%; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); transition: all 0.2s;">
+                        <i data-lucide="mic" style="width: 30px; height: 30px;"></i>
+                    </button>
+                    <!-- Cancel Button -->
+                    <button type="button" id="voiceCancelBtnBulk" onclick="cancelBulkRecording()" class="voice-cancel-btn">
+                        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                    </button>
+                </div>
+                <p id="voiceStatusBulk" style="margin-top: 12px; font-size: 0.95rem; color: #666; font-weight: 500;">Toque para adicionar um novo item</p>
+                <small style="color: #999; display: block; margin-top: 4px;">Fale: "Nome, Preço, Quantidade" (Ex: Açúcar, 5 reais, 1 quilo)</small>
+            </div>
+
+            <!-- Staging Table -->
+            <div style="overflow-x: auto; max-height: 40vh; margin-bottom: 1.5rem; border: 1px solid #eee; border-radius: 8px;">
+                <table class="data-table" style="margin: 0;">
+                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                        <tr>
+                            <th>Nome</th>
+                            <th style="width: 120px;">Preço (R$)</th>
+                            <th style="width: 120px;">Qtd</th>
+                            <th style="width: 100px;">Unidade</th>
+                            <th style="width: 60px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="bulkIngredientsList">
+                        <!-- Rows -->
+                    </tbody>
+                </table>
+                <div id="bulkEmptyState" style="padding: 2rem; text-align: center; color: #999; font-style: italic;">
+                    Nenhum ingrediente adicionado ainda.
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
+                <button type="button" onclick="closeModal('bulkIngredientModal')" class="btn-cancel" style="width: auto;">Cancelar</button>
+                <button type="button" onclick="saveAllBulkIngredients()" class="btn-submit" id="btnSaveBulk" style="width: auto; background: #4A90E2;" disabled>
+                    Salvar Todos (<span id="bulkCount">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Produto -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <h2 style="margin-bottom: 1.5rem;">Novo Produto / Receita</h2>
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <input type="hidden" id="prodId">
+                <div class="form-group">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="prodName" required placeholder="Ex: Bolo de Cenoura" oninput="checkDuplicateProduct(this.value)" onblur="this.value = toTitleCase(this.value); checkDuplicateProduct(this.value)">
+                    <span id="prodNameError" style="color: #d32f2f; font-size: 0.85rem; font-weight: 600; display: none; margin-top: 4px;"></span>
+                </div>
+                
+                <div style="background: #f9f9f9; padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #eee;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-brown);">Ingredientes</h3>
+                    
+                    <div id="recipeIngredients" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <!-- Dynamic Rows -->
+                    </div>
+
+                    <button type="button" onclick="addIngredientRow()" style="width: 100%; margin-top: 1rem; background: white; border: 2px dashed #ddd; color: #666; padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onmouseover="this.style.borderColor='var(--secondary-caramel)'; this.style.color='var(--secondary-caramel)'" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666'">
+                        <i data-lucide="plus-circle" style="width: 18px;"></i> Adicionar Ingrediente
+                    </button>
+
+                    <div style="text-align: right; margin-top: 1.5rem; font-weight: 600; font-size: 1.05rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                        Custo Total Ingredientes: <span id="totalIngredientsCost" style="color: var(--secondary-caramel);">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Custo Invisível (%)</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="number" id="prodInvisibleCost" step="0.01" placeholder="Ex: 10" oninput="calculateProductTotals()" style="font-weight: 600;">
+                        <span style="font-weight: bold; color: #888;">%</span>
+                    </div>
+                    <small style="color: #888; font-size: 0.85rem;">Percentual sobre os ingredientes (Gás, Energia, Água, etc).</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem;">
+                        <input type="checkbox" id="yieldActive" onchange="toggleYieldInput()" style="width: auto;">
+                        <label for="yieldActive" style="margin-bottom: 0; cursor: pointer;">Definir rendimento (fatias/unidades)</label>
+                    </div>
+                    <input type="number" id="prodYield" step="1" value="1" oninput="calculateProductTotals()" style="display: none; margin-top: 0.5rem;" placeholder="Quantidade de fatias/unidades">
+                </div>
+
+                <div class="form-group" style="background: #fdfdfd; padding: 1rem; border: 1px dashed #ddd; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <input type="checkbox" id="platformFeeActive" onchange="togglePlatformFee()" style="width: auto;">
+                        <label for="platformFeeActive" style="margin-bottom: 0; cursor: pointer;">Venda por Plataforma (iFood, etc)?</label>
+                    </div>
+                    <div id="platformFeeContainer" style="display: none; margin-top: 1rem;">
+                        <label>Taxa da Plataforma (%) <span id="platformFeeValueDisplay" style="color: var(--secondary-caramel); font-weight: 600; margin-left: 5px;"></span></label>
+                        <input type="number" id="prodPlatformFee" step="0.01" placeholder="Ex: 12%" oninput="calculateProductTotals()">
+                        <small style="display: block; color: #888; margin-top: 0.3rem;">Adicionado ao Custo Variável.</small>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Custo Variável Total</label>
+                        <input type="number" id="prodVariableCost" readonly style="background: #eee;">
+                        <small style="color: #888; font-size: 0.75rem;">Ingredientes + Invisível + Taxas</small>
+                    </div>
+                    <div>
+                        <label>Markup Desejado (%)</label>
+                        <input type="number" id="prodMarkup" step="0.01" placeholder="Ex: 100%" oninput="calculateProductTotals()">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Preço Sugerido</label>
+                        <input type="number" id="prodSuggestedPrice" readonly style="background: #eee; color: #666;">
+                    </div>
+                    <div>
+                        <label>Preço de Venda Final</label>
+                        <input type="number" id="prodSalePrice" step="0.01" required oninput="calculateProductTotals()">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding: 1rem; background: #f0f8ff; border-radius: 8px; font-size: 0.9rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <strong>Custo sobre Preço:</strong> <span id="prodCostPercent">0%</span>
+                    </div>
+                    <div>
+                        <strong>Lucro Líquido:</strong> <span id="prodNetProfit" style="font-weight: bold;">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button type="button" onclick="closeModal('productModal')" class="btn-cancel" style="flex: 1; margin-top: 1rem;">Cancelar</button>
+                    <button type="submit" class="btn-submit" style="flex: 1;">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        // --- State Management ---
+        let allProducts = [];
+        let allIngredients = [];
+        let currentEditingId = null;
+        let currentSort = { field: null, direction: 'asc' };
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            lucide.createIcons();
+
+            // Check URL for tab
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab') || 'produtos';
+            switchTab(tab);
+
+            // Load initial data
+            loadIngredients().then(() => {
+                loadProducts(); // Load products after ingredients to map names if needed
+            });
+
+            // Setup User Info
+            fetch('/api/auth/me')
+                .then(res => res.json())
+                .then(user => {
+                    if(user.name) document.getElementById('topUserName').textContent = 'Olá, ' + user.name.split(' ')[0];
+                })
+                .catch(err => console.error('Auth check failed', err));
+        });
+
+        // --- Tabs Logic ---
+        function switchTab(tabName) {
+            // Update URL without reload
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabName);
+            window.history.pushState({}, '', url);
+
+            // Hide all sections
+            document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-btn, .nav-item').forEach(el => el.classList.remove('active'));
+
+            // Show selected
+            const targetSection = document.getElementById('tab-' + tabName);
+            if (targetSection) targetSection.style.display = 'block';
+
+            // Activate buttons (Sidebar & Top Tabs if exist)
+            const navItem = document.getElementById('nav-' + tabName);
+            if (navItem) navItem.classList.add('active');
+            
+            // Mobile menu highlight
+            const mobileNavItem = document.getElementById('mobile-nav-' + tabName);
+            if (mobileNavItem) mobileNavItem.classList.add('active');
+        }
+
+        // --- Data Loading ---
+        async function loadIngredients() {
+            try {
+                const res = await fetch('/api/ingredients');
+                if (!res.ok) throw new Error('Falha ao carregar ingredientes');
+                allIngredients = await res.json();
+                renderIngredientsTable();
+                return allIngredients;
+            } catch (err) {
+                console.error(err);
+                // alert('Erro ao carregar ingredientes.');
+            }
+        }
+
+        async function authFetch(url, options = {}) {
+            options.credentials = 'include';
+            const response = await fetch(url, options);
+            if (response.status === 401 || response.status === 403) {
+                // Optional: Handle session expiry redirect
+                // window.location.href = '/login'; 
+            }
+            return response;
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products');
+                if (!res.ok) throw new Error('Falha ao carregar produtos');
+                allProducts = await res.json();
+                renderProductsTable();
+            } catch (err) {
+                console.error(err);
+                // alert('Erro ao carregar produtos.');
+            }
+        }
+
+        // --- Rendering ---
+        function renderIngredientsTable() {
+            const tbody = document.querySelector('#ingredientsTable tbody');
+            tbody.innerHTML = '';
+
+            allIngredients.forEach(ing => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td data-label="Nome"><strong>${ing.name}</strong></td>
+                    <td data-label="Preço Pago">${formatCurrency(ing.price)}</td>
+                    <td data-label="Qtd. Emb.">${ing.quantityPackage} ${ing.unit}</td>
+                    <td data-label="Ações">
+                        <button class="action-btn" onclick='openIngredientModal(${JSON.stringify(ing)})' title="Editar">
+                            <i data-lucide="edit-2"></i>
+                        </button>
+                        <button class="action-btn" onclick="deleteIngredient('${ing._id}')" title="Excluir" style="color: #ef4444;">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function toggleMobileSortMenu() {
+            const menu = document.getElementById('mobileSortMenu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+                lucide.createIcons();
+            }
+        }
+
+        function applyMobileSort(field) {
+            toggleSort(field);
+            toggleMobileSortMenu();
+        }
+
+        function toggleSort(field) {
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+            renderProductsTable();
+        }
+
+        function filterProducts() {
+            const term = document.getElementById('productSearchInput').value.toLowerCase();
+            const tbody = document.querySelector('#productsTable tbody');
+            const rows = tbody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const nameCell = row.querySelector('td[data-label="Nome"]');
+                if (nameCell) {
+                    const text = nameCell.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                }
+            });
+        }
+
+        function renderProductsTable() {
+            const tbody = document.querySelector('#productsTable tbody');
+            tbody.innerHTML = '';
+
+            let displayProducts = [...allProducts];
+
+            if (currentSort.field) {
+                displayProducts.sort((a, b) => {
+                    let valA, valB;
+                    
+                    if (currentSort.field === 'profit') {
+                        // Fee is already in variableCost
+                        valA = a.salePrice - a.variableCost;
+                        valB = b.salePrice - b.variableCost;
+                    } else if (currentSort.field === 'margin') {
+                        // Fee is already in variableCost
+                        const profitA = a.salePrice - a.variableCost;
+                        valA = a.salePrice > 0 ? (profitA / a.salePrice) : 0;
+                        
+                        const profitB = b.salePrice - b.variableCost;
+                        valB = b.salePrice > 0 ? (profitB / b.salePrice) : 0;
+                    } else if (currentSort.field === 'name') {
+                        valA = a.name.toLowerCase();
+                        valB = b.name.toLowerCase();
+                    } else {
+                        valA = a[currentSort.field];
+                        valB = b[currentSort.field];
+                    }
+
+                    if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            displayProducts.forEach(prod => {
+                const platformFeeValue = prod.platformFeeActive ? (prod.salePrice * (prod.platformFee / 100)) : 0;
+                // variableCost already includes platform fee if it was calculated correctly during save
+                // But let's check logic: calculateProductTotals adds it.
+                // So profit = salePrice - variableCost.
+                const profit = prod.salePrice - prod.variableCost; 
+                const margin = prod.salePrice > 0 ? (profit / prod.salePrice) * 100 : 0;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td data-label="Nome">
+                        <div style="font-weight: 600;">${prod.name}</div>
+                        ${prod.yieldActive ? `<small style="color:#888;">Rende: ${prod.yield} un</small>` : ''}
+                    </td>
+                    <td data-label="Custo Variável">${formatCurrency(prod.variableCost)}</td>
+                    <td data-label="Preço Venda">${formatCurrency(prod.salePrice)}</td>
+                    <td data-label="Lucro Bruto" style="color: #10b981; font-weight: 600;">${formatCurrency(profit)}</td>
+                    <td data-label="Margem">
+                        <span style="background: ${margin < 30 ? '#fee2e2' : '#d1fae5'}; color: ${margin < 30 ? '#b91c1c' : '#047857'}; padding: 4px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                            ${margin.toFixed(1)}%
+                        </span>
+                    </td>
+                    <td data-label="Ações">
+                        <button class="action-btn" onclick="openProductModal('${prod._id}')" title="Editar">
+                            <i data-lucide="edit-2"></i>
+                        </button>
+                        <button class="action-btn" onclick="duplicateProduct('${prod._id}')" title="Duplicar">
+                            <i data-lucide="copy"></i>
+                        </button>
+                        <button class="action-btn" onclick="deleteProduct('${prod._id}')" title="Excluir" style="color: #ef4444;">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        // --- Modals ---
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // --- Ingredient Actions ---
+        function checkDuplicateIngredient(name) {
+            const errorSpan = document.getElementById('ingNameError');
+            const submitBtn = document.getElementById('btnSaveIngredient');
+            const currentId = document.getElementById('ingId').value;
+            
+            if (!name || name.trim() === '') {
+                errorSpan.style.display = 'none';
+                if(submitBtn) submitBtn.disabled = false;
+                return;
+            }
+
+            const cleanName = name.trim().toLowerCase();
+            const exists = allIngredients.some(ing => 
+                ing.name.toLowerCase() === cleanName && ing._id !== currentId
+            );
+
+            if (exists) {
+                errorSpan.style.display = 'block';
+                if(submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.5';
+                    submitBtn.style.cursor = 'not-allowed';
+                }
+            } else {
+                errorSpan.style.display = 'none';
+                if(submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+            }
+        }
+
+        function openIngredientModal(ing = null) {
+            const modal = document.getElementById('ingredientModal');
+            const form = document.getElementById('ingredientForm');
+            
+            // Reset Voice UI
+            if (typeof resetIngredientVoiceUI === 'function') {
+                resetIngredientVoiceUI();
+            }
+
+            // Reset Error State
+            const errorSpan = document.getElementById('ingNameError');
+            const submitBtn = document.getElementById('btnSaveIngredient');
+            if(errorSpan) errorSpan.style.display = 'none';
+            if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+
+            if (ing) {
+                // Edit
+                document.getElementById('ingId').value = ing._id;
+                document.getElementById('ingName').value = ing.name;
+                document.getElementById('ingPrice').value = ing.price;
+                document.getElementById('ingQty').value = ing.quantityPackage;
+                document.getElementById('ingUnit').value = ing.unit;
+                modal.querySelector('h2').textContent = 'Editar Ingrediente';
+            } else {
+                // New
+                form.reset();
+                document.getElementById('ingId').value = '';
+                modal.querySelector('h2').textContent = 'Novo Ingrediente';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        async function saveIngredient(e) {
+            e.preventDefault();
+            const id = document.getElementById('ingId').value;
+            const data = {
+                name: document.getElementById('ingName').value,
+                price: parseFloat(document.getElementById('ingPrice').value),
+                quantityPackage: parseFloat(document.getElementById('ingQty').value),
+                unit: document.getElementById('ingUnit').value
+            };
+
+            const url = id ? `/api/ingredients/${id}` : '/api/ingredients';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error('Erro ao salvar');
+                
+                closeModal('ingredientModal');
+                loadIngredients(); // Reloads both tables
+            } catch (err) {
+                alert('Erro ao salvar ingrediente: ' + err.message);
+            }
+        }
+
+        async function deleteIngredient(id) {
+            if (!confirm('Tem certeza? Isso pode afetar produtos que usam este ingrediente.')) return;
+            try {
+                await fetch(`/api/ingredients/${id}`, { method: 'DELETE' });
+                loadIngredients();
+            } catch (err) {
+                alert('Erro ao excluir');
+            }
+        }
+
+
+        // --- Product Actions & Calculation Logic ---
+        function openProductModal(prodOrId = null) {
+            const modal = document.getElementById('productModal');
+            const form = document.getElementById('productForm');
+            const ingredientsContainer = document.getElementById('recipeIngredients');
+            ingredientsContainer.innerHTML = ''; // Clear
+
+            let prod = null;
+            if (prodOrId) {
+                if (typeof prodOrId === 'string') {
+                    prod = allProducts.find(p => p._id === prodOrId);
+                } else {
+                    prod = prodOrId;
+                }
+            }
+
+            if (prod) {
+                // Edit
+                document.getElementById('prodId').value = prod._id;
+                document.getElementById('prodName').value = prod.name;
+                document.getElementById('prodInvisibleCost').value = prod.invisibleCost || 0;
+                document.getElementById('prodMarkup').value = prod.markup || 0;
+                document.getElementById('prodSalePrice').value = prod.salePrice || 0;
+                
+                // Yield
+                document.getElementById('yieldActive').checked = prod.yieldActive;
+                document.getElementById('prodYield').value = prod.yield || 1;
+                toggleYieldInput();
+
+                // Platform Fee
+                document.getElementById('platformFeeActive').checked = prod.platformFeeActive;
+                document.getElementById('prodPlatformFee').value = prod.platformFee || 0;
+                togglePlatformFee();
+
+                // Ingredients
+                if (prod.ingredients && prod.ingredients.length > 0) {
+                    prod.ingredients.forEach(ing => addIngredientRow(ing));
+                } else {
+                    addIngredientRow(); // Add one empty
+                }
+                
+                modal.querySelector('h2').textContent = 'Editar Produto';
+            } else {
+                // New
+                form.reset();
+                document.getElementById('prodId').value = '';
+                addIngredientRow(); // Initial row
+                toggleYieldInput();
+                togglePlatformFee();
+                modal.querySelector('h2').textContent = 'Novo Produto';
+            }
+            
+            calculateProductTotals(); // Initial calc
+            modal.style.display = 'flex';
+        }
+
+        function addIngredientRow(data = null) {
+            const container = document.getElementById('recipeIngredients');
+            const id = Date.now() + Math.random().toString(36).substr(2, 9); // Unique ID for DOM
+
+            const div = document.createElement('div');
+            div.className = 'ingredient-row';
+            div.innerHTML = `
+                <select class="ing-select" onchange="calculateProductTotals()">
+                    <option value="">Selecione um ingrediente...</option>
+                    ${allIngredients.map(ing => `
+                        <option value="${ing._id}" data-price="${ing.price}" data-pkg="${ing.quantityPackage}" data-unit="${ing.unit}">
+                            ${ing.name}
+                        </option>
+                    `).join('')}
+                </select>
+                <input type="number" class="ing-qty" placeholder="Qtd" step="0.001" oninput="calculateProductTotals()">
+                <button type="button" class="btn-cancel" style="width: auto; padding: 0.5rem; color: #ef4444;" onclick="this.parentElement.remove(); calculateProductTotals()">
+                    <i data-lucide="trash"></i>
+                </button>
+            `;
+            
+            container.appendChild(div);
+            lucide.createIcons();
+
+            if (data) {
+                const select = div.querySelector('.ing-select');
+                const qty = div.querySelector('.ing-qty');
+                select.value = data.ingredient; // ID
+                qty.value = data.quantityUsed || data.quantity;
+            }
+        }
+
+        function calculateProductTotals() {
+            // 1. Calculate Ingredients Cost
+            let totalIngredientsCost = 0;
+            const rows = document.querySelectorAll('.ingredient-row');
+            
+            rows.forEach(row => {
+                const select = row.querySelector('.ing-select');
+                const qtyInput = row.querySelector('.ing-qty');
+                const qty = parseFloat(qtyInput.value) || 0;
+                
+                if (select.value) {
+                    const option = select.options[select.selectedIndex];
+                    const price = parseFloat(option.getAttribute('data-price')) || 0;
+                    const pkg = parseFloat(option.getAttribute('data-pkg')) || 1;
+                    
+                    const cost = (price / pkg) * qty;
+                    totalIngredientsCost += cost;
+                }
+            });
+
+            document.getElementById('totalIngredientsCost').textContent = formatCurrency(totalIngredientsCost);
+
+            // 2. Add Invisible Cost
+            const invisiblePercent = parseFloat(document.getElementById('prodInvisibleCost').value) || 0;
+            const invisibleValue = totalIngredientsCost * (invisiblePercent / 100);
+            
+            let totalVariableCost = totalIngredientsCost + invisibleValue;
+
+            // 3. Yield Division
+            const yieldActive = document.getElementById('yieldActive').checked;
+            const yieldAmount = parseFloat(document.getElementById('prodYield').value) || 1;
+            
+            if (yieldActive && yieldAmount > 0) {
+                totalVariableCost = totalVariableCost / yieldAmount;
+            }
+
+            // 4. Platform Fee (Added to Variable Cost as requested)
+            const salePrice = parseFloat(document.getElementById('prodSalePrice').value) || 0;
+            const platformFeeActive = document.getElementById('platformFeeActive').checked;
+            let platformFeeValue = 0;
+            
+            if (platformFeeActive) {
+                const feePercent = parseFloat(document.getElementById('prodPlatformFee').value) || 0;
+                platformFeeValue = salePrice * (feePercent / 100);
+                
+                const displayEl = document.getElementById('platformFeeValueDisplay');
+                if(displayEl) {
+                    if (salePrice > 0) {
+                        displayEl.textContent = `(${formatCurrency(platformFeeValue)})`;
+                        displayEl.style.color = 'var(--secondary-caramel)';
+                    } else if (feePercent > 0) {
+                        displayEl.textContent = '(Defina Preço Venda)';
+                        displayEl.style.color = '#ef4444';
+                    } else {
+                        displayEl.textContent = '';
+                    }
+                }
+            }
+            
+            totalVariableCost += platformFeeValue;
+
+            // Update Variable Cost Input
+            document.getElementById('prodVariableCost').value = totalVariableCost.toFixed(2);
+
+            // 5. Suggested Price (Cost + Markup)
+            const markup = parseFloat(document.getElementById('prodMarkup').value) || 0;
+            const suggestedPrice = totalVariableCost * (1 + (markup / 100));
+            document.getElementById('prodSuggestedPrice').value = suggestedPrice.toFixed(2);
+
+            // 6. Profit Analysis based on Actual Sale Price
+            // Net Profit = Sale Price - Total Variable Cost (which now includes Fee)
+            const netProfit = salePrice - totalVariableCost;
+            
+            document.getElementById('prodNetProfit').textContent = formatCurrency(netProfit);
+            document.getElementById('prodNetProfit').style.color = netProfit > 0 ? '#10b981' : '#ef4444';
+
+            const costPercent = salePrice > 0 ? (totalVariableCost / salePrice) * 100 : 0;
+            document.getElementById('prodCostPercent').textContent = costPercent.toFixed(1) + '%';
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            
+            // Gather Ingredients
+            const ingredients = [];
+            document.querySelectorAll('.ingredient-row').forEach(row => {
+                const select = row.querySelector('.ing-select');
+                const qty = row.querySelector('.ing-qty').value;
+                if (select.value && qty) {
+                    ingredients.push({
+                        ingredient: select.value,
+                        quantityUsed: parseFloat(qty)
+                    });
+                }
+            });
+
+            const data = {
+                name: document.getElementById('prodName').value,
+                salePrice: parseFloat(document.getElementById('prodSalePrice').value),
+                variableCost: parseFloat(document.getElementById('prodVariableCost').value), // Saved calculated cost
+                ingredients: ingredients,
+                invisibleCost: parseFloat(document.getElementById('prodInvisibleCost').value) || 0,
+                markup: parseFloat(document.getElementById('prodMarkup').value) || 0,
+                yieldActive: document.getElementById('yieldActive').checked,
+                yield: parseFloat(document.getElementById('prodYield').value) || 1,
+                platformFeeActive: document.getElementById('platformFeeActive').checked,
+                platformFee: parseFloat(document.getElementById('prodPlatformFee').value) || 0 // Store percentage if active
+            };
+
+            // If platform fee is a percentage, we might want to store it as such, or calculate absolute?
+            // Model Schema expects a Number. Let's store the value from input.
+
+            const id = document.getElementById('prodId').value;
+            const url = id ? `/api/products/${id}` : '/api/products';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error('Erro ao salvar produto');
+                
+                closeModal('productModal');
+                loadProducts();
+            } catch (err) {
+                alert('Erro: ' + err.message);
+            }
+        }
+
+        async function deleteProduct(id) {
+        if (!confirm('Excluir este produto?')) return;
+        try {
+            await authFetch(`/api/products/${id}`, { method: 'DELETE' });
+            loadProducts();
+        } catch (err) {
+            alert('Erro ao excluir');
+        }
+    }
+
+    async function duplicateProduct(id) {
+        const product = allProducts.find(p => p._id === id);
+        if (!product) return;
+        
+        if (!confirm(`Deseja duplicar o produto "${product.name}"?`)) return;
+
+        try {
+            let baseName = `${product.name} - copia`;
+            let newName = baseName;
+            let counter = 1;
+
+            // 1. Client-side check (fast but not guaranteed)
+            while (allProducts.some(p => p.name.toLowerCase() === newName.toLowerCase())) {
+                newName = `${baseName} (${counter})`;
+                counter++;
+            }
+            
+            // Helper to attempt creation
+            const attemptCreate = async (nameToUse) => {
+                const newProduct = { ...product };
+                delete newProduct._id;
+                delete newProduct.createdAt;
+                delete newProduct.updatedAt;
+                newProduct.name = nameToUse;
+
+                return await authFetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newProduct)
+                });
+            };
+
+            let response = await attemptCreate(newName);
+
+            // 2. If duplicate error (409 or MongoDB error), retry with timestamp
+            if (!response.ok) {
+                // Clone response to read json without consuming original if needed later (though we just need status/body)
+                const errData = await response.clone().json().catch(() => ({}));
+                
+                // Check for duplicate key error signature
+                if (response.status === 409 || 
+                   (errData.error && (errData.error.includes('duplicate key') || errData.error.includes('E11000')))) {
+                    
+                    console.warn('Duplicate name collision, retrying with timestamp...');
+                    newName = `${baseName} (${Date.now().toString().slice(-4)})`;
+                    response = await attemptCreate(newName);
+                }
+            }
+
+            if (response.ok) {
+                const createdProduct = await response.json();
+                alert('Produto duplicado com sucesso!');
+                loadProducts();
+                
+                // Open modal immediately
+                if (createdProduct) {
+                    openProductModal(createdProduct);
+                }
+            } else {
+                const errData = await response.json();
+                console.error('Erro duplicate:', errData);
+                alert('Erro ao duplicar produto: ' + (errData.error || 'Erro desconhecido'));
+            }
+        } catch (err) {
+            console.error('Erro ao duplicar:', err);
+            alert('Erro ao duplicar produto');
+        }
+    }
+
+        // --- Helpers ---
+        function toggleYieldInput() {
+            const active = document.getElementById('yieldActive').checked;
+            document.getElementById('prodYield').style.display = active ? 'block' : 'none';
+            calculateProductTotals();
+        }
+
+        function togglePlatformFee() {
+            const active = document.getElementById('platformFeeActive').checked;
+            document.getElementById('platformFeeContainer').style.display = active ? 'block' : 'none';
+            calculateProductTotals();
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function toTitleCase(str) {
+            return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+        }
+        
+        function checkDuplicateProduct(name) {
+            const id = document.getElementById('prodId').value;
+            const errorSpan = document.getElementById('prodNameError');
+            if (!name) {
+                if (errorSpan) errorSpan.style.display = 'none';
+                return;
+            }
+            
+            if (typeof allProducts !== 'undefined') {
+                const existing = allProducts.find(p => p.name.toLowerCase() === name.trim().toLowerCase() && p._id !== id);
+                
+                if (existing) {
+                    if (errorSpan) {
+                        errorSpan.textContent = 'Já existe um produto com nome similar a esse.';
+                        errorSpan.style.display = 'block';
+                    }
+                } else {
+                    if (errorSpan) errorSpan.style.display = 'none';
+                }
+            }
+        }
+
+        // --- Standard Ingredients (Mock) ---
+        const standardIngredients = [
+            { name: "Farinha de Trigo", price: 5.50, unit: "kg", quantityPackage: 1 },
+            { name: "Açúcar Refinado", price: 4.20, unit: "kg", quantityPackage: 1 },
+            { name: "Ovos (Dúzia)", price: 12.00, unit: "un", quantityPackage: 12 },
+            { name: "Leite Integral", price: 4.50, unit: "l", quantityPackage: 1 },
+            { name: "Manteiga", price: 12.00, unit: "g", quantityPackage: 200 },
+            { name: "Chocolate em Pó 50%", price: 25.00, unit: "kg", quantityPackage: 1 },
+            { name: "Fermento Químico", price: 6.00, unit: "g", quantityPackage: 100 },
+            { name: "Leite Condensado", price: 6.50, unit: "g", quantityPackage: 395 },
+            { name: "Creme de Leite", price: 3.50, unit: "g", quantityPackage: 200 }
+        ];
+
+        function openStandardIngredientsModal() {
+            const list = document.getElementById('standardIngredientsList');
+            list.innerHTML = '';
+            
+            standardIngredients.forEach(ing => {
+                const item = document.createElement('div');
+                item.className = 'standard-ing-item';
+                item.style.cssText = 'padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; cursor: pointer; hover: background #f9f9f9;';
+                item.innerHTML = `
+                    <div>
+                        <strong>${ing.name}</strong>
+                        <div style="font-size: 0.85rem; color: #666;">Sugestão: ${formatCurrency(ing.price)} / ${ing.quantityPackage}${ing.unit}</div>
+                    </div>
+                    <i data-lucide="plus-circle" style="color: var(--secondary-caramel);"></i>
+                `;
+                item.onclick = () => {
+                    openIngredientModal({
+                        _id: null, // New
+                        name: ing.name,
+                        price: ing.price,
+                        quantityPackage: ing.quantityPackage,
+                        unit: ing.unit === 'l' ? 'ml' : (ing.unit === 'kg' ? 'g' : ing.unit) // Normalize to g/ml/un
+                    });
+                    // Normalize units logic if needed (kg -> 1000g)
+                    if(ing.unit === 'kg') {
+                        document.getElementById('ingQty').value = ing.quantityPackage * 1000;
+                        document.getElementById('ingUnit').value = 'g';
+                    } else if (ing.unit === 'l') {
+                        document.getElementById('ingQty').value = ing.quantityPackage * 1000;
+                        document.getElementById('ingUnit').value = 'ml'; // Note: HTML select doesn't have ml in my snippet, checking...
+                        // If select doesn't have ml, fallback to g or un? My snippet had g and un.
+                    }
+                    closeModal('standardIngredientsModal');
+                };
+                list.appendChild(item);
+            });
+            
+            lucide.createIcons();
+            document.getElementById('standardIngredientsModal').style.display = 'flex';
+        }
+
+        // --- Mobile Menu Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenuDropdown = document.getElementById('mobileMenuDropdown');
+            
+            if (mobileMenuBtn && mobileMenuDropdown) {
+                mobileMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Toggle between none and flex
+                    if (mobileMenuDropdown.style.display === 'flex') {
+                        mobileMenuDropdown.style.display = 'none';
+                    } else {
+                        mobileMenuDropdown.style.display = 'flex';
+                    }
+                });
+
+                // Close when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!mobileMenuBtn.contains(e.target) && !mobileMenuDropdown.contains(e.target)) {
+                        mobileMenuDropdown.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+    <!-- Modal Standard Ingredients -->
+    <div class="modal-overlay" id="standardIngredientsModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1rem;">Produtos Pré-cadastrados</h2>
+            <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                Selecione um ingrediente abaixo para adicionar à sua lista. Você poderá editar o preço e quantidade depois.
+            </p>
+            
+<style>
+    .standard-ingredients-list {
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+        gap: 1rem; 
+        max-height: 50vh; 
+        overflow-y: auto; 
+        padding-right: 0.5rem;
+    }
+    @media (max-width: 768px) {
+        .standard-ingredients-list {
+            max-height: 35vh; /* Reduced height for mobile */
+            grid-template-columns: 1fr 1fr; /* 2 columns on mobile */
+        }
+    }
+</style>
+<div id="standardIngredientsList" class="standard-ingredients-list">
+                <!-- Populated via JS -->
+            </div>
+
+            <div style="margin-top: 2rem; text-align: right;">
+                <button type="button" onclick="closeModal('standardIngredientsModal')" class="btn-cancel" style="width: auto; padding: 0.8rem 1.5rem;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Voice Logic for Ingredients ---
+        let mediaRecorderIng;
+        let audioChunksIng = [];
+
+        function resetIngredientVoiceUI() {
+            const btn = document.getElementById('voiceRecordBtnIng');
+            const status = document.getElementById('voiceStatusIng');
+            if (btn) {
+                btn.style.background = 'linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%)';
+                btn.innerHTML = '<i data-lucide="mic" style="width: 30px; height: 30px;"></i>';
+            }
+            if (status) {
+                status.innerText = 'Toque para falar o ingrediente';
+                status.style.color = '#666';
+            }
+            if (mediaRecorderIng && mediaRecorderIng.state !== 'inactive') {
+                mediaRecorderIng.stop();
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        async function toggleIngredientRecording() {
+            const btn = document.getElementById('voiceRecordBtnIng');
+            const status = document.getElementById('voiceStatusIng');
+
+            if (!mediaRecorderIng || mediaRecorderIng.state === 'inactive') {
+                // Start Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorderIng = new MediaRecorder(stream);
+                    audioChunksIng = [];
+                    
+                    mediaRecorderIng.ondataavailable = e => audioChunksIng.push(e.data);
+                    mediaRecorderIng.onstop = async () => {
+                        const blob = new Blob(audioChunksIng, { type: 'audio/webm' });
+                        await processIngredientAudio(blob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorderIng.start();
+                    btn.style.background = '#F44336';
+                    btn.innerHTML = '<i data-lucide="square" style="width: 30px; height: 30px;"></i>';
+                    status.innerText = 'Gravando... Fale: Nome, Preço, Quantidade';
+                    status.style.color = '#F44336';
+                    lucide.createIcons();
+
+                } catch (err) {
+                    console.error(err);
+                    alert('Erro ao acessar microfone. Verifique as permissões.');
+                }
+            } else {
+                // Stop Recording
+                mediaRecorderIng.stop();
+                btn.style.background = '#eee';
+                btn.innerHTML = '<i data-lucide="loader-2" style="width: 30px; height: 30px; animation: spin 1s linear infinite;"></i>';
+                status.innerText = 'Processando com IA...';
+                status.style.color = '#666';
+                lucide.createIcons();
+            }
+        }
+
+        async function processIngredientAudio(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.webm');
+            formData.append('type', 'ingredient');
+
+            try {
+                const res = await fetch('/api/transcribe', { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                
+                if(!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Erro na transcrição');
+                }
+                
+                const data = await res.json();
+                console.log('IA Result:', data);
+                
+                let singleItem = data.parsedData;
+                // Handle new array structure from server (always returns ingredients array now)
+                if (singleItem && singleItem.ingredients && Array.isArray(singleItem.ingredients) && singleItem.ingredients.length > 0) {
+                    singleItem = singleItem.ingredients[0];
+                }
+
+                fillIngredientForm(singleItem);
+                
+                document.getElementById('voiceStatusIng').innerText = 'Entendido!';
+                document.getElementById('voiceStatusIng').style.color = '#4CAF50';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('voiceStatusIng').innerText = 'Erro: ' + err.message;
+                document.getElementById('voiceStatusIng').style.color = '#F44336';
+            } finally {
+                const btn = document.getElementById('voiceRecordBtnIng');
+                if(btn) {
+                    btn.style.background = 'linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%)';
+                    btn.innerHTML = '<i data-lucide="mic" style="width: 30px; height: 30px;"></i>';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            }
+        }
+
+        function fillIngredientForm(data) {
+            if(!data) return;
+            
+            console.log('Filling form with:', data); // Debug
+
+            // Helper to parse currency/number strings like "5,00" or "R$ 5,00"
+            const parseNumber = (val) => {
+                if (typeof val === 'number') return val;
+                if (typeof val === 'string') {
+                    // Remove "R$" and spaces, replace comma with dot
+                    let clean = val.replace(/[^\d.,]/g, '').replace(',', '.');
+                    // Handle thousand separators if present (e.g. 1.000,00 -> 1000.00)
+                    // Simple heuristic: if multiple dots, or dot before comma... 
+                    // Let's assume standard PT-BR "5,00" -> "5.00"
+                    return parseFloat(clean);
+                }
+                return 0;
+            };
+
+            // Name
+            if(data.name) {
+                const nameInput = document.getElementById('ingName');
+                nameInput.value = toTitleCase(data.name); 
+                checkDuplicateIngredient(nameInput.value); // Check dup immediately
+            }
+            
+            // Price
+            if(data.price !== undefined) {
+                const val = parseNumber(data.price);
+                if (!isNaN(val)) document.getElementById('ingPrice').value = val;
+            }
+            
+            // Quantity
+            if(data.quantityPackage !== undefined) {
+                const val = parseNumber(data.quantityPackage);
+                if (!isNaN(val)) document.getElementById('ingQty').value = val;
+            }
+            
+            // Unit
+            if(data.unit) {
+                const unitSelect = document.getElementById('ingUnit');
+                // Try to match
+                let val = data.unit.toLowerCase();
+                
+                // Map common variations
+                if(val === 'ml' || val === 'l' || val === 'litro' || val === 'litros') val = 'ml';
+                else if(val === 'g' || val === 'kg' || val === 'kilo' || val === 'kilos' || val === 'grama' || val === 'gramas') val = 'g';
+                else val = 'un';
+
+                // Handle ML mapping to G if ML is disabled in HTML (it was commented out)
+                // If the user wants ML back, I should probably uncomment it in HTML, but for now map to G
+                if (val === 'ml') val = 'g'; 
+
+                unitSelect.value = val;
+            }
+        }
+        
+        // Helper to normalize text (Sentence Case + Fix Accents Bug)
+        // This replaces the old toTitleCase to prevent "ÓLeo" issues
+        function toTitleCase(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        // --- Shared Helper ---
+        const parseNumberGlobal = (val) => {
+            if (typeof val === 'number') return val;
+            if (typeof val === 'string') {
+                let clean = val.replace(/[^\d.,]/g, '').replace(',', '.');
+                return parseFloat(clean) || 0;
+            }
+            return 0;
+        };
+        
+        // --- Bulk Ingredient Logic ---
+        let mediaRecorderBulk;
+        let audioChunksBulk = [];
+        let bulkIngredients = []; 
+
+        function openBulkIngredientModal() {
+            closeModal('ingredientModal');
+            document.getElementById('bulkIngredientModal').style.display = 'flex';
+            renderBulkList();
+        }
+
+        function renderBulkList() {
+            const tbody = document.getElementById('bulkIngredientsList');
+            const emptyState = document.getElementById('bulkEmptyState');
+            const btnSave = document.getElementById('btnSaveBulk');
+            const countSpan = document.getElementById('bulkCount');
+            
+            tbody.innerHTML = '';
+            
+            if (bulkIngredients.length === 0) {
+                emptyState.style.display = 'block';
+                btnSave.disabled = true;
+                btnSave.style.opacity = '0.5';
+            } else {
+                emptyState.style.display = 'none';
+                btnSave.disabled = false;
+                btnSave.style.opacity = '1';
+                
+                bulkIngredients.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="text" value="${item.name}" onchange="updateBulkItem(${index}, 'name', this.value)" class="bulk-input"></td>
+                        <td><input type="number" step="0.01" value="${item.price}" onchange="updateBulkItem(${index}, 'price', this.value)" class="bulk-input"></td>
+                        <td><input type="number" step="0.001" value="${item.quantityPackage}" onchange="updateBulkItem(${index}, 'quantityPackage', this.value)" class="bulk-input"></td>
+                        <td>
+                            <select onchange="updateBulkItem(${index}, 'unit', this.value)" class="bulk-input">
+                                <option value="g" ${item.unit === 'g' ? 'selected' : ''}>g</option>
+                                <option value="un" ${item.unit === 'un' ? 'selected' : ''}>un</option>
+                            </select>
+                        </td>
+                        <td style="text-align: center;">
+                            <button onclick="removeBulkItem(${index})" style="background: none; border: none; color: #F44336; cursor: pointer;">
+                                <i data-lucide="trash-2" style="width: 18px;"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+            countSpan.innerText = bulkIngredients.length;
+        }
+
+        function updateBulkItem(index, field, value) {
+            if (field === 'price' || field === 'quantityPackage') {
+                bulkIngredients[index][field] = parseFloat(value) || 0;
+            } else {
+                bulkIngredients[index][field] = value;
+            }
+        }
+
+        function removeBulkItem(index) {
+            bulkIngredients.splice(index, 1);
+            renderBulkList();
+        }
+
+        async function toggleBulkIngredientRecording() {
+            const btn = document.getElementById('voiceRecordBtnBulk');
+            const status = document.getElementById('voiceStatusBulk');
+            const cancelBtn = document.getElementById('voiceCancelBtnBulk');
+
+            if (!mediaRecorderBulk || mediaRecorderBulk.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorderBulk = new MediaRecorder(stream);
+                    audioChunksBulk = [];
+                    
+                    mediaRecorderBulk.ondataavailable = e => audioChunksBulk.push(e.data);
+                    mediaRecorderBulk.onstop = async () => {
+                        if (window.isBulkCancelled) {
+                            window.isBulkCancelled = false;
+                            stream.getTracks().forEach(track => track.stop());
+                            return;
+                        }
+                        const blob = new Blob(audioChunksBulk, { type: 'audio/webm' });
+                        await processBulkIngredientAudio(blob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorderBulk.start();
+                    window.isBulkCancelled = false;
+                    
+                    btn.style.background = '#F44336';
+                    btn.innerHTML = '<i data-lucide="square" style="width: 30px; height: 30px;"></i>';
+                    status.innerText = 'Gravando... Fale os itens';
+                    status.style.color = '#F44336';
+                    
+                    if(cancelBtn) cancelBtn.style.display = 'flex';
+                    
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                } catch (err) {
+                    console.error(err);
+                    alert('Erro ao acessar microfone.');
+                }
+            } else {
+                mediaRecorderBulk.stop();
+                btn.style.background = '#eee';
+                btn.innerHTML = '<i data-lucide="loader-2" style="width: 30px; height: 30px; animation: spin 1s linear infinite;"></i>';
+                status.innerText = 'Processando...';
+                status.style.color = '#666';
+                if(cancelBtn) cancelBtn.style.display = 'none';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+        
+        function cancelBulkRecording() {
+            if (mediaRecorderBulk && mediaRecorderBulk.state === 'recording') {
+                window.isBulkCancelled = true;
+                mediaRecorderBulk.stop();
+                
+                const btn = document.getElementById('voiceRecordBtnBulk');
+                const status = document.getElementById('voiceStatusBulk');
+                const cancelBtn = document.getElementById('voiceCancelBtnBulk');
+                
+                btn.style.background = 'linear-gradient(135deg, #4A90E2 0%, #357ABD 100%)';
+                btn.innerHTML = '<i data-lucide="mic" style="width: 30px; height: 30px;"></i>';
+                status.innerText = 'Cancelado.';
+                status.style.color = '#999';
+                
+                if(cancelBtn) cancelBtn.style.display = 'none';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                
+                setTimeout(() => {
+                    status.innerText = 'Toque para adicionar um novo item';
+                    status.style.color = '#666';
+                }, 2000);
+            }
+        }
+
+        async function processBulkIngredientAudio(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.webm');
+            formData.append('type', 'ingredient'); 
+
+            try {
+                const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+                if(!res.ok) throw new Error('Erro na transcrição');
+                
+                const data = await res.json();
+                console.log('Bulk Audio Response:', data); // DEBUG
+
+                const parsed = data.parsedData;
+                let itemsToAdd = [];
+
+                if (parsed.ingredients && Array.isArray(parsed.ingredients)) {
+                    itemsToAdd = parsed.ingredients;
+                } else if (parsed.name) {
+                    itemsToAdd = [parsed];
+                }
+
+                if (itemsToAdd.length > 0) {
+                    let addedCount = 0;
+                    
+                    itemsToAdd.forEach(item => {
+                        let unit = item.unit ? item.unit.toLowerCase() : 'un';
+                        if(['ml','l','litro','litros'].includes(unit)) unit = 'g'; 
+                        if(['kg','kilo','kilos','grama','gramas'].includes(unit)) unit = 'g';
+                        if(unit !== 'g' && unit !== 'un') unit = 'un';
+
+                        const newItem = {
+                            name: toTitleCase(item.name),
+                            price: parseNumberGlobal(item.price),
+                            quantityPackage: parseNumberGlobal(item.quantityPackage),
+                            unit: unit
+                        };
+                        bulkIngredients.push(newItem);
+                        addedCount++;
+                    });
+
+                    renderBulkList();
+                    
+                    document.getElementById('voiceStatusBulk').innerText = `Adicionado(s) ${addedCount} item(ns)!`;
+                    document.getElementById('voiceStatusBulk').style.color = '#4CAF50';
+                } else {
+                    document.getElementById('voiceStatusBulk').innerText = 'Não entendi os ingredientes.';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('voiceStatusBulk').innerText = 'Erro ao processar.';
+            } finally {
+                const btn = document.getElementById('voiceRecordBtnBulk');
+                const cancelBtn = document.getElementById('voiceCancelBtnBulk');
+                if(btn) {
+                    btn.style.background = 'linear-gradient(135deg, #4A90E2 0%, #357ABD 100%)';
+                    btn.innerHTML = '<i data-lucide="mic" style="width: 30px; height: 30px;"></i>';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+                if(cancelBtn) cancelBtn.style.display = 'none';
+            }
+        }
+
+        async function saveAllBulkIngredients() {
+            const btn = document.getElementById('btnSaveBulk');
+            btn.disabled = true;
+            btn.innerText = 'Salvando...';
+            
+            let successCount = 0;
+            let errors = [];
+            let remainingItems = [];
+
+            try {
+                for (const item of bulkIngredients) {
+                    try {
+                        const res = await fetch('/api/ingredients', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(item)
+                        });
+                        
+                        if (res.ok) {
+                            successCount++;
+                        } else {
+                            const err = await res.json();
+                            errors.push(`${item.name}: ${err.error || 'Erro desconhecido'}`);
+                            remainingItems.push(item);
+                        }
+                    } catch (e) {
+                        errors.push(`${item.name}: ${e.message}`);
+                        remainingItems.push(item);
+                    }
+                }
+
+                if (errors.length > 0) {
+                    alert(`Salvos: ${successCount}\nErros:\n${errors.join('\n')}`);
+                    bulkIngredients = remainingItems;
+                    renderBulkList();
+                    loadIngredients();
+                    // Don't enable here, let finally handle it or specific logic
+                } else {
+                    bulkIngredients = [];
+                    renderBulkList();
+                    closeModal('bulkIngredientModal');
+                    loadIngredients();
+                    alert('Todos os ingredientes foram salvos com sucesso!');
+                }
+            } catch (err) {
+                console.error('Critical error in bulk save:', err);
+                alert('Erro crítico ao salvar. Tente novamente.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = `Salvar Todos (${bulkIngredients.length})`;
+            }
+        }
+    </script>
+</body></html>

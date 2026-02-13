@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade - BelleCake</title>
+<!-- GTM Removed -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        .upgrade-hero-container {
+            max-width: 600px;
+            margin: 100px auto 50px;
+            padding: 0 20px;
+            text-align: center;
+        }
+        
+        .upgrade-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin: 0 auto 3rem;
+            max-width: 350px; /* Match desktop card size from index/apresentacao */
+        }
+
+        .dark-mode .upgrade-card {
+            background: #2d2d2d;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .upgrade-headline {
+            font-family: 'Inter', sans-serif;
+            font-size: calc(2.5rem - 10px);
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            line-height: 1.2;
+        }
+
+        /* Tool details now inside audience-section, matching index.html layout */
+        .tool-detail-card {
+            /* Removed background as it's now on the section */
+            /* text-align: center; - handled by flex container */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tool-detail-card img {
+            width: 100%;
+            border-radius: 20px; /* Matching index.html radius */
+            margin-bottom: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); /* Matching index.html shadow */
+            border: 1px solid var(--primary-yellow); /* Matching index.html border */
+            object-fit: contain;
+        }
+        
+        /* Removed .tool-title styles as requested */
+
+        .entenda-mais-btn {
+            margin: 0 auto;
+            background: transparent !important;
+            color: #1B5E20 !important;
+            border: 2px solid #1B5E20 !important;
+            font-weight: 800;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block !important; /* Force display */
+        }
+        
+        .entenda-mais-btn:hover {
+            background: #1B5E20 !important;
+            color: white !important;
+        }
+
+        /* Audio Player Container */
+        .wa-audio-container {
+            background-color: #f0f2f5; /* Light WhatsApp background */
+            border-radius: 12px; /* Slightly more rounded */
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 360px; /* Slightly wider */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin: 0 auto;
+        }
+
+        .wa-top-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        /* Avatar */
+        .wa-avatar-container {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .wa-avatar {
+            width: 64px; /* Increased size for better visibility */
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #ccc;
+            border: 3px solid white; /* Thicker border */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Better shadow */
+        }
+
+        .wa-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            image-rendering: -webkit-optimize-contrast; /* Attempt to improve sharpness */
+        }
+
+        .wa-mic-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: #09D261; /* WhatsApp Green */
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border: 2px solid #f0f2f5;
+        }
+
+        /* Play Button */
+        .wa-play-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        
+        .wa-play-btn svg {
+            width: 32px; /* Larger play icon */
+            height: 32px;
+            fill: #999;
+        }
+
+        .wa-play-btn:hover svg {
+            fill: #00a884; /* WhatsApp teal on hover */
+        }
+
+        /* Progress Area */
+        .wa-center-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0; /* Prevent flex overflow */
+        }
+
+        .wa-progress-container {
+            width: 100%;
+            height: 20px; /* Hit area */
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .wa-progress-bg {
+            width: 100%;
+            height: 4px;
+            background-color: #d1d7db;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .wa-progress-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #00a884; /* WhatsApp teal */
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .wa-progress-thumb {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background-color: #00a884;
+            border-radius: 50%;
+            opacity: 0; /* Hidden by default like WA */
+            transition: opacity 0.2s;
+        }
+
+        .wa-progress-container:hover .wa-progress-thumb {
+            opacity: 1;
+        }
+
+        .wa-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #667781;
+            margin-top: 4px;
+        }
+
+        /* Speed Controls */
+        .wa-speed-controls {
+            display: flex;
+            gap: 2px;
+            background: #e9edef;
+            padding: 2px;
+            border-radius: 12px;
+        }
+
+        .wa-speed-btn {
+            background: none;
+            border: none;
+            font-size: 10px;
+            font-weight: 600;
+            color: #667781;
+            padding: 2px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wa-speed-btn.active {
+            background-color: #00a884;
+            color: white;
+        }
+
+        .wa-speed-btn:hover:not(.active) {
+            background-color: #d1d7db;
+        }
+
+        /* Desktop Specific Adjustments */
+        @media (min-width: 1024px) {
+            .pricing-table.featured {
+                max-width: 480px !important; /* Wider card */
+                padding: 2.5rem !important;
+            }
+            
+            .pricing-table.featured .table-title {
+                font-size: 1.8rem !important; /* Larger title */
+            }
+            
+            .pricing-table.featured .table-price {
+                font-size: 2.8rem !important; /* Larger price */
+            }
+            
+            .pricing-table.featured .table-features li {
+                font-size: 1.15rem !important; /* Larger text */
+                padding: 0.8rem 0 !important;
+            }
+            
+            .pricing-table.featured .btn-cta {
+                font-size: 1.2rem !important;
+                padding: 1.2rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wa-audio-container {
+                max-width: 100%; /* Full width on mobile */
+            }
+            .wa-avatar {
+                width: 52px;
+                height: 52px;
+            }
+        }
+        
+        /* Special Offer Badge Styles */
+        .special-offer-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            color: white;
+            padding: 0.6rem 1.8rem;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            /* text-transform: uppercase; Removed as requested */
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .special-offer-badge::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .entenda-mais-btn {
+                display: block !important;
+                width: 80%;
+                padding: 0.8rem 1rem;
+            }
+        }
+
+        /* Desktop customizations requested */
+        @media (min-width: 1024px) {
+            .pricing-table.featured {
+                max-width: 480px !important; /* Wider card */
+            }
+            .pricing-table.featured .table-title {
+                font-size: 1.8rem !important; /* Larger title */
+            }
+            .pricing-table.featured .table-price {
+                font-size: 3.5rem !important; /* Larger price */
+            }
+            .pricing-table.featured .table-features li {
+                font-size: 1.1rem !important; /* Larger list items */
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo-container">
+            <a href="/">
+                <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="nav-logo">
+            </a>
+        </div>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar Tema" style="margin-left: auto; color: white;">
+            <span id="sun-wrapper"><i data-lucide="sun"></i></span>
+            <span id="moon-wrapper" style="display: none;"><i data-lucide="moon"></i></span>
+        </button>
+    </nav>
+
+    <main>
+        <!-- Hero / Pricing Card Section -->
+        <div class="upgrade-hero-container">
+            
+            <!-- Detailed Tools Section - Moved above Pricing Card -->
+            <section class="audience-section" style="padding-top: 0; padding-bottom: 2rem; background: transparent;">
+                <div class="special-offer-badge" style="font-weight: 600;">Que tal um desconto?</div>
+                <h2 style="text-align: center; margin-bottom: 0.5rem; font-size: calc(2rem - 2px); color: var(--heading-color); text-transform: none !important;">Escute o áudio abaixo</h2>
+                <p style="text-align: center; margin-bottom: 3rem; color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    Entenda por que o <strong>Acesso Completo</strong> é a melhor opção para automatizar e profissionalizar a gestão do seu negócio.
+                </p>
+
+                <!-- Audio Player (WhatsApp Style) -->
+                <div class="wa-audio-container">
+                    <div class="wa-top-row">
+                        <button class="wa-play-btn" id="waPlayBtn" onclick="toggleAudio()">
+                            <i data-lucide="play" fill="currentColor"></i>
+                        </button>
+                        
+                        <div class="wa-center-col">
+                            <div class="wa-progress-container" onclick="seekAudio(event)">
+                                <div class="wa-progress-bg">
+                                    <div class="wa-progress-fill" id="waProgressFill">
+                                        <div class="wa-progress-thumb"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wa-meta-row">
+                                <div class="wa-time-display" id="waTimeDisplay">0:00</div>
+                                <div class="wa-speed-controls">
+                                    <button class="wa-speed-btn active" onclick="setSpeed(1, this)">1x</button>
+                                    <button class="wa-speed-btn" onclick="setSpeed(1.5, this)">1.5x</button>
+                                    <button class="wa-speed-btn" onclick="setSpeed(2, this)">2x</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="wa-avatar-container">
+                            <div class="wa-avatar">
+                                <img src="/images/isa.png" alt="Isa">
+                            </div>
+                            <div class="wa-mic-badge">
+                                <i data-lucide="mic" style="width: 14px; height: 14px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <audio id="waAudio" preload="metadata">
+                         <source src="/images/audio%20upgrade.MP3" type="audio/mpeg">
+                    </audio>
+                </div>
+            </section>
+            
+            <!-- Main Upgrade Card -->
+            <div class="pricing-table featured" style="margin: 3rem auto 0; max-width: 380px;">
+                <div class="recommended-badge">RECOMENDADO</div>
+                <div class="table-title">Acesso Completo</div>
+                
+                <div style="margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="background: white; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <span style="font-weight: 500;">Planilha de precificação</span>
+                        <span><span style="text-decoration: line-through; font-size: 0.8em; color: #999; margin-right: 4px;">R$ 49,90</span><strong style="color: #333;">R$ 19,90</strong></span>
+                    </div>
+                    <div style="background: white; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <span style="font-weight: 500;">1 mês assinatura fluxo de caixa</span>
+                        <strong style="color: #333;">R$ 12,50</strong>
+                    </div>
+                    <div style="background: white; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <span style="font-weight: 500;">Ferramenta ponto de equilíbrio</span>
+                        <strong style="color: #333;">R$ 19,90</strong>
+                    </div>
+                    <div style="background: white; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <span style="font-weight: 500;">Suporte Whatsapp</span>
+                        <strong style="color: #333;">R$ 19,90</strong>
+                    </div>
+
+                    <!-- Math Sum Line -->
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; padding-right: 10px; margin-top: 2px;">
+                        <div style="width: 60px; border-top: 1px solid #bbb; margin-bottom: 2px;"></div>
+                        <span style="text-decoration: line-through; color: #999; font-size: 0.85rem;">R$ 72,20</span>
+                    </div>
+                    
+                    <div style="margin-top: 4px; padding: 0 10px 10px; text-align: center;">
+                        <div style="font-size: 0.85rem; color: #555; margin-bottom: 4px;">
+                            acesso completo com todas essas ferramentas por <strong>39,90</strong>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #1B5E20; font-weight: 600; margin-bottom: 15px;">
+                            desconto exclusivo de R$ 10,00
+                        </div>
+                        <div style="font-weight: 700; font-size: 1rem; color: var(--primary-color);">
+                            tenha acesso agora ao pacote completo por:
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-price">
+                    R$ 29,90 <span>/único</span>
+                </div>
+                <ul class="table-features">
+                    <li><i data-lucide="check"></i> Acesso Imediato à Planilha</li>
+                    <li><i data-lucide="check"></i> Aulas de Explicação</li>
+                    <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
+                    <li><i data-lucide="check"></i> Acesso Vitalício a Planilha</li>
+                    <li class="whatsapp-support">
+                        <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        Suporte Whatsapp
+                    </li>
+                    <li class="highlight-feature">
+                        <span class="bonus-label">Bônus exclusivo</span>
+                        <div class="bonus-content">
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
+                            Ferramenta para cálculo de ponto de equilíbrio com IA integrada
+                        </div>
+                    </li>
+                    <li class="highlight-feature">
+                        <span class="bonus-label">Bônus exclusivo #2</span>
+                        <div class="bonus-content" style="display: flex; align-items: flex-start;">
+                            <i data-lucide="gift" class="gift-bonus-icon" style="flex-shrink: 0; margin-right: 8px; margin-top: 3px;"></i>
+                            <div style="display: flex; flex-direction: column; text-align: left;">
+                                <span>Ferramenta completa para fluxo de caixa (1 mês de assinatura)</span>
+                                <div style="margin: 0.2rem 0 0.2rem 0; font-size: 0.9rem; color: var(--primary-yellow); font-weight: 600;">Você terá acesso a tudo isso:</div>
+                                <ul style="list-style-type: disc; padding-left: 1.2rem; margin: 0; font-size: 0.85rem; color: inherit; opacity: 0.9; line-height: 1.3;">
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Registro de vendas integrado com banco de dados</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Relatórios detalhados do seu negócio</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Controle de custos fixos da operação</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Integrações com Inteligência Artificial</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+                <a href="https://pay.cakto.com.br/d8ser2c" class="btn-cta cakto-checkout-btn" target="_blank" style="color: white !important;">
+                    OBTER PACOTE COMPLETO
+                </a>
+                <div style="text-align: center; margin-top: 0.8rem;">
+                    <a href="https://pay.cakto.com.br/3aoidkh_738778" target="_blank" style="color: #000; font-size: 0.9rem; font-weight: 700; text-decoration: underline;">
+                        Não, prefiro continuar com plano básico
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 1rem; color: #666; font-size: 0.9rem;">
+            <p>&copy; 2026 BelleCake. Todos os direitos reservados.</p>
+        </div>
+    </main>
+
+    <script src="/js/main.js"></script>
+    <!-- Mobile Sticky CTA -->
+    <div class="mobile-bottom-cta">
+        <div class="cta-left-content">
+            <div class="cta-timer" id="ctaTimer" data-duration="300" data-context="upgrade">05:00</div>
+            <div class="cta-prices">
+                <span class="old" style="text-decoration: none; font-weight: 600;">Acesso completo <span style="text-decoration: line-through;">R$ 39,90</span></span>
+                <span class="new" style="font-size: 1.05rem;">R$ 29,90</span>
+            </div>
+        </div>
+        <button onclick="window.open('https://pay.cakto.com.br/d8ser2c', '_blank')">
+            QUERO AGORA
+        </button>
+    </div>
+    <script>
+        lucide.createIcons();
+
+        // --- WhatsApp Audio Player Logic ---
+        const audio = document.getElementById('waAudio');
+        const playBtn = document.getElementById('waPlayBtn');
+        const progressFill = document.getElementById('waProgressFill');
+        const timeDisplay = document.getElementById('waTimeDisplay');
+        
+        let isPlaying = false;
+
+        function toggleAudio() {
+            if (isPlaying) {
+                audio.pause();
+            } else {
+                audio.play();
+            }
+        }
+
+        audio.addEventListener('play', () => {
+            isPlaying = true;
+            playBtn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+            playBtn.classList.add('playing');
+            document.querySelector('.wa-mic-badge').classList.add('animating');
+            lucide.createIcons();
+        });
+
+        audio.addEventListener('pause', () => {
+            isPlaying = false;
+            playBtn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+            playBtn.classList.remove('playing');
+            document.querySelector('.wa-mic-badge').classList.remove('animating');
+            lucide.createIcons();
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            const duration = audio.duration || 0;
+            const currentTime = audio.currentTime;
+            const percent = duration > 0 ? (currentTime / duration) * 100 : 0;
+            
+            if (progressFill) progressFill.style.width = percent + '%';
+            
+            // Update time text
+            const current = formatTime(currentTime);
+            const total = formatTime(duration);
+            if (timeDisplay) {
+                // Check if we have spans (new structure) or just text
+                const spans = timeDisplay.querySelectorAll('span');
+                if (spans.length === 2) {
+                    spans[0].textContent = current;
+                    spans[1].textContent = total;
+                } else {
+                    timeDisplay.textContent = `${current} / ${total}`;
+                }
+            }
+        });
+
+        function seekAudio(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percent = x / rect.width;
+            if (audio.duration) {
+                audio.currentTime = percent * audio.duration;
+            }
+        }
+
+        function setSpeed(speed, btn) {
+            audio.playbackRate = speed;
+            
+            // Update UI
+            document.querySelectorAll('.wa-speed-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>

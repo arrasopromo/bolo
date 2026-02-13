@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aulas Práticas - BelleCake</title>
+    
+    <!-- Performance Optimizations -->
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="preconnect" href="https://www.google.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Light Theme Colors */
+        :root {
+            --bg-cream: #FFFBF7;
+            --text-brown: #32221D;
+            --card-white: #FFFFFF;
+            --border-light: #E5E5E5;
+            --primary-yellow: #FFC107;
+            --secondary-caramel: #CD7A3E;
+            --sidebar-bg: #F8F9FA;
+            --active-item: #FFF3CD;
+        }
+
+        body {
+            background: var(--bg-cream) !important;
+            color: var(--text-brown) !important;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .main-layout {
+            display: flex;
+            margin-top: 80px; /* Navbar height */
+            flex: 1;
+            height: calc(100vh - 80px);
+            overflow: hidden;
+        }
+
+        /* Video Area */
+        .video-container {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background: transparent !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            max-width: 1400px; /* Increased from 1000px */
+            aspect-ratio: 16/9;
+            background: transparent !important;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: none !important;
+            border: 4px solid #C0C0C0 !important;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .video-wrapper.vertical {
+            aspect-ratio: 9/16;
+            max-width: 450px;
+        }
+
+        .video-wrapper.vertical iframe {
+            aspect-ratio: 9/16;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none !important;
+            background: transparent !important;
+        }
+
+        .lesson-info {
+            width: 100%;
+            max-width: 1000px;
+            color: var(--text-brown);
+        }
+
+        .lesson-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #000000;
+        }
+
+        .lesson-desc {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 350px;
+            background: var(--card-white);
+            border-left: 1px solid var(--border-light);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-cream);
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-brown);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .module {
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .module-header {
+            padding: 1rem 1.5rem;
+            background: #fdfdfd;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .module-header:hover {
+            background: #f5f5f5;
+        }
+
+        .module-content {
+            display: none;
+            background: white;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+
+        .lesson-item {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .lesson-item:hover {
+            background: #f9f9f9;
+        }
+
+        .lesson-item.active {
+            background: var(--active-item);
+            border-left-color: var(--primary-yellow);
+            color: var(--text-brown);
+            font-weight: 600;
+        }
+
+        .lesson-icon {
+            width: 20px;
+            height: 20px;
+            color: #999;
+        }
+
+        .lesson-item.active .lesson-icon {
+            color: var(--secondary-caramel);
+            fill: var(--secondary-caramel);
+        }
+
+        .nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Responsive */
+        .nav-arrow {
+            background: #FFFFFF !important; /* Force white background */
+            border: 1px solid var(--border-light);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #32221D !important; /* Force explicit dark brown text/icon */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Add slight shadow for visibility */
+        }
+        
+        .nav-arrow svg {
+            stroke: #32221D !important; /* Force stroke color for Lucide icons */
+        }
+        
+        .nav-arrow:hover {
+            background: var(--active-item) !important;
+            color: var(--secondary-caramel) !important;
+            border-color: var(--primary-yellow);
+        }
+        
+        .nav-arrow:hover svg {
+            stroke: var(--secondary-caramel) !important;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                overflow-x: hidden; /* Prevent horizontal scroll */
+            }
+
+            .main-layout {
+                flex-direction: column;
+                height: auto;
+                overflow: visible;
+                margin-top: 80px; /* Match navbar height exactly */
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-left: none;
+                border-top: 1px solid var(--border-light);
+            }
+
+            .video-container {
+                padding: 0;
+                width: 100%;
+                overflow: visible; /* Let it flow */
+            }
+
+            .video-wrapper {
+                width: 100%;
+                max-width: none; /* Force full width */
+                border: none !important;
+                border-bottom: 1px solid #ddd !important;
+                margin-bottom: 1rem;
+                aspect-ratio: 16/9;
+            }
+
+            .video-wrapper.vertical {
+                aspect-ratio: 9/16 !important;
+                max-width: 100%;
+                height: auto;
+            }
+
+            .video-wrapper.vertical iframe {
+                height: 100%;
+                width: 100%;
+                aspect-ratio: 9/16;
+            }
+
+            .lesson-info {
+                padding: 1.5rem; /* More breathing room */
+            }
+
+            .lesson-title {
+                font-size: 1.5rem; /* Adjusted for mobile */
+                line-height: 1.3;
+            }
+
+            .lesson-desc {
+                font-size: 1rem;
+            }
+
+            .module-header {
+                padding: 1.2rem 1.5rem;
+                font-size: 1.1rem; /* Bigger touch target */
+            }
+
+            .lesson-item {
+                padding: 1.2rem 1.5rem;
+                font-size: 1rem;
+            }
+            
+            .navbar {
+                position: fixed;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <div class="logo-container">
+            <a href="/aulas">
+                <img src="/images/LOGO BELLE CAKE.png" alt="Belle Cake Logo" class="nav-logo">
+            </a>
+        </div>
+        <div class="nav-profile">
+             <div id="userNameDisplay" style="color: white; font-weight: 600;">Olá, Confeiteira!</div>
+             <div style="width: 40px; height: 40px; background: var(--primary-yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--seal-brown);">
+                <i data-lucide="user"></i>
+             </div>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        <!-- Video Area -->
+        <main class="video-container">
+            <div class="video-wrapper">
+                <!-- Default Video (Aula 1) Facade -->
+                <div id="videoPlaceholder" onclick="loadIframe('ECX_R_GwtxA')" style="width: 100%; height: 100%; background: #000 url('https://img.youtube.com/vi/ECX_R_GwtxA/maxresdefault.jpg') center/cover no-repeat; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div style="width: 68px; height: 48px; background-color: rgba(33, 33, 33, 0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                         <svg height="24" viewBox="0 0 24 24" width="24" focusable="false" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: #fff;"><path d="M8 5v14l11-7z"></path></svg>
+                    </div>
+                </div>
+                <iframe id="videoPlayer" style="display: none; width: 100%; height: 100%;" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+            </div>
+            <div class="lesson-info">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 class="lesson-title" id="lessonTitle">Aula 1: Boas-vindas</h1>
+                        <p class="lesson-desc" id="lessonDesc">Seja bem-vinda ao curso! Neste vídeo explicamos como vai funcionar nossa jornada.</p>
+                    </div>
+                    
+                    <!-- Navigation Arrows -->
+                    <div style="display: flex; gap: 1rem; margin-left: 1rem;">
+                        <button onclick="navigateLesson(-1)" class="nav-arrow" title="Aula Anterior">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+                        <button onclick="navigateLesson(1)" class="nav-arrow" title="Próxima Aula">
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <i data-lucide="book-open"></i> Conteúdo do Curso
+                </div>
+                <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">
+                    5 Módulos • 10 Aulas
+                </div>
+            </div>
+
+            <!-- Módulo 1 -->
+            <div class="module">
+                <div class="module-header" onclick="toggleModule(this)">
+                    <span>Módulo 1: Área de membros</span>
+                    <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="module-content active">
+                    <div class="lesson-item active" onclick="playLesson('ECX_R_GwtxA', 'Aula 1: Boas-vindas', 'Introdução ao curso e visão geral da plataforma.', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 1: Boas-vindas</span>
+                    </div>
+                    <div class="lesson-item" onclick="playLesson('dQw4w9WgXcQ', 'Aula 2: Área de membros', 'Entendendo como funciona nossa área de membros.', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 2: Área de membros</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo 2 -->
+            <div class="module">
+                <div class="module-header" onclick="toggleModule(this)">
+                    <span>Módulo 2: Dominando a planilha (Computador)</span>
+                    <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="module-content">
+                    <div class="lesson-item" onclick="playLesson('cKaWqDj9QNM', 'Aula 3: Baixando e configurando planilha', 'Aprenda a baixar e configurar a planilha no computador.<br><br><a href=\'https://www.youtube.com/watch?v=QxQIvsgYrEo&t=129s\' target=\'_blank\' style=\'color: var(--secondary-caramel); font-weight: bold; text-decoration: underline;\'>CLIQUE AQUI E VEJA COMO BAIXAR OFFICE</a>', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 3: Baixando e configurando planilha</span>
+                    </div>
+                    <div class="lesson-item" onclick="playLesson('x62f763mnsw', 'Aula 4: Por dentro da planilha', 'Visão geral das funcionalidades da planilha no computador.', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 4: Por dentro da planilha</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo 3 -->
+            <div class="module">
+                <div class="module-header" onclick="toggleModule(this)">
+                    <span>Módulo 3: Dominando a planilha (iOS)</span>
+                    <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="module-content">
+                    <div class="lesson-item" onclick="playLesson('0ssHU_PpqPA', 'Aula 5: Baixando e configurando planilha', 'Aprenda a baixar e configurar a planilha no iPhone/iPad.<br><br><a href=\'https://apps.apple.com/br/app/microsoft-excel/id586683407\' target=\'_blank\' style=\'color: var(--secondary-caramel); font-weight: bold; text-decoration: underline;\'>BAIXAR EXCEL NA APP STORE</a>', this, true)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 5: Baixando e configurando planilha</span>
+                    </div>
+                    <div class="lesson-item" onclick="playLesson('B1CWSFBERkQ', 'Aula 6: Por dentro da planilha', 'Visão geral das funcionalidades da planilha no iOS.', this, true)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 6: Por dentro da planilha</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo 4 -->
+            <div class="module">
+                <div class="module-header" onclick="toggleModule(this)">
+                    <span>Módulo 4: Dominando a planilha (Android)</span>
+                    <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="module-content">
+                    <div class="lesson-item" onclick="playLesson('dQw4w9WgXcQ', 'Aula 7: Baixando e configurando planilha', 'Aprenda a baixar e configurar a planilha no Android.', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 7: Baixando e configurando planilha</span>
+                    </div>
+                    <div class="lesson-item" onclick="playLesson('dQw4w9WgXcQ', 'Aula 8: Por dentro da planilha', 'Visão geral das funcionalidades da planilha no Android.', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 8: Por dentro da planilha</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo 5 -->
+            <div class="module">
+                <div class="module-header" onclick="toggleModule(this)">
+                    <span>Módulo 5: Fluxo de caixa & Ponto de equilibrio</span>
+                    <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="module-content">
+                    <div class="lesson-item" onclick="playLesson('dQw4w9WgXcQ', 'Aula 9: Como usar a ferramenta fluxo de caixa', 'Tutorial completo da ferramenta de fluxo de caixa.', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 9: Como usar a ferramenta fluxo de caixa</span>
+                    </div>
+                    <div class="lesson-item" onclick="playLesson('dQw4w9WgXcQ', 'Aula 10: Como usar a ferramenta de ponto de equilibrio', 'Aprenda a definir e alcançar suas metas financeiras.', this)">
+                        <i data-lucide="play-circle" class="lesson-icon"></i>
+                        <span>Aula 10: Como usar a ferramenta de ponto de equilibrio</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão Voltar -->
+            <div style="padding: 2rem; margin-top: auto;">
+                <a href="/membros" style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 1rem; background: var(--border-light); color: var(--text-brown); text-decoration: none; border-radius: 8px; font-weight: 700; gap: 0.5rem; transition: background 0.2s;">
+                    <i data-lucide="arrow-left"></i> VOLTAR PAINEL
+                </a>
+            </div>
+
+        </aside>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        // Immediate Name Display (IIFE) to run before DOMContentLoaded if possible
+        (function() {
+            try {
+                const cachedName = localStorage.getItem('bellecake_user_name');
+                // Use a safe interval to check for element existence in case it's not ready
+                if (cachedName) {
+                    const checkElem = setInterval(() => {
+                        const nameDisplay = document.getElementById('userNameDisplay');
+                        if (nameDisplay) {
+                            nameDisplay.textContent = `Olá, ${cachedName.split(' ')[0]}!`;
+                            clearInterval(checkElem);
+                        }
+                    }, 50);
+                    // Clear interval after 5 seconds to prevent infinite loop
+                    setTimeout(() => clearInterval(checkElem), 5000);
+                }
+            } catch (e) { console.error('Early name set error', e); }
+        })();
+
+        // Load User Data
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons(); // Run icons creation after DOM is ready
+
+            const storedToken = localStorage.getItem('bellecake_token');
+            const nameDisplay = document.getElementById('userNameDisplay');
+            
+            // 1. Try Cache again (in case IIFE missed or element wasn't ready)
+            const cachedName = localStorage.getItem('bellecake_user_name');
+            if (cachedName && nameDisplay) {
+                nameDisplay.textContent = `Olá, ${cachedName.split(' ')[0]}!`;
+            }
+
+            // 2. Try Global Data (if set by other scripts)
+            if (window.currentUserData && (window.currentUserData.name || window.currentUserData.email) && nameDisplay) {
+                 const nameToUse = window.currentUserData.name || window.currentUserData.email;
+                 nameDisplay.textContent = `Olá, ${nameToUse.split(' ')[0]}!`;
+                 return;
+            }
+
+            // 3. Fetch Fresh Data
+            if (storedToken) {
+                try {
+                    const res = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${storedToken}` }
+                    });
+                    if (res.ok) {
+                        const userData = await res.json();
+                        // Use name or fallback to email (first part)
+                        const nameToUse = userData.name || userData.email || 'Confeiteira';
+                        
+                        if (nameDisplay) {
+                            nameDisplay.textContent = `Olá, ${nameToUse.split(' ')[0]}!`;
+                            // Update cache if name exists
+                            if (userData.name) {
+                                localStorage.setItem('bellecake_user_name', userData.name);
+                            }
+                        }
+                    } else {
+                         // If token is invalid, clear cache
+                         console.warn('Token invalid or expired');
+                         // localStorage.removeItem('bellecake_token'); // Optional: force logout logic
+                    }
+                } catch (e) {
+                    console.error('Erro ao buscar usuário:', e);
+                }
+            } else {
+                 console.warn('No token found in localStorage');
+            }
+        });
+
+        function navigateLesson(direction) {
+            const allLessons = Array.from(document.querySelectorAll('.lesson-item'));
+            const currentLesson = document.querySelector('.lesson-item.active');
+            
+            if (!currentLesson || allLessons.length === 0) return;
+            
+            const currentIndex = allLessons.indexOf(currentLesson);
+            let nextIndex = currentIndex + direction;
+            
+            // Boundary checks
+            if (nextIndex < 0) return; // Already at first lesson
+            if (nextIndex >= allLessons.length) return; // Already at last lesson
+            
+            const nextLesson = allLessons[nextIndex];
+            
+            // Check if next lesson is in a closed module
+            const parentContent = nextLesson.closest('.module-content');
+            if (parentContent && !parentContent.classList.contains('active')) {
+                // Find the header for this content and click it to open
+                const module = parentContent.parentElement;
+                const header = module.querySelector('.module-header');
+                if (header) toggleModule(header);
+            }
+            
+            // Trigger click on the next lesson to play it
+            nextLesson.click();
+        }
+
+        function toggleModule(header) {
+            const content = header.nextElementSibling;
+            const currentIcon = header.querySelector('[data-lucide]');
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-right');
+                if (currentIcon) currentIcon.replaceWith(newIcon);
+            } else {
+                content.classList.add('active');
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-down');
+                if (currentIcon) currentIcon.replaceWith(newIcon);
+            }
+            lucide.createIcons();
+        }
+
+        function loadIframe(videoId) {
+            const placeholder = document.getElementById('videoPlaceholder');
+            const iframe = document.getElementById('videoPlayer');
+            
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+            
+            iframe.style.display = 'block';
+            // Only set src if it's not already set to this video to avoid reload (optional optimization, but autoplay is desired here)
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&vq=hd1080&rel=0`;
+        }
+
+        function playLesson(videoId, title, desc, element, isVertical = false) {
+            // Update Video Wrapper Style
+            const wrapper = document.querySelector('.video-wrapper');
+            if (isVertical) {
+                wrapper.classList.add('vertical');
+            } else {
+                wrapper.classList.remove('vertical');
+            }
+
+            // Handle Facade/Placeholder
+            const placeholder = document.getElementById('videoPlaceholder');
+            const iframe = document.getElementById('videoPlayer');
+            
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+            iframe.style.display = 'block';
+
+            // Update Video with HD preference
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&vq=hd1080&rel=0`;
+            document.getElementById('lessonTitle').textContent = title;
+            document.getElementById('lessonDesc').innerHTML = desc;
+
+            // Update Active State
+            document.querySelectorAll('.lesson-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            // Scroll to top on mobile
+            if (window.innerWidth <= 900) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    </script>
+</body>
+</html>
