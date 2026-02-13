@@ -960,6 +960,22 @@
             // Initialize Lucide icons
             lucide.createIcons();
 
+            // Modal Overlay Click Handler
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        closeAllModals();
+                    }
+                });
+                
+                // Prevent touchmove on overlay to stop background scroll
+                overlay.addEventListener('touchmove', (e) => {
+                    if (e.target === overlay) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            });
+
             // Check URL for tab
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab') || 'produtos';
@@ -1188,10 +1204,12 @@
         // --- Modals ---
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
+            document.body.style.overflow = ''; // Restore body scroll
         }
 
         function closeAllModals() {
             document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+            document.body.style.overflow = ''; // Restore body scroll
         }
 
         // --- Ingredient Actions ---
@@ -1263,6 +1281,7 @@
             }
             
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock body scroll
             // Scroll to top fix for mobile
             const content = modal.querySelector('.modal-content');
             if (content) content.scrollTop = 0;
@@ -1361,6 +1380,7 @@
             
             calculateProductTotals(); // Initial calc
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock body scroll
             // Scroll to top fix for mobile
             const content = modal.querySelector('.modal-content');
             if (content) content.scrollTop = 0;
@@ -1951,6 +1971,7 @@
         function openBulkIngredientModal() {
             closeModal('ingredientModal');
             document.getElementById('bulkIngredientModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock body scroll
             renderBulkList();
         }
 
