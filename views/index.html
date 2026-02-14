@@ -137,18 +137,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <h2 class="video-title">Entenda como funciona a planilha</h2>
         
         <div class="video-slider-container" id="videoSliderContainer" style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
-            <!-- Desktop Placeholder (Hidden on Mobile) -->
-            <div class="video-slide desktop-only-video" style="flex: 0 0 100%; max-width: 800px; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                <div class="video-placeholder" style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.5); padding: 56.25% 0 0 0;">
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <i data-lucide="play-circle" style="width: 64px; height: 64px; color: white;"></i>
-                        <p style="color: white; margin-top: 1rem;">Vídeo Explicativo</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mobile Wistia Video (Visible only on Mobile) -->
-            <div class="mobile-video-explicativo" style="display: none; width: 100%; max-width: 360px;">
+            <!-- Wistia Video (Visible on All Devices) -->
+            <div class="video-explicativo-container" style="width: 100%; max-width: 360px;">
                 <script src="https://fast.wistia.com/player.js" async></script>
                 <script src="https://fast.wistia.com/embed/i3jpnu5dri.js" async type="module"></script>
                 <style>
@@ -157,10 +147,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     display: block;
                     filter: blur(5px);
                     padding-top:177.78%;
-                  }
-                  @media (max-width: 768px) {
-                      .desktop-only-video { display: none !important; }
-                      .mobile-video-explicativo { display: block !important; }
                   }
                 </style>
                 <wistia-player media-id="i3jpnu5dri" aspect="0.5625"></wistia-player>
