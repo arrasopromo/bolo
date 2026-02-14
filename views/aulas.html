@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aulas Práticas - BelleCake</title>
+    <script>
+        (function(){try{if(localStorage.getItem('debug_logs')==='1')return;var c=window.console||{};var n=function(){};['log','info','debug','trace','group','groupCollapsed','time','timeEnd'].forEach(function(m){if(c[m])c[m]=n});}catch(e){}})();
+    </script>
     
     <!-- Performance Optimizations -->
     <link rel="preconnect" href="https://www.youtube.com">
@@ -76,11 +79,16 @@
             border: 4px solid #C0C0C0 !important;
             margin-bottom: 2rem;
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
         }
 
         .video-wrapper.vertical {
             aspect-ratio: 9/16;
             max-width: 450px;
+        }
+        .video-wrapper.vertical-tall {
+            aspect-ratio: auto !important;
         }
 
         .video-wrapper.vertical iframe {
@@ -147,7 +155,7 @@
         .module-header {
             padding: 1rem 1.5rem;
             background: #fdfdfd;
-            cursor: pointer;
+            cursor: default;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -155,18 +163,9 @@
             transition: background 0.2s;
         }
 
-        .module-header:hover {
-            background: #f5f5f5;
-        }
+        .module-header:hover {}
 
-        .module-content {
-            display: none;
-            background: white;
-        }
-
-        .module-content.active {
-            display: block;
-        }
+        .module-content { display: block; background: white; }
 
         .lesson-item {
             padding: 1rem 1.5rem;
@@ -263,12 +262,11 @@
                 overflow: hidden;
             }
 
-            /* Empurra a lista mais para baixo quando vídeo vertical está ativo (Aula 2) */
-            body.lesson-vertical-active .sidebar {
-                margin-top: 1.25rem;
-            }
+            /* Empurra a lista mais para baixo quando vídeo vertical está ativo */
+            body.lesson-vertical-active .sidebar { margin-top: 4rem; }
+            body.lesson-vertical-tall-active .sidebar { margin-top: 6rem; }
             body.lesson-vertical-active .lesson-info {
-                margin-bottom: 0.5rem;
+                margin-bottom: 0.75rem;
             }
 
             .video-container {
@@ -282,7 +280,7 @@
                 max-width: none; /* Force full width */
                 border: none !important;
                 border-bottom: 1px solid #ddd !important;
-                margin-bottom: 1rem;
+                margin-bottom: 1.25rem;
                 aspect-ratio: 16/9;
             }
 
@@ -290,6 +288,9 @@
                 aspect-ratio: 9/16 !important;
                 max-width: 100%;
                 height: auto;
+            }
+            .video-wrapper.vertical-tall {
+                aspect-ratio: auto !important;
             }
 
             .video-wrapper.vertical iframe {
@@ -402,7 +403,7 @@
                         <i data-lucide="play-circle" class="lesson-icon"></i>
                         <span>Aula 1: Boas-vindas</span>
                     </div>
-                    <div class="lesson-item" onclick="playWistiaMobile('cgjxmvchrk', 'Aula 2: Área de membros', 'Entendendo como funciona nossa área de membros.', this)">
+                    <div class="lesson-item" onclick="playWistiaMobile('cgjxmvchrk', 'Aula 2: Área de membros', 'Entendendo como funciona nossa área de membros.', this, '0.5625', '177.78%')">
                         <i data-lucide="play-circle" class="lesson-icon"></i>
                         <span>Aula 2: Área de membros</span>
                     </div>
@@ -430,7 +431,7 @@
                     <i data-lucide="chevron-down"></i>
                 </div>
                 <div class="module-content">
-                    <div class="lesson-item" onclick="playLesson('ngNWmnzYb30', 'Aula 4: Dominando Ferramenta de Precificação (Celular)', 'Aprenda a usar a ferramenta de precificação no celular.', this, true)">
+                    <div class="lesson-item" onclick="playWistiaMobile('olf11upssl', 'Aula 4: Dominando Ferramenta de Precificação (Celular)', 'Aprenda a usar a ferramenta de precificação no celular.', this, '0.4621309370988447', '216.39%')">
                         <i data-lucide="play-circle" class="lesson-icon"></i>
                         <span>Aula 4: Dominando Ferramenta de Precificação (Celular)</span>
                     </div>
@@ -439,11 +440,11 @@
 
             <!-- Módulo 5 -->
             <div class="module">
-                <div class="module-header" onclick="toggleModule(this)">
+                <div class="module-header">
                     <span>Módulo 4: Fluxo de caixa & Ponto de equilibrio</span>
                     <i data-lucide="chevron-down"></i>
                 </div>
-                <div class="module-content">
+                <div class="module-content active">
                     <div class="lesson-item" onclick="playLesson('nyepejjT2kk', 'Aula 5: Como usar a ferramenta fluxo de caixa', 'Tutorial completo da ferramenta de fluxo de caixa.', this)">
                         <i data-lucide="play-circle" class="lesson-icon"></i>
                         <span>Aula 5: Como usar a ferramenta fluxo de caixa</span>
@@ -610,7 +611,7 @@
 
             // Reset mobile spacing/state
             document.body.classList.remove('lesson-vertical-active');
-            toggleSidebarMobile(false);
+            document.body.classList.remove('lesson-vertical-tall-active');
         }
 
         function playLesson(videoId, title, desc, element, isVertical = false) {
@@ -654,7 +655,7 @@
             // Reset mobile spacing/state if not vertical lesson
             if (!isVertical) {
                 document.body.classList.remove('lesson-vertical-active');
-                toggleSidebarMobile(false);
+                document.body.classList.remove('lesson-vertical-tall-active');
             }
         }
 
@@ -700,9 +701,17 @@
             }
         }
 
-        function playWistiaMobile(mediaId, title, desc, element) {
+        function playWistiaMobile(mediaId, title, desc, element, aspect = '0.5625', pad = '177.78%') {
             const wrapper = document.querySelector('.video-wrapper');
             wrapper.classList.add('vertical');
+            // Mark tall verticals (e.g., aspect ~0.462 -> pad ~216%)
+            if (parseFloat(aspect) < 0.55) {
+                wrapper.classList.add('vertical-tall');
+                document.body.classList.add('lesson-vertical-tall-active');
+            } else {
+                wrapper.classList.remove('vertical-tall');
+                document.body.classList.remove('lesson-vertical-tall-active');
+            }
             const placeholder = document.getElementById('videoPlaceholder');
             const iframe = document.getElementById('videoPlayer');
             const host = document.getElementById('wistiaHost');
@@ -710,9 +719,9 @@
             if (iframe) { iframe.style.display = 'none'; iframe.src = ''; }
             if (host) {
                 host.style.display = 'block';
-                host.innerHTML = `<wistia-player media-id="${mediaId}" aspect="0.5625"></wistia-player>`;
+                host.innerHTML = `<wistia-player media-id="${mediaId}" aspect="${aspect}" autoplay muted playsinline></wistia-player>`;
             }
-            ensureWistiaScripts(mediaId, '177.78%');
+            ensureWistiaScripts(mediaId, pad);
             if (!document.querySelector(`script[src*="embed/${mediaId}.js"]`)) {
                 const s2 = document.createElement('script');
                 s2.src = `https://fast.wistia.com/embed/${mediaId}.js`;
@@ -727,7 +736,6 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
             if (window.innerWidth <= 900) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                toggleSidebarMobile(true);
             }
             // Flag vertical layout active for spacing tweaks
             document.body.classList.add('lesson-vertical-active');

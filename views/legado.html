@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precificação Planilha - BelleCake</title>
+    <script>
+        (function(){try{if(localStorage.getItem('debug_logs')==='1')return;var c=window.console||{};var n=function(){};['log','info','debug','trace','group','groupCollapsed','time','timeEnd'].forEach(function(m){if(c[m])c[m]=n});}catch(e){}})
+        ();
+    </script>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://track.bellecake.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-PDGN6N6P');</script>
+<!-- End Google Tag Manager -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="/css/styles.css" as="style" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/css/styles.css"></noscript>
+    <!-- Google Fonts (preload, non-render-blocking) -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap"></noscript>
+    <style>
+        /* Responsive Text Utilities */
+        .mobile-only { display: none !important; }
+        .desktop-only { display: block !important; }
+        
+        @media (max-width: 768px) {
+            .mobile-only { display: block !important; }
+            .desktop-only { display: none !important; }
+            /* Reduce vertical spacing in Ferramentas Exclusivas grid */
+            #tools-sketch-grid { gap: 1rem !important; margin: 1rem auto !important; padding: 0 0.75rem !important; }
+            #tools-sketch-grid > div { max-width: 100% !important; }
+            #tools-sketch-grid img { display: block; width: 100%; height: auto; }
+        }
+
+        /* Mobile-only video/GIF placeholder before photo annotations */
+        .mobile-video { display: none; }
+        @media (max-width: 768px) {
+            .pricing-card { display: none !important; }
+            .mobile-video { 
+                display: flex; 
+                flex-direction: column;
+                align-items: center;
+                width: 100%; 
+                padding: 0.5rem 1.5rem 1rem; 
+            }
+            .mobile-video .video-container { 
+                aspect-ratio: 9/16; 
+                max-width: 360px; 
+                width: 100%; 
+                border-radius: 16px; 
+                overflow: hidden; 
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                background: rgba(0,0,0,0.2);
+            }
+        }
+    </style>
+    <script>
+        // Lazy load Wistia player for the explainer video:
+        // - Prefer user click on "Veja como funciona"
+        // - Fallback to IntersectionObserver with conservative rootMargin to avoid initial critical path
+        (function() {
+            const section = document.getElementById('video-explicativo');
+            const container = document.getElementById('wistiaContainer');
+            const howLinks = Array.from(document.querySelectorAll('a[href="#video-explicativo"]'));
+            if (!section || !container) return;
+
+            function ensureWistiaScripts(mediaId) {
+                // Add style for blurred poster while custom element hydrates
+                const style = document.createElement('style');
+                const pad = mediaId === '8pdhkvtavz' ? '216.39%' : '177.78%';
+                style.textContent = `wistia-player[media-id='${mediaId}']:not(:defined){background:center/contain no-repeat url('https://fast.wistia.com/embed/medias/${mediaId}/swatch');display:block;filter:blur(5px);padding-top:${pad}}`;
+                document.head.appendChild(style);
+                // Load core player once
+                if (!document.querySelector('script[src*="fast.wistia.com/player.js"]')) {
+                    const s1 = document.createElement('script');
+                    s1.src = 'https://fast.wistia.com/player.js';
+                    s1.async = true;
+                    document.head.appendChild(s1);
+                }
+            }
+
+            function loadWistia() {
+                if (container.getAttribute('data-loaded') === '1') return;
+                container.setAttribute('data-loaded', '1');
+                ensureWistiaScripts('i3jpnu5dri');
+
+                container.innerHTML = '<wistia-player media-id="i3jpnu5dri" aspect="0.5625"></wistia-player>';
+                const s2 = document.createElement('script');
+                s2.src = 'https://fast.wistia.com/embed/i3jpnu5dri.js';
+                s2.async = true;
+                s2.type = 'module';
+                document.head.appendChild(s2);
+            }
+
+            // Prefer explicit user intent
+            howLinks.forEach(a => a.addEventListener('click', loadWistia, { once: true }));
+
+            if ('IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        loadWistia();
+                        io.disconnect();
+                    }
+                }, { rootMargin: '0px 0px -30% 0px', threshold: 0.01 });
+                io.observe(section);
+            } else {
+                // Fallback: load after DOM ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', loadWistia);
+                } else {
+                    loadWistia();
+                }
+            }
+        })();
+    </script>
+</head>
+<body>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo-container">
+            <a href="https://bellecake.com">
+                <img src="/images/LOGO BELLE CAKE.webp" alt="Belle Cake Logo" class="nav-logo" width="500" height="500" decoding="async" loading="eager">
+            </a>
+        </div>
+        <!-- Nav links removed as requested -->
+        <a href="javascript:void(0)" onclick="scrollToFeaturedPricing()" class="btn-primary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+            <i data-lucide="table" class="icon-small"></i> GARANTIR FERRAMENTA
+        </a>
+        
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar Tema" style="margin-left: 0.5rem; color: white;">
+            <span id="sun-wrapper"><i data-lucide="sun"></i></span>
+            <span id="moon-wrapper" style="display: none;"><i data-lucide="moon"></i></span>
+        </button>
+
+        <div class="mobile-menu-btn">
+            <i data-lucide="menu"></i>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="hero-section" id="inicio">
+        <div class="hero-content">
+            
+            <div class="hero-text-side">
+                <h1 class="main-title desktop-only">
+                    Ferramenta de precificação automatica
+                </h1>
+                <h1 class="main-title mobile-only">
+                    ÁREA DE MEMBROS COMPLETA
+                </h1>
+                
+                <p class="subtitle desktop-only">
+                    Tenha lucro real em cada venda e nunca mais perca dinheiro.
+                </p>
+
+                <!-- Mobile vertical player (9:16) shown before photo/annotations -->
+                <div class="mobile-video">
+                    <div class="video-container" id="mobileVideoContainer"></div>
+                    <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="card-headline">OFERTA EXCLUSIVA</div>
+                    <div class="price-header">
+                        <span class="old-price">R$ 49,90</span>
+                        <span class="savings">Economize R$ 30,00</span>
+                    </div>
+                    <div class="main-price">
+                        <span class="starting-at">a partir de</span>
+                        R$ 19,90
+                    </div>
+                    
+                    <button class="btn-cta pulse" onclick="scrollToFeaturedPricing()">
+                        GARANTIR PLANILHA
+                        <i data-lucide="table" class="icon-btn"></i>
+                    </button>
+                    <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
+                </div>
+            </div>
+
+            <div class="hero-image-side">
+                <div class="annotation left">Profissional em Análise de Dados</div>
+                <div class="annotation right">26 anos</div>
+                <div class="annotation heart-icon">
+                    <i data-lucide="heart" fill="#EDBE97" style="color: #EDBE97;"></i>
+                    <span>fazer bolos</span>
+                </div>
+                <img src="/images/isa.webp"
+                     srcset="/images/isa-360w.webp 360w, /images/isa-600w.webp 600w, /images/isa-800w.webp 800w"
+                     sizes="(max-width: 768px) 80vw, 500px"
+                     alt="Isa Belle Cake"
+                     class="isa-image"
+                     width="1080" height="1350" fetchpriority="high" decoding="async"
+                     onerror="this.style.display='none'">
+                <script>
+                    // Ensure LCP image fetches with high priority
+                    (function() {
+                        const isa = document.querySelector('.isa-image');
+                        if (isa) {
+                            isa.setAttribute('fetchpriority', 'high');
+                            isa.setAttribute('width', '1080');
+                            isa.setAttribute('height', '1350');
+                            isa.setAttribute('decoding', 'async');
+                        }
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <!-- Hero visual removed, image will be background -->
+    </main>
+
+    <!-- Video Section -->
+    <section id="video-explicativo" class="video-section">
+        <div class="section-badge">Vídeo explicativo</div>
+        <h2 class="video-title">Entenda como funciona a planilha</h2>
+        
+        <div class="video-slider-container" id="videoSliderContainer" style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
+            <!-- Lazy-loaded Wistia Video (inject on view) -->
+            <div id="wistiaContainer" class="video-explicativo-container" style="width: 100%; max-width: 360px;"></div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Bubble -->
+    <a id="whatsappBubble" href="https://wa.me/5531973586912?text=Oi%2C%20estou%20no%20site%20e%20tenho%20d%C3%BAvidas" aria-label="Falar no WhatsApp" style="position: fixed; right: 16px; bottom: 16px; width: 64px; height: 64px; border-radius: 50%; background: transparent; display:flex; align-items:center; justify-content:center; z-index: 2147483647; text-decoration:none;" target="_blank" rel="noopener">
+        <img src="/images/logo%20wpp.png" alt="WhatsApp" style="display:block; width:100%; height:100%; object-fit: contain;">
+    </a>
+
+    <!-- Audience Section -->
+    <section class="audience-section" id="quem-e">
+        <div class="section-badge">Para quem é indicado</div>
+        <h2 class="audience-title">Você precisa disso?</h2>
+        <div class="why-us-slider-container">
+            <div class="why-us-track" id="whyUsTrack">
+                <!-- Card 1 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                    <h3>Chega de Prejuízo</h3>
+                    <p>Você trabalha, trabalha e não vê o dinheiro? Mude isso agora e comece a lucrar de verdade.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <h3>Economize Tempo</h3>
+                    <p>Diga adeus às horas perdidas em cálculos manuais. Precifique em segundos, sem dor de cabeça.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="calculator"></i>
+                    </div>
+                    <h3>Começando Agora?</h3>
+                    <p>A ferramenta ideal para iniciar com o pé direito, sabendo exatamente quanto cobrar desde o primeiro doce.</p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <h3>Gestão Profissional</h3>
+                    <p>Eleve o nível do seu negócio. Otimize sua gestão e tenha controle total, como uma verdadeira confeiteira de sucesso.</p>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="bar-chart-2"></i>
+                    </div>
+                    <h3>Finanças em Dia</h3>
+                    <p>Organize seu financeiro de vez. Saiba para onde vai cada centavo e veja seu negócio crescer.</p>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="dollar-sign"></i>
+                    </div>
+                    <h3>Seu Salário Garantido</h3>
+                    <p>Defina e receba seu salário justo. Descubra o valor exato que você merece por cada venda.</p>
+                </div>
+
+                <!-- Card 7 -->
+                <div class="audience-card why-us-card">
+                    <div class="audience-icon">
+                        <i data-lucide="help-circle"></i>
+                    </div>
+                    <h3>Segurança ao Cobrar</h3>
+                    <p>Acabe com a insegurança na hora de passar o preço. Tenha certeza de que está cobrando o valor justo e correto.</p>
+                </div>
+            </div>
+            
+            <!-- Pagination Dots -->
+            <div class="why-us-dots" id="whyUsDots">
+                <!-- Dots generated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- What You Get Section -->
+    <section class="audience-section" style="padding-top: 1rem; padding-bottom: 1.25rem;">
+        <div class="section-badge">Ferramentas Exclusivas</div>
+        <h2 class="audience-title">Veja esboço do que voce terá acesso</h2>
+        
+        <div id="tools-sketch-grid" style="display: flex; gap: 1.5rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; max-width: 1200px; margin: 1rem auto; padding: 0 0.5rem;">
+            
+            <!-- 1. Ponto de Equilíbrio - Left -->
+            <div style="flex: 1; min-width: 260px; max-width: 320px; display: flex; justify-content: center; align-items: stretch;">
+                <img src="/images/ponto equilibrio.webp"
+                     alt="Ponto de Equilíbrio"
+                     class="tools-img"
+                     style="width: 100%; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.35); border: 1px solid var(--primary-yellow);"
+                     loading="lazy" decoding="async">
+            </div>
+
+            <!-- 2. Planilha - Center -->
+            <div style="flex: 1; min-width: 260px; max-width: 320px; display: flex; justify-content: center; align-items: stretch;">
+                <img src="/images/planilha folder.webp"
+                     alt="Planilha"
+                     class="tools-img"
+                     style="width: 100%; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.35); border: 1px solid var(--primary-yellow);"
+                     loading="lazy" decoding="async">
+            </div>
+
+            <!-- 3. Fluxo de Caixa (Premium) - Right -->
+            <div style="flex: 1; min-width: 260px; max-width: 320px; display: flex; flex-direction: column; align-items: center; position: relative;">
+                <div style="position: absolute; top: -15px; background: var(--primary-yellow); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                    <i data-lucide="star" style="width: 14px; height: 14px; fill: white;"></i> Premium <i data-lucide="star" style="width: 14px; height: 14px; fill: white;"></i>
+                </div>
+                <img src="/images/fluxo caixa (1).webp"
+                     alt="Fluxo de Caixa"
+                     class="tools-img"
+                     style="width: 100%; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.35); border: 4px solid var(--primary-yellow);"
+                     loading="lazy" decoding="async">
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="tabela-de-precos">
+        <div class="section-badge" style="margin-bottom: 1rem;">Nossos planos</div>
+        <h2 class="audience-title">
+            Escolha o melhor plano para <span>VOCÊ</span>
+        </h2>
+        
+        <div class="pricing-tables-container">
+            <!-- Basic Plan -->
+            <div class="pricing-table">
+                <div class="table-title">Acesso Básico</div>
+                <div class="table-price">
+                    R$ 19,90 <span>/único</span>
+                </div>
+                <ul class="table-features">
+                    <li><i data-lucide="check"></i> Acesso Imediato à Ferramenta</li>
+                    <li><i data-lucide="check"></i> Aulas de Explicação</li>
+                    <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
+                    <li><i data-lucide="check"></i> Acesso Vitalício a Ferramenta</li>
+                </ul>
+                <a href="javascript:void(0)" onclick="openUpsellModal()" class="btn-cta" id="btn-pacote-basico-anchor" style="scroll-margin-top: 150px;">
+                    OBTER PACOTE BASICO
+                </a>
+            </div>
+
+            <!-- Premium Plan -->
+            <div class="pricing-table featured">
+                <div class="recommended-badge">RECOMENDADO</div>
+                <div class="table-title">Acesso Completo</div>
+                <div class="table-price">
+                    R$ 39,90 <span>/único</span>
+                </div>
+                <ul class="table-features">
+                    <li><i data-lucide="check"></i> Acesso Imediato à Ferramenta</li>
+                    <li><i data-lucide="check"></i> Aulas de Explicação</li>
+                    <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
+                    <li><i data-lucide="check"></i> Acesso Vitalício a Ferramenta</li>
+                    <li class="whatsapp-support">
+                        <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        Suporte Whatsapp
+                    </li>
+                    <li class="highlight-feature">
+                        <span class="bonus-label">Bônus exclusivo</span>
+                        <div class="bonus-content">
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
+                            Ferramenta para cálculo de ponto de equilíbrio com IA integrada
+                        </div>
+                    </li>
+                    <li class="highlight-feature">
+                        <span class="bonus-label">Bônus exclusivo #2</span>
+                        <div class="bonus-content">
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
+                            Ferramenta completa para fluxo de caixa (1 mês de assinatura)
+                        </div>
+                    </li>
+                </ul>
+                <a href="https://pay.cakto.com.br/984m3jr_738897" class="btn-cta cakto-checkout-btn" id="btn-checkout-premium" target="_blank">
+                    OBTER PACOTE COMPLETO
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Who Am I Section -->
+    <section class="who-am-i-section">
+        <div class="who-content">
+            <div class="who-text">
+                <h2 class="who-title">Quem é Isabelle Santos?</h2>
+                <p class="who-description">
+                    Especialista em precificação e gestão para confeiteiras. 
+                    Com vasta experiência no mercado, ajudo você a transformar sua paixão em um negócio lucrativo e organizado.
+                    Minha missão é garantir que você nunca mais tenha prejuízo e saiba exatamente quanto ganha em cada doce vendido.
+                </p>
+            </div>
+            <div class="who-image-container">
+                <img src="/images/eu.webp" alt="Isabelle Santos" class="who-image" width="1080" height="1080" loading="lazy" decoding="async">
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Lazy load Wistia player for the explainer video:
+        // - Prefer user click on "Veja como funciona"
+        // - Fallback to IntersectionObserver with conservative rootMargin to avoid initial critical path
+        (function() {
+            const section = document.getElementById('video-explicativo');
+            const container = document.getElementById('wistiaContainer');
+            const howLinks = Array.from(document.querySelectorAll('a[href="#video-explicativo"]'));
+            if (!section || !container) return;
+
+            function ensureWistiaScripts(mediaId) {
+                // Add style for blurred poster while custom element hydrates
+                const style = document.createElement('style');
+                const pad = mediaId === '8pdhkvtavz' ? '216.39%' : '177.78%';
+                style.textContent = `wistia-player[media-id='${mediaId}']:not(:defined){background:center/contain no-repeat url('https://fast.wistia.com/embed/medias/${mediaId}/swatch');display:block;filter:blur(5px);padding-top:${pad}}`;
+                document.head.appendChild(style);
+                // Load core player once
+                if (!document.querySelector('script[src*="fast.wistia.com/player.js"]')) {
+                    const s1 = document.createElement('script');
+                    s1.src = 'https://fast.wistia.com/player.js';
+                    s1.async = true;
+                    document.head.appendChild(s1);
+                }
+            }
+
+            function loadWistia() {
+                if (container.getAttribute('data-loaded') === '1') return;
+                container.setAttribute('data-loaded', '1');
+                ensureWistiaScripts('i3jpnu5dri');
+
+                container.innerHTML = '<wistia-player media-id="i3jpnu5dri" aspect="0.5625"></wistia-player>';
+                const s2 = document.createElement('script');
+                s2.src = 'https://fast.wistia.com/embed/i3jpnu5dri.js';
+                s2.async = true;
+                s2.type = 'module';
+                document.head.appendChild(s2);
+            }
+
+            // Prefer explicit user intent
+            howLinks.forEach(a => a.addEventListener('click', loadWistia, { once: true }));
+
+            if ('IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        loadWistia();
+                        io.disconnect();
+                    }
+                }, { rootMargin: '0px 0px -30% 0px', threshold: 0.01 });
+                io.observe(section);
+            } else {
+                // Fallback: load after DOM ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', loadWistia);
+                } else {
+                    loadWistia();
+                }
+            }
+        })();
+    </script>
+    <script>
+        // Mobile hero vertical Wistia: load early in viewport and autoplay muted
+        (function() {
+            const container = document.getElementById('mobileVideoContainer');
+            if (!container) return;
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            if (!isMobile) return;
+
+            function ensureWistiaScripts(mediaId) {
+                const style = document.createElement('style');
+                const pad = '216.39%'; // for aspect 0.4621309370988447
+                style.textContent = `wistia-player[media-id='${mediaId}']:not(:defined){background:center/contain no-repeat url('https://fast.wistia.com/embed/medias/${mediaId}/swatch');display:block;filter:blur(5px);padding-top:${pad}}`;
+                document.head.appendChild(style);
+                if (!document.querySelector('script[src*="fast.wistia.com/player.js"]')) {
+                    const s1 = document.createElement('script');
+                    s1.src = 'https://fast.wistia.com/player.js';
+                    s1.async = true;
+                    document.head.appendChild(s1);
+                }
+            }
+
+            function loadMobileWistia() {
+                if (container.getAttribute('data-loaded') === '1') return;
+                container.setAttribute('data-loaded', '1');
+                ensureWistiaScripts('8pdhkvtavz');
+                container.innerHTML = '<wistia-player media-id="8pdhkvtavz" aspect="0.4621309370988447" autoplay muted playsinline></wistia-player>';
+                const s2 = document.createElement('script');
+                s2.src = 'https://fast.wistia.com/embed/8pdhkvtavz.js';
+                s2.async = true;
+                s2.type = 'module';
+                document.head.appendChild(s2);
+                // Best-effort autoplay after player initializes
+                setTimeout(() => {
+                    try {
+                        const el = container.querySelector('wistia-player');
+                        if (el && typeof el.play === 'function') {
+                            el.muted = true;
+                            el.play().catch(()=>{});
+                        } else if (window.Wistia && typeof Wistia.first === 'function') {
+                            const p = Wistia.first();
+                            if (p && p.play) {
+                                if (p.mute) p.mute();
+                                p.play();
+                            }
+                        }
+                    } catch(_) {}
+                }, 600);
+            }
+
+            if ('IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        loadMobileWistia();
+                        io.disconnect();
+                    }
+                }, { rootMargin: '100px 0px', threshold: 0.01 });
+                io.observe(container);
+            } else {
+                // Fallback: load after DOM ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', loadMobileWistia, { once: true });
+                } else {
+                    loadMobileWistia();
+                }
+            }
+        })();
+    </script>
+    <script>
+        // Defer Google Tag Manager to post-interaction or idle to reduce TBT/LCP
+        (function() {
+            window.dataLayer = window.dataLayer || [];
+            function injectGTM() {
+                if (injectGTM._done) return;
+                injectGTM._done = true;
+                window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+                var s = document.createElement('script');
+                s.async = true;
+                s.src = 'https://track.bellecake.com/gtm.js?id=GTM-PDGN6N6P';
+                document.head.appendChild(s);
+            }
+            const once = (fn) => (e) => { fn(); ['click','scroll','keydown','pointerdown'].forEach(t=>window.removeEventListener(t, once(fn))); };
+            window.addEventListener('click', injectGTM, { once: true, passive: true });
+            window.addEventListener('scroll', injectGTM, { once: true, passive: true });
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(injectGTM, { timeout: 4000 });
+            } else {
+                setTimeout(injectGTM, 4000);
+            }
+        })();
+    </script>
+
+
+    <!-- Rodapé -->
+    <footer class="site-footer">
+        <div style="color: var(--text-muted); font-size: 0.9rem; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+            <p>&copy; Todos direitos reservados 2026</p>
+        </div>
+    </footer>
+
+    <!-- Mobile Sticky CTA -->
+    <div class="mobile-bottom-cta">
+        <div class="cta-left-content">
+            <div class="cta-timer" id="ctaTimer">15:00</div>
+            <div class="cta-prices" style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start; justify-content: center;">
+                <span class="old-price" style="font-size: 0.75rem; text-decoration: line-through; opacity: 0.8; line-height: 1; color: white; white-space: nowrap;">R$ 79,90</span>
+                <span class="new" style="line-height: 1; font-size: 1.1rem; font-weight: 800; white-space: nowrap;">R$ 39,90</span>
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; width: 100%; gap: 5px;">
+             <button onclick="document.getElementById('btn-pacote-basico-anchor').scrollIntoView({ behavior: 'smooth', block: 'start' });">
+                Garantir ferramenta
+            </button>
+        </div>
+    </div>
+
+    <!-- Upsell Modal -->
+    <div id="upsellModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
+        <div style="position: relative; width: 100%; max-width: 400px; max-height: 90vh; height: auto; background: white; border-radius: 16px; overflow: hidden; animation: slideUp 0.3s ease-out; margin: auto; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid var(--primary-yellow);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #32221D, #5D3A29); padding: 1.5rem 1rem 1rem 1rem; text-align: center; position: relative;">
+                <button onclick="closeUpsellModal()" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 5px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+                <h2 style="margin: 0; color: white; font-size: 1.6rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Realizar Upgrade</h2>
+                <!-- Subtitle removed -->
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 1.5rem; overflow-y: auto; background: white; position: relative;">
+                <!-- Scroll Indicator -->
+                <div id="scrollIndicator" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10; flex-direction: column; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s;">
+                     <div style="width: 20px; height: 32px; border: 2px solid #CD7A3E; border-radius: 12px; position: relative;">
+                        <div style="width: 4px; height: 8px; background: #CD7A3E; border-radius: 2px; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); animation: scrollWheel 1.5s infinite;"></div>
+                     </div>
+                     <span style="font-size: 0.7rem; color: #CD7A3E; font-weight: 700; margin-top: 4px; text-transform: uppercase;">Arraste</span>
+                </div>
+
+                <div class="table-price" style="font-size: calc(2rem + 1px); margin-bottom: 0.5rem; text-align: center; color: #333; font-weight: 900;">
+                    R$ 39,90 <span style="font-size: 0.9rem; color: #666; font-weight: normal;">/único</span>
+                </div>
+                
+                <ul class="table-features" style="margin-bottom: 1.5rem;">
+                    <li><i data-lucide="check"></i> Tudo do Plano Básico</li>
+                    <li class="whatsapp-support" style="background: #E8F5E9; border: 1px solid #4CAF50; color: #2E7D32; font-weight: 600;">
+                        <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; margin-right: 8px; fill: currentColor;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        Suporte Whatsapp
+                    </li>
+                    <li class="highlight-feature" style="border: 2px dashed var(--primary-yellow); padding: 0.4rem; border-radius: 12px; margin: 0.2rem 0; display: block; background: var(--dark-card);">
+                        <span class="bonus-label">Bônus exclusivo</span>
+                        <div class="bonus-content">
+                            <i data-lucide="gift" class="gift-bonus-icon"></i>
+                            Ferramenta para cálculo de ponto de equilíbrio com IA integrada
+                        </div>
+                    </li>
+                    <li class="highlight-feature" style="border: 2px dashed var(--primary-yellow); padding: 0.4rem; border-radius: 12px; margin: 0.2rem 0; display: block; background: var(--dark-card);">
+                        <span class="bonus-label">Bônus exclusivo #2</span>
+                        <div class="bonus-content" style="display: flex; align-items: flex-start;">
+                            <i data-lucide="gift" class="gift-bonus-icon" style="flex-shrink: 0; margin-right: 8px; margin-top: 3px;"></i>
+                            <div style="display: flex; flex-direction: column; text-align: left;">
+                                <span>Ferramenta completa para fluxo de caixa (1 mês de assinatura)</span>
+                                <div style="margin: 0.2rem 0 0.2rem 0; font-size: 0.9rem; color: var(--primary-yellow); font-weight: 600;">Você terá acesso a tudo isso:</div>
+                                <ul style="list-style-type: disc; padding-left: 1.2rem; margin: 0; font-size: 0.85rem; color: inherit; opacity: 0.9; line-height: 1.3;">
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Registro de vendas integrado com banco de dados</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Relatórios detalhados do seu negócio</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Controle de custos fixos da operação</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Integrações com Inteligência Artificial</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+
+                <a href="https://pay.cakto.com.br/984m3jr_738897" class="btn-cta cakto-checkout-btn" target="_blank" style="display: block; width: 100%; text-align: center; padding: 1rem; background: #4CAF50; color: white; border-radius: 8px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); transition: transform 0.2s;">
+                    QUERO O PACOTE COMPLETO
+                </a>
+                
+                 <div style="text-align: center; margin-top: 1rem;">
+                    <a href="/upgrade" style="color: #000; font-size: 0.85rem; font-weight: 600; text-decoration: underline; cursor: pointer;">
+                        Não, quero ficar apenas com o básico
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes scrollWheel {
+            0% { top: 4px; opacity: 1; }
+            100% { top: 16px; opacity: 0; }
+        }
+    </style>
+
+    <script>
+        (function() {
+            function loadLucide(cb){
+                if (window.lucide) { cb && cb(); return; }
+                var s=document.createElement('script');
+                s.src='https://unpkg.com/lucide@latest';
+                s.async=true;
+                s.onload=function(){ cb && cb(); };
+                document.head.appendChild(s);
+            }
+            var schedule = window.requestIdleCallback ? requestIdleCallback : function(fn){ setTimeout(fn, 1); };
+            schedule(function(){ loadLucide(function(){ if (window.lucide && lucide.createIcons) lucide.createIcons(); }); });
+        })();
+    </script>
+    <script src="/js/main.js"></script>
+    <script>
+
+        let scrollTimeout;
+
+        function openUpsellModal() {
+            const modal = document.getElementById('upsellModal');
+            modal.style.display = 'flex';
+            lucide.createIcons();
+
+            // Mobile Scroll Indicator Logic
+            if (window.innerWidth <= 768) {
+                const indicator = document.getElementById('scrollIndicator');
+                if (indicator) {
+                    // Reset
+                    indicator.style.display = 'none';
+                    indicator.style.opacity = '0';
+                    clearTimeout(scrollTimeout);
+
+                    // Show after 3 seconds
+                    scrollTimeout = setTimeout(() => {
+                        indicator.style.display = 'flex';
+                        // Force reflow
+                        void indicator.offsetWidth; 
+                        indicator.style.opacity = '1';
+
+                        // Hide after 4 seconds of being visible
+                        setTimeout(() => {
+                            indicator.style.opacity = '0';
+                            setTimeout(() => { indicator.style.display = 'none'; }, 500);
+                        }, 4000);
+                    }, 3000);
+                }
+            }
+        }
+
+        function closeUpsellModal() {
+            const modal = document.getElementById('upsellModal');
+            modal.style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('upsellModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUpsellModal();
+            }
+        });
+
+        // Hide sticky footer when viewing Pricing Section
+        document.addEventListener('DOMContentLoaded', () => {
+            const footer = document.querySelector('.mobile-bottom-cta');
+            const pricingSection = document.getElementById('tabela-de-precos');
+
+            if (footer && pricingSection) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            footer.style.opacity = '0';
+                            footer.style.pointerEvents = 'none'; // Prevent clicks while hidden
+                            footer.style.transition = 'opacity 0.3s ease';
+                        } else {
+                            footer.style.opacity = '1';
+                            footer.style.pointerEvents = 'auto';
+                        }
+                    });
+                }, { threshold: 0.1 }); // Trigger when 10% of pricing is visible
+
+                observer.observe(pricingSection);
+            }
+        });
+    </script>
+    <script>
+        function scrollToFeaturedPricing() {
+            const sec = document.getElementById('tabela-de-precos');
+            const featured = document.querySelector('.pricing-table.featured');
+            const basic = document.querySelector('.pricing-section .pricing-table:not(.featured)');
+            if (basic) { basic.style.display = 'none'; }
+            if (featured) {
+                featured.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (sec) {
+                sec.scrollIntoView({ behavior: 'smooth' });
+            }
+            if ('IntersectionObserver' in window && sec && basic) {
+                const io = new IntersectionObserver((entries) => {
+                    if (!entries[0].isIntersecting) {
+                        basic.style.display = '';
+                        io.disconnect();
+                    }
+                }, { threshold: 0 });
+                io.observe(sec);
+            }
+        }
+        function adjustWhatsAppBubble() {
+            const bubble = document.getElementById('whatsappBubble');
+            if (!bubble) return;
+            const mobileBar = document.querySelector('.mobile-bottom-cta');
+            let offset = 16;
+            if (window.innerWidth <= 768 && mobileBar) {
+                const h = mobileBar.offsetHeight || 56;
+                offset = h + 16;
+            } else if (window.innerWidth <= 768) {
+                offset = 72;
+            }
+            bubble.style.bottom = offset + 'px';
+        }
+        window.addEventListener('resize', adjustWhatsAppBubble);
+        document.addEventListener('DOMContentLoaded', adjustWhatsAppBubble);
+    </script>
+    <style>
+        .tools-img { width: 100%; height: auto; object-fit: contain; display: block; }
+    </style>
+</body>
+</html>
