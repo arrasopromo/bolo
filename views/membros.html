@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área de Membros - BelleCake</title>
+    <!-- GTM Removed -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+
+    <style>
+        /* Light Theme Colors */
+        :root {
+            --bg-cream: #FFFBF7;
+            --text-brown: #32221D;
+            --card-white: #FFFFFF;
+            --border-light: #E5E5E5;
+            --primary-yellow: #FFC107;
+            --secondary-caramel: #CD7A3E;
+        }
+
+        body {
+            background: var(--bg-cream) !important;
+            color: var(--text-brown) !important;
+        }
+
+        .members-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 80vh;
+        }
+        .member-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .main-title {
+            text-shadow: none !important;
+        }
+        .subtitle {
+            text-shadow: none !important;
+        }
+        .user-badge {
+            background: var(--card-white);
+            border: 1px solid var(--primary-yellow);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            width: 100%;
+        }
+
+        /* Só muda para 2 colunas em tablets (iPad) ou telas menores que 950px */
+        @media (max-width: 950px) {
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Muda para 1 coluna apenas em celulares */
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .content-card {
+            background: var(--card-white);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-yellow);
+        }
+        .card-image {
+            height: 120px;
+            background: linear-gradient(135deg, #5D3A29, #CD7A3E);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .card-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.1);
+        }
+        .card-image i {
+            position: relative;
+            z-index: 1;
+        }
+        .card-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-brown);
+        }
+        .card-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+            flex: 1;
+        }
+        .access-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--primary-yellow);
+            color: var(--seal-brown);
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .access-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* Navbar adjustment for members area */
+        .nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        /* Locked Card State */
+        .content-card.locked {
+            filter: grayscale(100%);
+            opacity: 0.7;
+            cursor: pointer;
+            position: relative;
+        }
+        .content-card.locked:hover {
+            transform: none;
+            border-color: var(--border-light);
+        }
+        .content-card.locked .access-btn {
+            background-color: #555 !important;
+            color: #ccc !important;
+            pointer-events: none; /* Button looks disabled */
+        }
+        .content-card.locked::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50; /* Above everything */
+        }
+
+        @media (max-width: 768px) {
+            .nav-profile span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <div class="logo-container">
+            <a href="/">
+                <img src="/images/LOGO BELLE CAKE.webp" alt="Belle Cake Logo" class="nav-logo">
+            </a>
+        </div>
+        <div class="nav-profile" id="navProfileContainer">
+            <!-- Content populated by JS -->
+             <button onclick="openLoginModal()" style="background: var(--primary-yellow); border: none; padding: 0.5rem 1.2rem; border-radius: 20px; font-weight: 700; color: var(--seal-brown); cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="log-in" style="width: 18px;"></i> ENTRAR
+             </button>
+        </div>
+    </nav>
+
+    <main class="members-container" style="padding-top: 140px;">
+        <div class="member-header">
+            <h1 class="main-title" style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1rem; color: #000000;">Área de Membros</h1>
+            <p id="welcome-msg" class="subtitle" style="display: none; text-shadow: none !important;">Bem-vinda ao seu painel exclusivo de sucesso.</p>
+            
+            <div id="user-badge" class="user-badge" style="display: none; align-items: flex-start;">
+                <i data-lucide="crown" color="#CD7A3E" fill="#CD7A3E" style="margin-top: 5px;"></i>
+                <div style="text-align: left;">
+                    <div style="margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Status da Conta</div>
+                        <div id="accountStatus" style="font-weight: 700; color: var(--heading-color);">ACESSO COMPLETO</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted);">Membro desde</div>
+                        <div id="memberSince" style="font-weight: 600; font-size: 0.8rem; color: var(--heading-color);">...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <!-- Card 1: Ferramenta -->
+            <div class="content-card" id="card-planilha">
+                <div class="card-image">
+                    <img src="/images/planilha%20folder.webp" alt="Capa Ferramenta">
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Ferramenta de precificação automatizada</h3>
+                    <p class="card-desc">Acesse agora a versão mais recente da sua ferramenta de precificação e comece a lucrar.</p>
+                    <a href="/precificacao" class="access-btn">
+                        <i data-lucide="layout"></i> ACESSAR FERRAMENTA
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 2: Aulas -->
+            <div class="content-card" id="card-aulas">
+                <div class="card-image" style="background: #000000; display: flex; align-items: center; justify-content: center;">
+                    <div style="color: #FF0000; font-weight: 900; font-size: 1.5rem; letter-spacing: 2px;">REC</div>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Aulas Práticas</h3>
+                    <p class="card-desc">Tutoriais passo a passo ensinando como preencher e extrair o máximo da ferramenta.</p>
+                    <a href="/aulas" class="access-btn" target="_blank">
+                        <i data-lucide="play-circle"></i> ASSISTIR AGORA
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 3: IA Bonus -->
+            <div class="content-card" id="card-ia" style="border: 1px solid var(--primary-yellow);">
+                <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #CD7A3E);">
+                    <div id="badge-ia" class="trial-badge" style="display: none; background: #4CAF50; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 12px; position: absolute; top: 10px; right: 10px; font-weight: 700; z-index: 10;">TESTE GRÁTIS 7 DIAS</div>
+                    <img src="/images/ponto%20equilibrio.webp" alt="Capa IA">
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Ponto de Equilíbrio</h3>
+                    <p class="card-desc">Descubra seu ponto de equilíbrio e receba dicas de vendas personalizadas com nossa Inteligência Artificial.</p>
+                    <a href="/equilibrio" class="access-btn" target="_blank">
+                        <i data-lucide="zap"></i> ACESSAR FERRAMENTA
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 4: Fluxo de Caixa -->
+            <div class="content-card" id="card-fluxo">
+                <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #4CAF50);">
+                    <div id="badge-fluxo" class="trial-badge" style="display: none; background: #4CAF50; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 12px; position: absolute; top: 10px; right: 10px; font-weight: 700; z-index: 10;">TESTE GRÁTIS 7 DIAS</div>
+                    <img src="/images/fluxo%20caixa%20(1).webp" alt="Capa Fluxo de Caixa">
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Fluxo de Caixa</h3>
+                    <p class="card-desc">Controle suas vendas diárias, cadastre produtos e visualize seus lucros com gráficos detalhados.</p>
+                    <a href="/fluxo" id="btn-fluxo" class="access-btn" target="_blank">
+                        <i data-lucide="layout-dashboard"></i> ACESSAR PAINEL
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 5: Estoque (Hidden as requested) -->
+            <!-- 
+            <div class="content-card" id="card-estoque">
+                <div class="card-image" style="background: linear-gradient(135deg, #2C3E50, #4CA1AF); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="package" style="color: white; width: 64px; height: 64px;"></i>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Controle de Estoque</h3>
+                    <p class="card-desc">Gerencie seus ingredientes, acompanhe quantidades e evite faltas na produção.</p>
+                    <a href="/estoque" class="access-btn">
+                        <i data-lucide="package"></i> ACESSAR ESTOQUE
+                    </a>
+                </div>
+            </div>
+            -->
+
+            <!-- Card 5: Material de Massas (Order Bump) -->
+            <div class="content-card" id="card-massas">
+                <div class="card-image">
+                    <img src="/images/bolo%20branco.webp" alt="Bolo Recheado" style="object-position: center;">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7);"></div>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Massas Perfeitas</h3>
+                    <p class="card-desc">Acesse suas receitas exclusivas de massas profissionais e recheios estruturados.</p>
+                    <a href="/orderbump/Massas Perfeitas - Belle Cake.pdf" target="_blank" class="access-btn">
+                        <i data-lucide="book-open"></i> ACESSAR MATERIAL
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 6: Suporte -->
+            <div class="content-card" id="card-suporte">
+                <div class="card-image" style="background: transparent;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Capa WhatsApp" style="width: 80px; height: 80px; position: relative;">
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Suporte VIP</h3>
+                    <p class="card-desc">Dúvidas sobre a ferramenta? Nossa equipe de suporte está pronta para te ajudar no WhatsApp.</p>
+                    <button onclick="handleSupportClick()" class="access-btn" style="background: #25D366; color: white;">
+                        <i data-lucide="message-circle"></i> CHAMAR NO ZAP
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; margin-top: auto;">
+        &copy; Todos direitos reservados 2026 - BelleCake
+    </footer>
+
+    <div id="loginModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+            <button onclick="closeLoginModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; cursor: pointer; color: #999;">
+                <i data-lucide="x"></i>
+            </button>
+            
+            <h2 style="margin-top: 0; color: var(--text-brown); margin-bottom: 0.5rem;">Acessar sua Conta</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">Digite o e-mail utilizado na compra para entrar.</p>
+            
+            <form id="loginForm">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Seu E-mail</label>
+                    <input type="email" id="loginEmail" placeholder="exemplo@email.com" required style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 16px;">
+                </div>
+                <button type="submit" style="width: 100%; padding: 1rem; background: var(--primary-yellow); color: var(--seal-brown); border: none; border-radius: 8px; font-weight: 800; cursor: pointer; transition: opacity 0.2s;">
+                    ENTRAR AGORA
+                </button>
+            </form>
+            <div id="loginStatus" style="margin-top: 1rem; font-size: 0.9rem; text-align: center; display: none;"></div>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+
+    <!-- Support Modal -->
+    <div id="supportModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="modal-content" style="background: white; padding: 1.5rem 1rem; border-radius: 20px; width: 90%; max-width: 360px; max-height: 90vh; overflow-y: auto; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.4); animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column;">
+            <button onclick="closeSupportModal()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #999; padding: 5px; z-index: 10;">
+                <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+            </button>
+            
+            <div style="margin-bottom: 0.5rem;">
+                <img src="/images/logo preta bellecake.webp" alt="Belle Cake" style="width: 140px; height: auto;">
+            </div>
+            
+            <h2 style="color: var(--text-brown); margin-bottom: 0.3rem; font-size: 1.3rem; line-height: 1.2;">Suporte VIP</h2>
+            
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.4; padding: 0 0.5rem;">
+                Estamos aqui para te ajudar! Mas antes, precisamos confirmar uma coisa importante.
+            </p>
+            
+            <div style="text-align: left; background: #FFFBF7; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #F5E6D3;">
+                <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="supportConfirmCheck" onchange="toggleSupportBtn()" style="width: 20px; height: 20px; accent-color: var(--secondary-caramel); flex-shrink: 0; margin-top: 2px;">
+                    <span style="font-size: 0.9rem; color: #555; line-height: 1.4; font-weight: 500;">
+                        Confirmo que assisti a todas as aulas disponíveis na área de membros antes de solicitar suporte.
+                    </span>
+                </label>
+            </div>
+
+            <button id="btnOpenWhatsapp" disabled onclick="confirmAndOpenWhatsapp()" style="background: #25D366; color: white; border: none; padding: 0.8rem; border-radius: 10px; font-weight: 700; font-size: 0.95rem; width: 100%; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); opacity: 0.5; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i> CONTINUAR PARA WHATSAPP
+            </button>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="modal-content" style="background: white; padding: 1.5rem 1rem; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.4); animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column;">
+            <button onclick="closeWelcomeModal()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #999; padding: 5px; z-index: 10;">
+                <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+            </button>
+            
+            <div style="margin-bottom: 0.5rem;">
+                <img src="/images/logo preta bellecake.webp" alt="Belle Cake" style="width: 140px; height: auto;">
+            </div>
+            
+            <h2 style="color: var(--text-brown); margin-bottom: 0.3rem; font-size: 1.3rem; line-height: 1.2;">Seja muito bem-vinda(o)!</h2>
+            
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.4; padding: 0 0.5rem;">
+                Muito obrigado pela sua confiança! Garantimos que você vai adorar tudo o que preparamos para você na área de membros.
+            </p>
+            
+            <div style="text-align: left; background: #FFFBF7; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #F5E6D3;">
+                <p style="margin-bottom: 0.5rem; display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; color: #555; line-height: 1.4;">
+                    <i data-lucide="check-circle-2" style="color: #4CAF50; width: 16px; flex-shrink: 0; margin-top: 3px;"></i>
+                    <span>O acesso às ferramentas é <strong>imediato</strong>.</span>
+                </p>
+                <p style="margin: 0; display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; color: #555; line-height: 1.4;">
+                    <i data-lucide="play-circle" style="color: var(--secondary-caramel); width: 16px; flex-shrink: 0; margin-top: 3px;"></i>
+                    <span>Assista a <strong>todas as aulas</strong>. Elas são rápidas e essenciais para o seu sucesso.</span>
+                </p>
+            </div>
+
+            <!-- Contact Info -->
+            <div style="margin-bottom: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                <p style="font-size: 0.8rem; color: #999; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Canais de Atendimento</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <a href="https://instagram.com/isbellecake" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #E1306C; font-weight: 600; font-size: 0.9rem; padding: 0.5rem; background: #FFF0F5; border-radius: 8px; transition: background 0.2s;">
+                        <i data-lucide="instagram" style="width: 16px; height: 16px;"></i> @isbellecake
+                    </a>
+                    
+                    <a href="mailto:suportebellecake@gmail.com" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: var(--text-brown); font-weight: 600; font-size: 0.9rem; padding: 0.5rem; background: #F5F5F5; border-radius: 8px; transition: background 0.2s;">
+                        <i data-lucide="mail" style="width: 16px; height: 16px;"></i> suportebellecake@gmail.com
+                    </a>
+                </div>
+            </div>
+
+            <label style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 1rem; cursor: pointer; color: #777; font-size: 0.8rem; user-select: none;">
+                <input type="checkbox" id="dontShowWelcomeAgain" style="width: 16px; height: 16px; accent-color: var(--secondary-caramel);"> Não exibir novamente
+            </label>
+            
+            <button onclick="closeWelcomeModal()" style="background: var(--secondary-caramel); color: white; border: none; padding: 0.8rem; border-radius: 10px; font-weight: 700; font-size: 0.95rem; width: 100%; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(205, 122, 62, 0.3);">
+                Começar Agora
+            </button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script>
+        function closeWelcomeModal() {
+            const checkbox = document.getElementById('dontShowWelcomeAgain');
+            if (checkbox && checkbox.checked) {
+                localStorage.setItem('bellecake_welcome_seen', 'true');
+            }
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Support Modal Logic
+        function handleSupportClick() {
+            const seen = localStorage.getItem('bellecake_support_seen');
+            if (seen === 'true') {
+                const phoneNumber = '5531973586912';
+                const message = encodeURIComponent('Olá, estou com dúvidas');
+                window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+            } else {
+                const modal = document.getElementById('supportModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    // Reset state
+                    const checkbox = document.getElementById('supportConfirmCheck');
+                    const btn = document.getElementById('btnOpenWhatsapp');
+                    if(checkbox) checkbox.checked = false;
+                    if(btn) {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                    }
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function closeSupportModal() {
+            const modal = document.getElementById('supportModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function toggleSupportBtn() {
+            const checkbox = document.getElementById('supportConfirmCheck');
+            const btn = document.getElementById('btnOpenWhatsapp');
+            if (checkbox && btn) {
+                btn.disabled = !checkbox.checked;
+                btn.style.opacity = checkbox.checked ? '1' : '0.5';
+            }
+        }
+
+        function confirmAndOpenWhatsapp() {
+            localStorage.setItem('bellecake_support_seen', 'true');
+            closeSupportModal();
+            const phoneNumber = '5531973586912';
+            const message = encodeURIComponent('Olá, estou com dúvidas');
+            window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check welcome message
+            const welcomeSeen = localStorage.getItem('bellecake_welcome_seen');
+            if (!welcomeSeen) {
+                setTimeout(() => {
+                    const modal = document.getElementById('welcomeModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        lucide.createIcons();
+                    }
+                }, 1000);
+            }
+        });
+
+        // ... existing code ...
+
+        lucide.createIcons();
+
+        // Login Modal Logic
+        function openLoginModal() {
+            const modal = document.getElementById('loginModal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                document.getElementById('loginEmail').focus();
+            }, 10);
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+        // Close on outside click
+        document.getElementById('loginModal').addEventListener('click', (e) => {
+            if (e.target.id === 'loginModal') closeLoginModal();
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const btn = e.target.querySelector('button');
+            const status = document.getElementById('loginStatus');
+            
+            if (!email) return;
+
+            const originalText = btn.innerText;
+            btn.innerText = 'Verificando...';
+            btn.disabled = true;
+            status.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/auth/login-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    status.innerText = 'Login realizado! Redirecionando...';
+                    status.style.color = 'green';
+                    status.style.display = 'block';
+                    
+                    localStorage.setItem('bellecake_token', data.token);
+                    
+                    setTimeout(() => {
+                        window.location.href = `/membros?token=${data.token}`;
+                    }, 1000);
+                } else {
+                    status.innerText = data.error || 'Erro ao entrar.';
+                    status.style.color = 'red';
+                    status.style.display = 'block';
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                status.innerText = 'Erro de conexão. Tente novamente.';
+                status.style.color = 'red';
+                status.style.display = 'block';
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Dev Login Removed as per user request
+
+        // Check for token in URL (Login via Link/Webhook)
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (token) {
+                console.log('Token encontrado na URL:', token);
+                // Save token
+                localStorage.setItem('bellecake_token', token);
+                
+                // Show success message
+                const header = document.querySelector('.member-header');
+                if (header) {
+                    const msg = document.createElement('div');
+                    msg.style.position = 'fixed';
+                    msg.style.top = '20px';
+                    msg.style.right = '20px';
+                    msg.style.background = '#FFFFFF';
+                    msg.style.color = '#4CAF50';
+                    msg.style.padding = '12px 20px';
+                    msg.style.borderRadius = '8px';
+                    msg.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    msg.style.display = 'flex';
+                    msg.style.alignItems = 'center';
+                    msg.style.gap = '10px';
+                    msg.style.zIndex = '1000';
+                    msg.style.borderLeft = '4px solid #4CAF50';
+                    msg.style.animation = 'slideIn 0.3s ease-out';
+                    
+                    msg.innerHTML = '<i data-lucide="check-circle-2" style="width: 20px;"></i> <span style="font-weight: 600; font-size: 0.9rem;">Login realizado com sucesso!</span>';
+                    
+                    // Add animation keyframes if not exists
+                    if (!document.getElementById('toast-style')) {
+                        const style = document.createElement('style');
+                        style.id = 'toast-style';
+                        style.innerHTML = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+                        document.head.appendChild(style);
+                    }
+
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 4000);
+                    setTimeout(() => lucide.createIcons(), 100);
+                }
+
+                // Clean URL (Wait a bit so user sees it worked? No, clean immediately for security, but maybe logic relies on it?)
+                // window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            const storedToken = localStorage.getItem('bellecake_token');
+            
+            // Update Fluxo Link with Token immediately if available
+            if (storedToken) {
+                // Show welcome message and badge
+                const welcomeMsg = document.getElementById('welcome-msg');
+                const userBadge = document.getElementById('user-badge');
+                if (welcomeMsg) welcomeMsg.style.display = 'block';
+                if (userBadge) userBadge.style.display = 'inline-flex';
+
+                const btnFluxo = document.getElementById('btn-fluxo');
+                if (btnFluxo) {
+                    btnFluxo.href = `/fluxo?token=${storedToken}`;
+                }
+
+                // Render Logged In Profile
+                const navContainer = document.getElementById('navProfileContainer');
+                if (navContainer) {
+                    navContainer.innerHTML = `
+                        <div id="userNameDisplay" style="color: white; font-weight: 600;">Olá, Confeiteira!</div>
+                        <div style="width: 40px; height: 40px; background: var(--primary-yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--seal-brown); cursor: pointer;" onclick="if(confirm('Deseja sair?')) { localStorage.removeItem('bellecake_token'); location.reload(); }">
+                            <i data-lucide="user"></i>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                }
+            } else {
+                // Not Logged In - Lock Cards
+                const cards = document.querySelectorAll('.content-card');
+                cards.forEach(card => {
+                    card.classList.add('locked');
+                    
+                    // Change button text to indicate lock
+                    const btn = card.querySelector('.access-btn');
+                    if (btn) {
+                        btn.innerHTML = '<i data-lucide="lock"></i> BLOQUEADO';
+                    }
+
+                    // Add click event to open login modal
+                    card.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openLoginModal();
+                    });
+                });
+                // Re-render icons for the new lock icon
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+
+            if (storedToken) {
+                try {
+                    const res = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${storedToken}` }
+                    });
+                    
+                    if (res.status === 404) {
+                        // Token valid but user deleted from DB -> Logout
+                        console.warn('User not found. Logging out...');
+                        localStorage.removeItem('bellecake_token');
+                        
+                        // Clear URL params to prevent infinite loop
+                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                        window.history.replaceState({path: newUrl}, '', newUrl);
+                        
+                        window.location.reload();
+                        return;
+                    }
+
+                    if (res.ok) {
+                        const userData = await res.json();
+                        
+                        if (!userData) return; // Safety check
+
+                        const nameDisplay = document.getElementById('userNameDisplay');
+                        if (nameDisplay && userData.name) {
+                            nameDisplay.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
+                        }
+                        
+                        const memberSince = document.getElementById('memberSince');
+                        if (memberSince) {
+                            // Use userData.createdAt or fallback to now
+                            const dateStr = userData.createdAt || new Date().toISOString();
+                            const date = new Date(dateStr);
+                            memberSince.textContent = date.toLocaleDateString('pt-BR');
+                        }
+
+                        // Check Plan and Lock Cards if Basic
+                        if (userData.plan === 'basic') {
+                            const statusEl = document.getElementById('accountStatus');
+                            if (statusEl) statusEl.innerText = 'ACESSO BÁSICO';
+
+                            // Check for 7-Day Trial (Fluxo & Ponto de Equilíbrio)
+                            const createdAt = new Date(userData.createdAt || new Date());
+                            const now = new Date();
+                            const diffTime = Math.abs(now - createdAt);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            const isTrialActive = diffDays <= 7;
+
+                            // Default locked cards
+                            let cardsToLock = ['card-ia', 'card-fluxo', 'card-massas', 'card-suporte'];
+
+                            if (isTrialActive) {
+                                // If trial is active, remove Fluxo and IA from locked list
+                                cardsToLock = ['card-massas', 'card-suporte'];
+                                
+                                // Optional: Update status text
+                                if (statusEl) statusEl.innerHTML = 'ACESSO BÁSICO';
+                                
+                                // Ensure badges are visible (already in HTML but good to confirm)
+                                const trialBadges = document.querySelectorAll('.trial-badge');
+                                trialBadges.forEach(b => b.style.display = 'block');
+                            } else {
+                                // Trial expired - hide badges? Or keep them to show what they missed?
+                                // Better to hide or change text to "Trial Expirado"
+                                const trialBadges = document.querySelectorAll('.trial-badge');
+                                trialBadges.forEach(b => {
+                                    b.style.display = 'block';
+                                    b.style.backgroundColor = '#999';
+                                    b.innerText = 'TRIAL EXPIRADO';
+                                });
+                            }
+                            
+                            cardsToLock.forEach(id => {
+                                const card = document.getElementById(id);
+                                if (card) {
+                                    card.classList.add('locked');
+                                    
+                                    const btn = card.querySelector('.access-btn');
+                                    if (btn) {
+                                        btn.innerHTML = '<i data-lucide="lock"></i> BLOQUEADO (Upgrade)';
+                                        btn.style.backgroundColor = '#555';
+                                        btn.href = '/upgrade';
+                                    }
+
+                                    // Override click to go to upgrade
+                                    card.onclick = (e) => {
+                                        e.preventDefault();
+                                        window.location.href = '/upgrade';
+                                    };
+                                }
+                            });
+                            setTimeout(() => lucide.createIcons(), 100);
+                        }
+
+                        // Check Massas Perfeitas Access (Order Bump)
+                        // Even for Complete users, this might be locked if they didn't buy the order bump
+                        if (!userData.massasPerfeitasAccess) {
+                            const massasCard = document.getElementById('card-massas');
+                            if (massasCard && !massasCard.classList.contains('locked')) {
+                                massasCard.classList.add('locked');
+                                const btn = massasCard.querySelector('.access-btn');
+                                if (btn) {
+                                    btn.innerHTML = '<i data-lucide="lock"></i> BLOQUEADO (Adquira)';
+                                    btn.style.backgroundColor = '#555';
+                                    btn.href = '/upgrade'; 
+                                }
+                                massasCard.onclick = (e) => {
+                                    e.preventDefault();
+                                    window.location.href = '/upgrade';
+                                };
+                                // Re-render icons only if we locked it here
+                                setTimeout(() => lucide.createIcons(), 100);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao buscar usuário:', e);
+                }
+            }
+        });
+    </script>
+    <script>
+        // Remove target="_blank" from card links on mobile (User Request)
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth <= 768) {
+                const cardLinks = document.querySelectorAll('.content-card .access-btn[target="_blank"]');
+                cardLinks.forEach(link => {
+                    link.removeAttribute('target');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
