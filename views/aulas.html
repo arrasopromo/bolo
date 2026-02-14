@@ -383,7 +383,7 @@
                         <i data-lucide="play-circle" class="lesson-icon"></i>
                         <span>Aula 1: Boas-vindas</span>
                     </div>
-                    <div class="lesson-item" onclick="playLesson('dQw4w9WgXcQ', 'Aula 2: Área de membros', 'Entendendo como funciona nossa área de membros.', this)">
+                    <div class="lesson-item" onclick="showComingSoon('Aula 2: Área de membros', 'Este conteúdo estará disponível em breve.', this)">
                         <i data-lucide="play-circle" class="lesson-icon"></i>
                         <span>Aula 2: Área de membros</span>
                     </div>
@@ -603,6 +603,31 @@
             element.classList.add('active');
             
             // Scroll to top on mobile
+            if (window.innerWidth <= 900) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function showComingSoon(title, desc, element) {
+            const wrapper = document.querySelector('.video-wrapper');
+            wrapper.classList.remove('vertical');
+            const placeholder = document.getElementById('videoPlaceholder');
+            const iframe = document.getElementById('videoPlayer');
+            if (iframe) {
+                iframe.style.display = 'none';
+                iframe.src = '';
+            }
+            if (placeholder) {
+                placeholder.style.display = 'flex';
+                placeholder.onclick = null;
+                placeholder.style.background = '#000';
+                placeholder.innerHTML = '<div style="text-align:center; color:#fff; display:flex; flex-direction:column; align-items:center; gap:.5rem;"><i data-lucide="clock" style="width: 48px; height: 48px;"></i><p style="margin:0; font-weight:700;">Vídeo em breve</p></div>';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+            document.getElementById('lessonTitle').textContent = title;
+            document.getElementById('lessonDesc').innerHTML = desc;
+            document.querySelectorAll('.lesson-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
             if (window.innerWidth <= 900) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
