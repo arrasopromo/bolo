@@ -677,7 +677,9 @@
         </a>
         
         <div class="mobile-header-actions">
-
+            <button onclick="window.location.href='/fluxo'" style="background:none; border:none; color:#FFFFFF; cursor: pointer; margin-right: 10px;" title="Fluxo de Caixa">
+                <i data-lucide="layout-dashboard" size="28"></i>
+            </button>
             <button id="mobileMenuBtn" style="background:none; border:none; color:#FFFFFF; cursor: pointer;">
                 <i data-lucide="menu" size="28"></i>
             </button>
@@ -690,9 +692,7 @@
             <div class="nav-item" id="mobile-nav-ingredientes" onclick="closeAllModals(); switchTab('ingredientes'); document.getElementById('mobileMenuDropdown').style.display='none'">
                 <i data-lucide="shopping-basket"></i> Ingredientes
             </div>
-            <div class="nav-item" onclick="window.location.href='/estoque'">
-                <i data-lucide="package"></i> Estoque
-            </div>
+
             <div class="nav-item" onclick="window.location.href='/membros'">
                 <i data-lucide="arrow-left"></i> Voltar Painel
             </div>
@@ -717,9 +717,7 @@
                 </li>
             </ul>
             <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.8rem;">
-                <div class="nav-item" onclick="window.location.href='/estoque'" style="color: rgba(255,255,255,0.7);">
-                    <i data-lucide="package"></i> Estoque
-                </div>
+
 
                 <div class="nav-item" onclick="window.location.href='/membros'" style="color: #FFFFFF;">
                     <i data-lucide="arrow-left"></i> Voltar Painel
