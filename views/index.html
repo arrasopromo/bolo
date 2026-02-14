@@ -11,9 +11,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://track.bellecake.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-PDGN6N6P');</script>
 <!-- End Google Tag Manager -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="/css/styles.css">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide Icons (defer to avoid render-blocking) -->
+    <script defer src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
     <style>
@@ -55,7 +57,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <nav class="navbar">
         <div class="logo-container">
             <a href="https://bellecake.com">
-                <img src="/images/LOGO BELLE CAKE.webp" alt="Belle Cake Logo" class="nav-logo">
+                <img src="/images/LOGO BELLE CAKE.webp" alt="Belle Cake Logo" class="nav-logo" width="500" height="500" decoding="async" loading="eager">
             </a>
         </div>
         <!-- Nav links removed as requested -->
@@ -125,6 +127,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <span>fazer bolos</span>
                 </div>
                 <img src="/images/isa.webp" alt="Isa Belle Cake" class="isa-image" onerror="this.style.display='none'">
+                <script>
+                    // Ensure LCP image fetches with high priority
+                    (function() {
+                        const isa = document.querySelector('.isa-image');
+                        if (isa) {
+                            isa.setAttribute('fetchpriority', 'high');
+                            isa.setAttribute('width', '1080');
+                            isa.setAttribute('height', '1350');
+                            isa.setAttribute('decoding', 'async');
+                        }
+                    })();
+                </script>
             </div>
         </div>
 
@@ -137,20 +151,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <h2 class="video-title">Entenda como funciona a planilha</h2>
         
         <div class="video-slider-container" id="videoSliderContainer" style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
-            <!-- Wistia Video (Visible on All Devices) -->
-            <div class="video-explicativo-container" style="width: 100%; max-width: 360px;">
-                <script src="https://fast.wistia.com/player.js" async></script>
-                <script src="https://fast.wistia.com/embed/i3jpnu5dri.js" async type="module"></script>
-                <style>
-                  wistia-player[media-id='i3jpnu5dri']:not(:defined) {
-                    background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/i3jpnu5dri/swatch');
-                    display: block;
-                    filter: blur(5px);
-                    padding-top:177.78%;
-                  }
-                </style>
-                <wistia-player media-id="i3jpnu5dri" aspect="0.5625"></wistia-player>
-            </div>
+            <!-- Lazy-loaded Wistia Video (inject on view) -->
+            <div id="wistiaContainer" class="video-explicativo-container" style="width: 100%; max-width: 360px;"></div>
         </div>
     </section>
 
@@ -240,12 +242,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             
             <!-- 1. Ponto de Equilíbrio - Left -->
             <div style="flex: 1; min-width: 280px; max-width: 380px; display: flex; justify-content: center; align-items: flex-start;">
-                <img src="/images/ponto equilibrio.webp" alt="Ponto de Equilíbrio" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--primary-yellow); object-fit: contain;">
+                <img src="/images/ponto equilibrio.webp" alt="Ponto de Equilíbrio" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--primary-yellow); object-fit: contain;" width="1080" height="1920" loading="lazy" decoding="async">
             </div>
 
             <!-- 2. Planilha - Center -->
             <div style="flex: 1; min-width: 280px; max-width: 380px; display: flex; justify-content: center; align-items: flex-start;">
-                <img src="/images/planilha folder.webp" alt="Planilha" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--primary-yellow); object-fit: contain;">
+                <img src="/images/planilha folder.webp" alt="Planilha" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--primary-yellow); object-fit: contain;" width="1080" height="1920" loading="lazy" decoding="async">
             </div>
 
             <!-- 3. Fluxo de Caixa (Premium) - Right -->
@@ -253,7 +255,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <div style="position: absolute; top: -15px; background: var(--primary-yellow); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
                     <i data-lucide="star" style="width: 14px; height: 14px; fill: white;"></i> Premium <i data-lucide="star" style="width: 14px; height: 14px; fill: white;"></i>
                 </div>
-                <img src="/images/fluxo caixa (1).webp" alt="Fluxo de Caixa" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 4px solid var(--primary-yellow); object-fit: contain;">
+                <img src="/images/fluxo caixa (1).webp" alt="Fluxo de Caixa" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 4px solid var(--primary-yellow); object-fit: contain;" width="1080" height="1920" loading="lazy" decoding="async">
             </div>
 
         </div>
@@ -334,11 +336,55 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 </p>
             </div>
             <div class="who-image-container">
-                <img src="/images/eu.webp" alt="Isabelle Santos" class="who-image">
+                <img src="/images/eu.webp" alt="Isabelle Santos" class="who-image" width="1080" height="1080" loading="lazy" decoding="async">
             </div>
         </div>
     </section>
 
+    <script>
+        // Lazy load Wistia player when section is about to enter the viewport
+        (function() {
+            const section = document.getElementById('video-explicativo');
+            const container = document.getElementById('wistiaContainer');
+            if (!section || !container) return;
+
+            function loadWistia() {
+                if (container.getAttribute('data-loaded') === '1') return;
+                container.setAttribute('data-loaded', '1');
+                const style = document.createElement('style');
+                style.textContent = "wistia-player[media-id='i3jpnu5dri']:not(:defined){background:center/contain no-repeat url('https://fast.wistia.com/embed/medias/i3jpnu5dri/swatch');display:block;filter:blur(5px);padding-top:177.78%}";
+                document.head.appendChild(style);
+
+                container.innerHTML = '<wistia-player media-id="i3jpnu5dri" aspect="0.5625"></wistia-player>';
+                const s1 = document.createElement('script');
+                s1.src = 'https://fast.wistia.com/player.js';
+                s1.async = true;
+                const s2 = document.createElement('script');
+                s2.src = 'https://fast.wistia.com/embed/i3jpnu5dri.js';
+                s2.async = true;
+                s2.type = 'module';
+                document.head.appendChild(s1);
+                document.head.appendChild(s2);
+            }
+
+            if ('IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        loadWistia();
+                        io.disconnect();
+                    }
+                }, { rootMargin: '200px' });
+                io.observe(section);
+            } else {
+                // Fallback: load after DOM ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', loadWistia);
+                } else {
+                    loadWistia();
+                }
+            }
+        })();
+    </script>
 
 
     <!-- Rodapé -->
