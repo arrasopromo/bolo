@@ -15,8 +15,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" href="/css/styles.css" as="style" onload="this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/css/styles.css"></noscript>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Google Fonts (preload, non-render-blocking) -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&display=swap"></noscript>
     <style>
         /* Responsive Text Utilities */
         .mobile-only { display: none !important; }
@@ -25,6 +26,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         @media (max-width: 768px) {
             .mobile-only { display: block !important; }
             .desktop-only { display: none !important; }
+            /* Reduce vertical spacing in Ferramentas Exclusivas grid */
+            #tools-sketch-grid { gap: 1rem !important; margin: 1rem auto !important; padding: 0 0.75rem !important; }
+            #tools-sketch-grid > div { max-width: 100% !important; }
+            #tools-sketch-grid img { display: block; width: 100%; height: auto; }
         }
 
         /* Mobile-only video/GIF placeholder before photo annotations */
@@ -241,13 +246,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <div class="section-badge">Ferramentas Exclusivas</div>
         <h2 class="audience-title">Veja esboço do que voce terá acesso</h2>
         
-        <div style="display: flex; gap: 3rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; max-width: 1200px; margin: 2rem auto; padding: 0 0.5rem;">
+        <div id="tools-sketch-grid" style="display: flex; gap: 3rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; max-width: 1200px; margin: 2rem auto; padding: 0 0.5rem;">
             
             <!-- 1. Ponto de Equilíbrio - Left -->
             <div style="flex: 1; min-width: 280px; max-width: 380px; display: flex; justify-content: center; align-items: flex-start;">
                 <img src="/images/ponto equilibrio.webp"
                      srcset="/images/ponto equilibrio-360w.webp 360w, /images/ponto equilibrio-600w.webp 600w, /images/ponto equilibrio-800w.webp 800w"
-                     sizes="(max-width: 768px) 90vw, 380px"
+                     sizes="(max-width: 768px) 90vw, 600px"
                      alt="Ponto de Equilíbrio"
                      style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--primary-yellow); object-fit: contain;"
                      width="1080" height="1920" loading="lazy" decoding="async">
@@ -257,7 +262,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <div style="flex: 1; min-width: 280px; max-width: 380px; display: flex; justify-content: center; align-items: flex-start;">
                 <img src="/images/planilha folder.webp"
                      srcset="/images/planilha folder-360w.webp 360w, /images/planilha folder-600w.webp 600w, /images/planilha folder-800w.webp 800w"
-                     sizes="(max-width: 768px) 90vw, 380px"
+                     sizes="(max-width: 768px) 90vw, 600px"
                      alt="Planilha"
                      style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--primary-yellow); object-fit: contain;"
                      width="1080" height="1920" loading="lazy" decoding="async">
@@ -270,7 +275,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 </div>
                 <img src="/images/fluxo caixa (1).webp"
                      srcset="/images/fluxo caixa (1)-360w.webp 360w, /images/fluxo caixa (1)-600w.webp 600w, /images/fluxo caixa (1)-800w.webp 800w"
-                     sizes="(max-width: 768px) 90vw, 380px"
+                     sizes="(max-width: 768px) 90vw, 600px"
                      alt="Fluxo de Caixa"
                      style="width: 100%; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 4px solid var(--primary-yellow); object-fit: contain;"
                      width="1080" height="1920" loading="lazy" decoding="async">
@@ -360,10 +365,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </section>
 
     <script>
-        // Lazy load Wistia player when section is about to enter the viewport
+        // Lazy load Wistia player for the explainer video:
+        // - Prefer user click on "Veja como funciona"
+        // - Fallback to IntersectionObserver with conservative rootMargin to avoid initial critical path
         (function() {
             const section = document.getElementById('video-explicativo');
             const container = document.getElementById('wistiaContainer');
+            const howLinks = Array.from(document.querySelectorAll('a[href="#video-explicativo"]'));
             if (!section || !container) return;
 
             function ensureWistiaScripts(mediaId) {
@@ -394,13 +402,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 document.head.appendChild(s2);
             }
 
+            // Prefer explicit user intent
+            howLinks.forEach(a => a.addEventListener('click', loadWistia, { once: true }));
+
             if ('IntersectionObserver' in window) {
                 const io = new IntersectionObserver((entries) => {
                     if (entries[0].isIntersecting) {
                         loadWistia();
                         io.disconnect();
                     }
-                }, { rootMargin: '200px' });
+                }, { rootMargin: '0px 0px -30% 0px', threshold: 0.01 });
                 io.observe(section);
             } else {
                 // Fallback: load after DOM ready
@@ -413,10 +424,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         })();
     </script>
     <script>
-        // Lazy load Wistia vertical video in mobile hero (replaces index gif)
+        // Mobile hero vertical Wistia: load early in viewport and autoplay muted
         (function() {
             const container = document.getElementById('mobileVideoContainer');
             if (!container) return;
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            if (!isMobile) return;
 
             function ensureWistiaScripts(mediaId) {
                 const style = document.createElement('style');
@@ -435,12 +448,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 if (container.getAttribute('data-loaded') === '1') return;
                 container.setAttribute('data-loaded', '1');
                 ensureWistiaScripts('8pdhkvtavz');
-                container.innerHTML = '<wistia-player media-id="8pdhkvtavz" aspect="0.4621309370988447"></wistia-player>';
+                container.innerHTML = '<wistia-player media-id="8pdhkvtavz" aspect="0.4621309370988447" autoplay muted playsinline></wistia-player>';
                 const s2 = document.createElement('script');
                 s2.src = 'https://fast.wistia.com/embed/8pdhkvtavz.js';
                 s2.async = true;
                 s2.type = 'module';
                 document.head.appendChild(s2);
+                // Best-effort autoplay after player initializes
+                setTimeout(() => {
+                    try {
+                        const el = container.querySelector('wistia-player');
+                        if (el && typeof el.play === 'function') {
+                            el.muted = true;
+                            el.play().catch(()=>{});
+                        } else if (window.Wistia && typeof Wistia.first === 'function') {
+                            const p = Wistia.first();
+                            if (p && p.play) {
+                                if (p.mute) p.mute();
+                                p.play();
+                            }
+                        }
+                    } catch(_) {}
+                }, 600);
             }
 
             if ('IntersectionObserver' in window) {
@@ -449,15 +478,38 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         loadMobileWistia();
                         io.disconnect();
                     }
-                }, { rootMargin: '100px' });
+                }, { rootMargin: '100px 0px', threshold: 0.01 });
                 io.observe(container);
             } else {
                 // Fallback: load after DOM ready
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', loadMobileWistia);
+                    document.addEventListener('DOMContentLoaded', loadMobileWistia, { once: true });
                 } else {
                     loadMobileWistia();
                 }
+            }
+        })();
+    </script>
+    <script>
+        // Defer Google Tag Manager to post-interaction or idle to reduce TBT/LCP
+        (function() {
+            window.dataLayer = window.dataLayer || [];
+            function injectGTM() {
+                if (injectGTM._done) return;
+                injectGTM._done = true;
+                window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+                var s = document.createElement('script');
+                s.async = true;
+                s.src = 'https://track.bellecake.com/gtm.js?id=GTM-PDGN6N6P';
+                document.head.appendChild(s);
+            }
+            const once = (fn) => (e) => { fn(); ['click','scroll','keydown','pointerdown'].forEach(t=>window.removeEventListener(t, once(fn))); };
+            window.addEventListener('click', injectGTM, { once: true, passive: true });
+            window.addEventListener('scroll', injectGTM, { once: true, passive: true });
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(injectGTM, { timeout: 4000 });
+            } else {
+                setTimeout(injectGTM, 4000);
             }
         })();
     </script>
