@@ -212,9 +212,9 @@
     <main class="members-container" style="padding-top: 140px;">
         <div class="member-header">
             <h1 class="main-title" style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1rem; color: #000000;">Área de Membros</h1>
-            <p class="subtitle" style="text-shadow: none !important;">Bem-vinda ao seu painel exclusivo de sucesso.</p>
+            <p id="welcome-msg" class="subtitle" style="display: none; text-shadow: none !important;">Bem-vinda ao seu painel exclusivo de sucesso.</p>
             
-            <div class="user-badge" style="align-items: flex-start;">
+            <div id="user-badge" class="user-badge" style="display: none; align-items: flex-start;">
                 <i data-lucide="crown" color="#CD7A3E" fill="#CD7A3E" style="margin-top: 5px;"></i>
                 <div style="text-align: left;">
                     <div style="margin-bottom: 0.5rem;">
@@ -574,6 +574,12 @@
             
             // Update Fluxo Link with Token immediately if available
             if (storedToken) {
+                // Show welcome message and badge
+                const welcomeMsg = document.getElementById('welcome-msg');
+                const userBadge = document.getElementById('user-badge');
+                if (welcomeMsg) welcomeMsg.style.display = 'block';
+                if (userBadge) userBadge.style.display = 'inline-flex';
+
                 const btnFluxo = document.getElementById('btn-fluxo');
                 if (btnFluxo) {
                     btnFluxo.href = `/fluxo?token=${storedToken}`;

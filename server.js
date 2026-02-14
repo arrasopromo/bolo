@@ -64,6 +64,7 @@ const Sale = require('./models/Sale');
 const FixedCost = require('./models/FixedCost');
 const VariableCost = require('./models/VariableCost'); // If needed
 const FinancialStrategy = require('./models/FinancialStrategy');
+const OpenAIUsage = require('./models/OpenAIUsage');
 
 // OpenAI Config
 const openai = new OpenAI({
@@ -934,6 +935,22 @@ app.post('/api/dicas-vendas', authenticateToken, async (req, res) => {
             temperature: 0.7
         });
 
+        // Track Usage
+        if (completion.usage) {
+            const inputCost = (completion.usage.prompt_tokens / 1000000) * 0.15;
+            const outputCost = (completion.usage.completion_tokens / 1000000) * 0.60;
+            const totalCost = inputCost + outputCost;
+
+            await OpenAIUsage.create({
+                user: req.user._id,
+                endpoint: '/api/dicas-vendas',
+                model: 'gpt-4o-mini',
+                tokens_input: completion.usage.prompt_tokens,
+                tokens_output: completion.usage.completion_tokens,
+                cost_usd: totalCost
+            });
+        }
+
         const dica = completion.choices[0].message.content.trim();
         res.json({ success: true, dica });
 
@@ -983,10 +1000,27 @@ app.post('/api/transcribe', authenticateToken, checkSubscription, upload.single(
         const transcription = await openai.audio.transcriptions.create({
             file: fs.createReadStream(filePath),
             model: "whisper-1",
-            language: "pt"
+            language: "pt",
+            response_format: "verbose_json"
         });
 
         const text = transcription.text;
+        const duration = transcription.duration; // Duration in seconds
+
+        // Track Whisper Usage
+        if (duration) {
+            const minutes = duration / 60;
+            const whisperCost = minutes * 0.006; // $0.006 per minute
+            
+            await OpenAIUsage.create({
+               user: req.user._id,
+               endpoint: '/api/transcribe',
+               model: 'whisper-1',
+               duration_seconds: duration,
+               cost_usd: whisperCost
+           });
+       }
+
         console.log('Transcribed text:', text);
 
         let systemPrompt = '';
@@ -1053,6 +1087,22 @@ app.post('/api/transcribe', authenticateToken, checkSubscription, upload.single(
             ],
             response_format: { type: "json_object" }
         });
+
+        // Track GPT Usage
+        if (completion.usage) {
+            const inputCost = (completion.usage.prompt_tokens / 1000000) * 0.15;
+            const outputCost = (completion.usage.completion_tokens / 1000000) * 0.60;
+            const totalCost = inputCost + outputCost;
+
+            await OpenAIUsage.create({
+                user: req.user._id,
+                endpoint: '/api/transcribe',
+                model: 'gpt-4o-mini',
+                tokens_input: completion.usage.prompt_tokens,
+                tokens_output: completion.usage.completion_tokens,
+                cost_usd: totalCost
+            });
+        }
 
         const parsedData = JSON.parse(completion.choices[0].message.content);
         
@@ -1311,6 +1361,22 @@ app.post('/api/classificar-custo', authenticateToken, async (req, res) => {
             messages: [{ role: "user", content: prompt }],
             max_tokens: 100
         });
+
+        // Track Usage
+        if (completion.usage) {
+            const inputCost = (completion.usage.prompt_tokens / 1000000) * 0.15;
+            const outputCost = (completion.usage.completion_tokens / 1000000) * 0.60;
+            const totalCost = inputCost + outputCost;
+
+            await OpenAIUsage.create({
+                user: req.user._id,
+                endpoint: '/api/classificar-custo',
+                model: 'gpt-4o-mini',
+                tokens_input: completion.usage.prompt_tokens,
+                tokens_output: completion.usage.completion_tokens,
+                cost_usd: totalCost
+            });
+        }
 
         const content = completion.choices[0].message.content.trim();
         // Remove potential markdown code blocks if any

@@ -862,7 +862,7 @@
                     <label>Preço Pago (R$)</label>
                     <input type="number" id="ingPrice" step="0.01" required placeholder="0.00">
                 </div>
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end;">
                     <div>
                         <label>Quantidade Embalagem</label>
                         <input type="number" id="ingQty" step="0.001" required placeholder="1000">
@@ -1487,6 +1487,33 @@
             if (content) content.scrollTop = 0;
         }
 
+        function validateIngredientSelection(selectElement) {
+            const selectedValue = selectElement.value;
+            if (!selectedValue) {
+                calculateProductTotals();
+                return;
+            }
+
+            // Check if this ingredient is already selected in another row
+            const allSelects = document.querySelectorAll('.ing-select');
+            let isDuplicate = false;
+
+            allSelects.forEach(select => {
+                if (select !== selectElement && select.value === selectedValue) {
+                    isDuplicate = true;
+                }
+            });
+
+            if (isDuplicate) {
+                alert('Este ingrediente já foi adicionado à receita!');
+                selectElement.value = ""; // Reset selection
+                calculateProductTotals(); // Recalculate with empty value
+                return;
+            }
+
+            calculateProductTotals();
+        }
+
         function addIngredientRow(data = null) {
             const container = document.getElementById('recipeIngredients');
             const id = Date.now() + Math.random().toString(36).substr(2, 9); // Unique ID for DOM
@@ -1496,7 +1523,7 @@
             div.innerHTML = `
                 <div style="width: 100%;">
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <select class="ing-select" onchange="calculateProductTotals()" style="flex: 1; width: 0;">
+                        <select class="ing-select" onchange="validateIngredientSelection(this)" style="flex: 1; width: 0;">
                             <option value="">Selecione um ingrediente...</option>
                             ${allIngredients.map(ing => `
                                 <option value="${ing._id}" data-price="${ing.price}" data-pkg="${ing.quantityPackage}" data-unit="${ing.unit}">
@@ -1505,7 +1532,7 @@
                             `).join('')}
                         </select>
                         <input type="number" class="ing-qty" placeholder="Qtd" step="0.001" oninput="calculateProductTotals()" style="width: 85px; flex-shrink: 0;">
-                        <button type="button" class="btn-cancel" style="width: auto; padding: 0.5rem; color: #ef4444; flex-shrink: 0;" onclick="this.parentElement.parentElement.remove(); calculateProductTotals()">
+                        <button type="button" class="btn-cancel" style="width: auto; padding: 0.5rem; color: #ef4444; flex-shrink: 0;" onclick="this.closest('.ingredient-row').remove(); calculateProductTotals()">
                             <i data-lucide="trash"></i>
                         </button>
                     </div>
