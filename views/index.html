@@ -93,9 +93,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
                 <!-- Mobile vertical player (9:16) shown before photo/annotations -->
                 <div class="mobile-video">
-                    <div class="video-container">
-                        <img src="/images/index%20gif.webp" alt="Demonstração" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
+                    <div class="video-container" id="mobileVideoContainer"></div>
                     <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
                 </div>
 
@@ -368,22 +366,31 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             const container = document.getElementById('wistiaContainer');
             if (!section || !container) return;
 
+            function ensureWistiaScripts(mediaId) {
+                // Add style for blurred poster while custom element hydrates
+                const style = document.createElement('style');
+                const pad = mediaId === '8pdhkvtavz' ? '216.39%' : '177.78%';
+                style.textContent = `wistia-player[media-id='${mediaId}']:not(:defined){background:center/contain no-repeat url('https://fast.wistia.com/embed/medias/${mediaId}/swatch');display:block;filter:blur(5px);padding-top:${pad}}`;
+                document.head.appendChild(style);
+                // Load core player once
+                if (!document.querySelector('script[src*=\"fast.wistia.com/player.js\"]')) {
+                    const s1 = document.createElement('script');
+                    s1.src = 'https://fast.wistia.com/player.js';
+                    s1.async = true;
+                    document.head.appendChild(s1);
+                }
+            }
+
             function loadWistia() {
                 if (container.getAttribute('data-loaded') === '1') return;
                 container.setAttribute('data-loaded', '1');
-                const style = document.createElement('style');
-                style.textContent = "wistia-player[media-id='i3jpnu5dri']:not(:defined){background:center/contain no-repeat url('https://fast.wistia.com/embed/medias/i3jpnu5dri/swatch');display:block;filter:blur(5px);padding-top:177.78%}";
-                document.head.appendChild(style);
+                ensureWistiaScripts('i3jpnu5dri');
 
                 container.innerHTML = '<wistia-player media-id="i3jpnu5dri" aspect="0.5625"></wistia-player>';
-                const s1 = document.createElement('script');
-                s1.src = 'https://fast.wistia.com/player.js';
-                s1.async = true;
                 const s2 = document.createElement('script');
                 s2.src = 'https://fast.wistia.com/embed/i3jpnu5dri.js';
                 s2.async = true;
                 s2.type = 'module';
-                document.head.appendChild(s1);
                 document.head.appendChild(s2);
             }
 
@@ -401,6 +408,55 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     document.addEventListener('DOMContentLoaded', loadWistia);
                 } else {
                     loadWistia();
+                }
+            }
+        })();
+    </script>
+    <script>
+        // Lazy load Wistia vertical video in mobile hero (replaces index gif)
+        (function() {
+            const container = document.getElementById('mobileVideoContainer');
+            if (!container) return;
+
+            function ensureWistiaScripts(mediaId) {
+                const style = document.createElement('style');
+                const pad = '216.39%'; // for aspect 0.4621309370988447
+                style.textContent = `wistia-player[media-id='${mediaId}']:not(:defined){background:center/contain no-repeat url('https://fast.wistia.com/embed/medias/${mediaId}/swatch');display:block;filter:blur(5px);padding-top:${pad}}`;
+                document.head.appendChild(style);
+                if (!document.querySelector('script[src*=\"fast.wistia.com/player.js\"]')) {
+                    const s1 = document.createElement('script');
+                    s1.src = 'https://fast.wistia.com/player.js';
+                    s1.async = true;
+                    document.head.appendChild(s1);
+                }
+            }
+
+            function loadMobileWistia() {
+                if (container.getAttribute('data-loaded') === '1') return;
+                container.setAttribute('data-loaded', '1');
+                ensureWistiaScripts('8pdhkvtavz');
+                container.innerHTML = '<wistia-player media-id="8pdhkvtavz" aspect="0.4621309370988447"></wistia-player>';
+                const s2 = document.createElement('script');
+                s2.src = 'https://fast.wistia.com/embed/8pdhkvtavz.js';
+                s2.async = true;
+                s2.type = 'module';
+                document.head.appendChild(s2);
+            }
+
+            if ('IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        loadMobileWistia();
+                        io.disconnect();
+                    }
+                }, { rootMargin: '100px' });
+                io.observe(container);
+            } else {
+                // Fallback: load after DOM ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', loadMobileWistia);
+                } else {
+                    loadMobileWistia();
                 }
             }
         })();
