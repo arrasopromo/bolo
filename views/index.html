@@ -87,7 +87,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <main class="hero-section" id="inicio">
         <div class="hero-content">
             
-            <div class="hero-text-side">
+            <div class="hero-text-side" style="display:flex; flex-direction:column; align-items:center; text-align:center;">
                 <h1 class="main-title desktop-only">
                     <span class="title-line-1">Confeiteira,</span>
                     <span class="title-line-2">tenha gestão completa do seu negócio com nossas ferramentas</span>
@@ -101,19 +101,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     Ferramentas feitas para confeiteiras: precifique com segurança e gerencie suas vendas do jeito certo.
                 </p>
                 <div class="mobile-only hero-gif" style="display:flex; flex-direction:column; align-items:center;">
-                    <img src="/images/telefone%20e%20pc.gif" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 460px; border-radius: 12px;">
+                    <img src="/images/mockup%20tlefones%20.png" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 460px; border-radius: 12px;">
                     <div class="availability">
                         <span>Disponível</span>
                         <i data-lucide="smartphone"></i>
                         <i data-lucide="monitor"></i>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: center; margin-top: 1.6rem;">
+                <div class="mobile-only" style="display: flex; justify-content: center; margin-top: 1.6rem;">
                     <a href="#plano-completo" class="btn-primary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: #4CAF50; color: #fff; font-weight: 800; border-radius: 10px; padding: 0.7rem 1.2rem; box-shadow: 0 6px 20px rgba(76,175,80,0.4);">
                         QUERO ACESSO A FERRAMENTA
                     </a>
                 </div>
-                <div style="display: flex; justify-content: center; margin-top: 0.5rem;">
+                <div class="mobile-only" style="display: flex; justify-content: center; margin-top: 0.5rem;">
                     <a href="#video-explicativo" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: var(--navbar-bg); color: #fff; font-weight: 800; border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.9rem; box-shadow: 0 6px 16px rgba(0,0,0,0.25);">
                         VEJA COMO FUNCIONA
                     </a>
@@ -131,7 +131,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     </div>
                     
                     <button class="btn-cta pulse" onclick="scrollToFeaturedPricing()">
-                        GARANTIR PLANILHA
+                        GARANTIR FERRAMENTA
                         <i data-lucide="table" class="icon-btn"></i>
                     </button>
                     <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
@@ -139,7 +139,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             </div>
 
             <div class="hero-media-side desktop-only" style="flex: 1; min-width: 320px; display: flex; justify-content: center; align-items: center;">
-                <img src="/images/telefone%20e%20pc.gif" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 520px; border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.25);">
+                <img src="/images/mockup%20tlefones%20.png" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 580px; border-radius: 16px; box-shadow: none; margin-top: -40px;">
             </div>
         </div>
 
@@ -148,31 +148,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     
     <section class="audience-section" id="substitua-planilhas" style="padding-top: 4.5rem; padding-bottom: 1.25rem;">
         <div class="section-badge">Mudança inteligente</div>
-        <h2 class="audience-title">Troque planilhas de Excel ultrapassadas por ferramentas automáticas</h2>
-        <div style="max-width:1400px; margin:0 auto; padding:0 1rem; display:flex; justify-content:center;">
-            <img src="/images/troca%20planilha%20excel.png" alt="Comparação entre planilha Excel e ferramenta Belle Cake" style="width:100%; max-width:1280px; height:auto; border-radius:23px;">
+        <h2 class="audience-title">Troque planilha de Excel ultrapassada<br>por ferramentas automáticas</h2>
+        <div style="max-width:1000px; margin:0 auto; padding:0 1rem; display:flex; justify-content:center;">
+            <img src="/images/telefone%20.gif" alt="Comparação entre planilha Excel e ferramenta Belle Cake" style="width:100%; max-width:880px; height:auto; border-radius:23px;">
         </div>
-        <div style="max-width:1100px; margin:1.5rem auto 0; padding:0 1rem; display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:1.2rem; text-align:left; font-family:'Poppins',sans-serif; font-size:0.95rem; line-height:1.5;">
-            <div>
-                <strong>O que a planilha em Excel atrapalha:</strong>
-                <ul style="margin:0.4rem 0 0; padding-left:1.1rem;">
-                    <li>Você digita tudo na mão e qualquer fórmula errada muda o resultado.</li>
-                    <li>Não atualiza automaticamente quando o preço dos ingredientes muda.</li>
-                    <li>Fica difícil enxergar lucro e margem de cada produto com clareza.</li>
-                    <li>Arquivos se perdem entre pastas, versões e dispositivos diferentes.</li>
-                    <li>No celular a experiência é ruim, apertada e pouco intuitiva.</li>
-                </ul>
-            </div>
-            <div>
-                <strong>O que a ferramenta de precificação resolve:</strong>
-                <ul style="margin:0.4rem 0 0; padding-left:1.1rem;">
-                    <li>Você cadastra ingredientes uma vez e o sistema calcula tudo pra você.</li>
-                    <li>Vê preço de venda, lucro e margem por produto em segundos.</li>
-                    <li>Atualizações de custo refletem automaticamente em todas as receitas.</li>
-                    <li>Todas as informações ficam organizadas em um único painel.</li>
-                    <li>Funciona bem no celular, com tela pensada para toque e leitura rápida.</li>
-                </ul>
-            </div>
+        <div style="max-width:900px; margin:1rem auto 0; padding:0 1rem; text-align:left;">
+            <p class="subtitle" style="margin:0 0 0.4rem;">
+                Planilhas em Excel até quebram o galho, mas são lentas, cheias de fórmulas e nada amigáveis no celular.
+            </p>
+            <p class="subtitle" style="margin:0 0 0.4rem;">
+                Com as ferramentas Belle Cake, você acompanha custos, preços e lucro sem fórmulas, num painel pensado para confeiteiras.
+            </p>
+            <p class="subtitle" style="margin:0;">
+                Tudo fica organizado em um único lugar, acessível do celular, tablet ou computador.
+            </p>
         </div>
     </section>
 
@@ -785,9 +774,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             let offset = 16;
             if (window.innerWidth <= 768 && mobileBar) {
                 const h = mobileBar.offsetHeight || 56;
-                offset = h + 12;
+                offset = h + 4;
             } else if (window.innerWidth <= 768) {
-                offset = 12;
+                offset = 4;
             }
             bubble.style.bottom = offset + 'px';
         }
