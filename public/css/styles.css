@@ -916,7 +916,7 @@ body {
     
     .hero-section .btn-primary.small {
         display: inline-flex !important;
-        margin: 0.15rem auto 0 !important;
+        margin: 0.1rem auto 0 !important;
     }
     
     .hero-section .subtitle {
@@ -926,8 +926,9 @@ body {
     
     
     .main-title {
-        font-size: 2rem;
+        font-size: 1.875rem;
         margin-bottom: 0.2rem;
+        margin-top: 0.2rem;
     }
     
     .main-price {
@@ -941,8 +942,8 @@ body {
     .hero-gif {
         display: flex;
         justify-content: center;
-        margin-top: -0.4rem !important;
-        margin-bottom: -0.4rem !important;
+        margin-top: -0.8rem !important;
+        margin-bottom: -1.2rem !important;
     }
     .hero-gif img {
         display: block;
@@ -1646,7 +1647,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
     /* Adjust section titles - Reduced size as requested */
     .audience-title, .video-title, .who-title {
-        font-size: calc(1.9rem - 1px) !important;
+        font-size: calc(1.9rem - 2px) !important;
     }
 
     /* Reduce pricing card height (padding) but keep width */
