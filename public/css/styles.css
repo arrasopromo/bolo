@@ -329,7 +329,7 @@ body {
 }
 
 [data-theme="light"] .hero-section {
-    background-color: #F5E6D3;
+    background-color: #FFF5EA;
 }
 
 [data-theme="light"] .hero-section .main-title {
@@ -355,8 +355,10 @@ body {
 }
 
 .video-title,
-.audience-title {
+.audience-title,
+.who-title {
     font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.2px;
 }
 
 .main-title .title-line-2 {
@@ -512,6 +514,9 @@ body {
 }
 
 @media (max-width: 768px) {
+    .pricing-tables-container .pricing-table.featured {
+        margin-top: 0.6rem;
+    }
     #por-que-escolher .why-us-slider-container {
         margin-top: 1.5rem;
     }
@@ -945,7 +950,7 @@ body {
     .hero-gif {
         display: flex;
         justify-content: center;
-        margin-top: -2.0rem !important;
+        margin-top: -2.8rem !important;
         margin-bottom: 0 !important;
     }
     .hero-gif img {
@@ -969,7 +974,7 @@ body {
 }
 
 .video-title {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 900;
     margin-bottom: 2rem;
     color: var(--heading-color);
@@ -992,7 +997,7 @@ body {
 }
     background: #000;
     background: #000;
-    border-radius: 16px;
+    border-radius: 15px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     border: 1px solid var(--primary-yellow);
     overflow: hidden;
@@ -1064,7 +1069,7 @@ body {
 }
 
 .audience-title {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 900;
     margin-bottom: 1rem;
     color: var(--heading-color);
@@ -1439,7 +1444,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 }
 
 .who-title {
-    font-size: 2.5rem;
+    font-size: 2.4rem;
     font-weight: 900;
     margin-bottom: 1.5rem;
     color: var(--heading-color);
@@ -1725,7 +1730,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
     /* Adjust section titles - Reduced size as requested */
     .audience-title, .video-title, .who-title {
-        font-size: calc(1.9rem - 6px) !important;
+        font-size: calc(1.9rem - 7px) !important;
     }
 
     /* Reduce pricing card height (padding) but keep width */
@@ -1784,7 +1789,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
 /* Hero Section Overrides */
 .hero-section {
-    background-color: #F5E6D3 !important;
+    background-color: #FFF5EA !important;
 }
 
 /* Mobile Bottom CTA - Revert & Fixes */
@@ -1802,46 +1807,17 @@ body:not([data-theme="light"]) .audience-title .highlight {
     }
 }
 
-/* Section Cut for 'Mudança inteligente' */
+/* Section 'Mudança inteligente' */
 #substitua-planilhas {
-    position: relative;
-    background: var(--audience-bg);
-}
-#substitua-planilhas::before {
-    content: "";
-    position: absolute;
-    top: -20px;
-    left: 0;
-    width: 100%;
-    height: 20px;
-    background: var(--audience-bg);
-    transform: skewY(-3deg);
-    transform-origin: left top;
-    z-index: -1;
+    background-color: #FFF5EA;
 }
 
 @media (max-width: 768px) {
-    #substitua-planilhas {
-        padding-top: 3.2rem !important;
-    }
-    .audience-section, .video-section {
+    #substitua-planilhas { padding-top: 5.2rem !important; }
+    .audience-section,
+    .video-section {
         padding-left: 0.8rem;
         padding-right: 0.8rem;
-    }
-    .audience-title, .video-title, .who-title {
-        font-size: 2.4rem;
-        max-width: none !important;
-        padding: 0 0.3rem;
-        line-height: 1.15;
-        letter-spacing: 0.2px;
-    }
-    /* Center 'Por que escolher' cards on mobile */
-    .why-us-track {
-        justify-content: center !important;
-    }
-    .audience-card.why-us-card {
-        margin-left: auto !important;
-        margin-right: auto !important;
     }
 }
 
@@ -1862,7 +1838,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
 @media (max-width: 768px) {
     .availability {
-        margin-top: -2.4rem;
+        margin-top: -3.1rem;
         margin-bottom: 0.2rem;
     }
 }

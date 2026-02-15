@@ -184,6 +184,7 @@ app.get('/apresentacao', (req, res) => res.sendFile(path.join(__dirname, 'views'
 app.get('/aulas', (req, res) => res.sendFile(path.join(__dirname, 'views', 'aulas.html')));
 app.get('/novidade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'novidade.html')));
 app.get('/upgrade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'upgrade.html')));
+app.get('/ferramentas', (req, res) => res.sendFile(path.join(__dirname, 'views', 'fluxo.html')));
 
 // Redirects for direct access
 app.get('/ingredientes', (req, res) => res.redirect('/precificacao?tab=ingredientes'));
