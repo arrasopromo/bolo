@@ -1840,7 +1840,20 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
 @media (max-width: 768px) {
     .availability {
-        margin-top: -2.3rem;
+        margin-top: -1.8rem;
         margin-bottom: 0.2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    #substitua-planilhas .audience-title {
+        font-size: 1.8rem !important;
+        line-height: 1.2 !important;
+        max-width: 22ch;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    #substitua-planilhas img.phone-gif {
+        max-width: 96vw !important;
     }
 }

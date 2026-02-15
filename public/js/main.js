@@ -152,13 +152,13 @@ function initSlider(trackId, dotsId, cardSelector, gapDefault = 24, autoMs = 100
 // Initialize Sliders
 document.addEventListener('DOMContentLoaded', () => {
     // Why Us Slider
-    initSlider('whyUsTrack', 'whyUsDots', '.why-us-card', 24, 10000);
+    initSlider('whyUsTrack', 'whyUsDots', '.why-us-card', 24, 7000);
     
     // Video Slider
     initSlider('videoTrack', 'videoDots', '.video-slide', 24, 10000);
 
     // Why Choose Slider (Por que escolher a ferramenta)
-    initSlider('whyChooseTrack', 'whyChooseDots', '.why-us-card', 24, 10000);
+    initSlider('whyChooseTrack', 'whyChooseDots', '.why-us-card', 24, 7000);
 });
 
 // Order Modal Logic - REMOVED/DISABLED as elements are not in HTML
