@@ -1,5 +1,5 @@
 // Slider Logic (Generic)
-function initSlider(trackId, dotsId, cardSelector, gapDefault = 24) {
+function initSlider(trackId, dotsId, cardSelector, gapDefault = 24, autoMs = 10000) {
     const track = document.getElementById(trackId);
     const dotsContainer = document.getElementById(dotsId);
     const cards = track ? track.querySelectorAll(cardSelector) : [];
@@ -7,6 +7,7 @@ function initSlider(trackId, dotsId, cardSelector, gapDefault = 24) {
     if (track && cards.length > 0) {
         const cardCount = cards.length;
         let autoPlayInterval;
+        let observer;
         
         // Create Dots
         if (dotsContainer) {
@@ -88,11 +89,24 @@ function initSlider(trackId, dotsId, cardSelector, gapDefault = 24) {
                     left: nextScroll,
                     behavior: 'smooth'
                 });
-            }, 6000); // Faster autoplay for better engagement (6s)
+            }, autoMs);
         };
+        const stopAutoPlay = () => clearInterval(autoPlayInterval);
 
-        // Start Autoplay
-        startAutoPlay();
+        // Start Autoplay only when section is visible
+        const section = track.closest('.audience-section') || document.getElementById('quem-e');
+        if ('IntersectionObserver' in window && section) {
+            observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    startAutoPlay();
+                } else {
+                    stopAutoPlay();
+                }
+            }, { threshold: 0.35 });
+            observer.observe(section);
+        } else {
+            startAutoPlay();
+        }
 
         // Pause on Interaction
         track.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
@@ -102,7 +116,8 @@ function initSlider(trackId, dotsId, cardSelector, gapDefault = 24) {
         track.addEventListener('mouseleave', () => {
             isDown = false;
             track.classList.remove('active');
-            startAutoPlay();
+            // Only resume if section is visible
+            if (!observer) startAutoPlay();
         });
 
         // Mouse Drag Implementation
@@ -137,10 +152,10 @@ function initSlider(trackId, dotsId, cardSelector, gapDefault = 24) {
 // Initialize Sliders
 document.addEventListener('DOMContentLoaded', () => {
     // Why Us Slider
-    initSlider('whyUsTrack', 'whyUsDots', '.why-us-card');
+    initSlider('whyUsTrack', 'whyUsDots', '.why-us-card', 24, 10000);
     
     // Video Slider
-    initSlider('videoTrack', 'videoDots', '.video-slide');
+    initSlider('videoTrack', 'videoDots', '.video-slide', 24, 10000);
 });
 
 // Order Modal Logic - REMOVED/DISABLED as elements are not in HTML

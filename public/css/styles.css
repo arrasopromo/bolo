@@ -140,7 +140,7 @@ body {
     width: 100%;
     z-index: 1000;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    height: 80px; /* Fixed smaller height */
+    height: 68px; /* Slightly smaller height */
 }
 
 .theme-toggle-btn {
@@ -171,11 +171,11 @@ body {
 }
 
 .nav-logo {
-    height: 140px; /* Significantly larger */
+    height: 120px; /* Slightly smaller to match navbar */
     width: auto;
     object-fit: contain;
     position: absolute;
-    top: -25px; /* Moved up (higher) as requested */
+    top: -28px; /* Keep overlapping effect nicely */
     left: 20px; /* Moved right as requested */
     /* Since navbar is 80px and logo is 140px, it will hang down 60px */
     z-index: 1001; /* Ensure it stays on top */
@@ -318,6 +318,10 @@ body {
 /* Force specific elements in Hero to be light regardless of theme */
 .hero-section .main-title {
     color: var(--seal-brown) !important;
+    text-transform: none !important;
+    font-weight: 800 !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 0.2px !important; /* letras um pouco mais próximas */
 }
 
 .hero-section .subtitle {
@@ -339,7 +343,7 @@ body {
 }
 
 .main-title {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 3.5rem;
     font-weight: 900;
     line-height: 1.1;
@@ -348,6 +352,21 @@ body {
     letter-spacing: 1px;
     text-shadow: none;
     color: var(--new-tan);
+}
+
+.video-title,
+.audience-title {
+    font-family: 'Poppins', sans-serif;
+}
+
+.main-title .title-line-2 {
+    display: block;
+    font-size: 100%; /* mesmo tamanho da linha 1 */
+    text-transform: none !important;
+}
+.main-title .title-line-1 {
+    text-transform: capitalize !important;
+    font-weight: 900 !important; /* 'Confeiteira' em negrito */
 }
 
 .highlight-yellow {
@@ -748,13 +767,14 @@ body {
     }
 
     .hero-section {
-        /* Add padding top to account for navbar */
-        padding-top: 120px; 
+        /* Account for fixed navbar without leaving large gap */
+        padding-top: 56px; 
     }
 
     .hero-content {
         flex-direction: column;
         text-align: center;
+        align-items: flex-start;
     }
 
     .hero-text-side {
@@ -762,9 +782,9 @@ body {
         display: flex;
         flex-direction: column;
         align-items: center;
+        text-align: center;
         order: 1; /* Text first */
-        /* Ensure text doesn't overlap navbar */
-        margin-top: 1rem; 
+        margin-top: 0; 
     }
     
     .hero-image-side {
@@ -879,20 +899,35 @@ body {
         padding: 0.5rem 1.5rem;
     }
     
-    .btn-primary.small {
-        display: none; /* Hide button on mobile */
-    }
-    
     .mobile-menu-btn {
         display: none; /* Hide hamburger menu */
     }
     
     .hero-section {
-        padding: 6rem 1.5rem 2rem;
+        padding: 72px 0.8rem 0.8rem;
+        min-height: auto;
     }
+    
+    .hero-text-side {
+        align-items: center;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .hero-section .btn-primary.small {
+        display: inline-flex !important;
+        margin: 0.15rem auto 0 !important;
+    }
+    
+    .hero-section .subtitle {
+        font-size: calc(1.2rem - 1px) !important;
+        margin-bottom: 0 !important;
+    }
+    
     
     .main-title {
         font-size: 2rem;
+        margin-bottom: 0.2rem;
     }
     
     .main-price {
@@ -900,6 +935,18 @@ body {
     }
 
     /* Responsive overrides moved to end of file to ensure they take precedence over generic styles */
+}
+
+@media (max-width: 768px) {
+    .hero-gif {
+        display: flex;
+        justify-content: center;
+        margin-top: -0.4rem !important;
+        margin-bottom: -0.4rem !important;
+    }
+    .hero-gif img {
+        display: block;
+    }
 }
 
 /* Video Section */
@@ -931,10 +978,14 @@ body {
 
 @media (max-width: 768px) {
     .video-container {
+    .video-section {
+        padding: 3rem 1rem;
+    }
         aspect-ratio: 9/16;
         max-width: 360px;
     }
 }
+    background: #000;
     background: #000;
     border-radius: 16px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
