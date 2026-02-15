@@ -475,11 +475,11 @@ body {
 .hero-section::after {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: -6px;
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(90deg, transparent, var(--primary-yellow), transparent);
+    background: linear-gradient(90deg, transparent, var(--new-tan), transparent);
 }
 
 .pricing-card {
@@ -512,6 +512,9 @@ body {
 }
 
 @media (max-width: 768px) {
+    #por-que-escolher .why-us-slider-container {
+        margin-top: 1.5rem;
+    }
     .btn-cta.pulse {
         animation: pulse-border-only 2s infinite;
     }
@@ -926,7 +929,7 @@ body {
     
     
     .main-title {
-        font-size: 1.875rem;
+        font-size: 1.6rem;
         margin-bottom: 0.2rem;
         margin-top: 0.2rem;
     }
@@ -942,11 +945,12 @@ body {
     .hero-gif {
         display: flex;
         justify-content: center;
-        margin-top: -0.8rem !important;
-        margin-bottom: -1.2rem !important;
+        margin-top: -2.0rem !important;
+        margin-bottom: 0 !important;
     }
     .hero-gif img {
         display: block;
+        margin-bottom: 0 !important;
     }
 }
 
@@ -1085,6 +1089,80 @@ body:not([data-theme="light"]) .audience-title .highlight {
     max-width: 600px;
     margin: 0 auto 4rem;
     font-size: 1.1rem;
+}
+
+/* FAQ */
+#faq .audience-title {
+    margin-bottom: 0.4rem;
+}
+
+#faq .audience-subtitle {
+    margin-bottom: 1.5rem;
+}
+
+.faq-list {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.faq-item {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.faq-question {
+    width: 100%;
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--seal-brown);
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: left;
+}
+
+.faq-question-text {
+    flex: 1;
+}
+
+.faq-chevron {
+    width: 18px;
+    height: 18px;
+    color: var(--seal-brown);
+    transition: transform 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.faq-answer {
+    padding: 0 1.1rem 1rem;
+    font-size: 0.95rem;
+    color: #5D3A29;
+    line-height: 1.5;
+    display: none;
+}
+
+.faq-item.is-open .faq-answer {
+    display: block;
+}
+
+.faq-item.is-open .faq-question-text {
+    color: var(--primary-orange);
+}
+
+.faq-item.is-open .faq-chevron {
+    transform: rotate(180deg);
+    color: var(--primary-orange);
 }
 
 /* Slider Logic (Why Us - Hybrid CSS-First) */
@@ -1647,7 +1725,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
     /* Adjust section titles - Reduced size as requested */
     .audience-title, .video-title, .who-title {
-        font-size: calc(1.9rem - 2px) !important;
+        font-size: calc(1.9rem - 6px) !important;
     }
 
     /* Reduce pricing card height (padding) but keep width */
@@ -1721,5 +1799,70 @@ body:not([data-theme="light"]) .audience-title .highlight {
     .navbar .btn-primary, 
     .nav-menu .btn-primary { 
         display: none !important; 
+    }
+}
+
+/* Section Cut for 'Mudança inteligente' */
+#substitua-planilhas {
+    position: relative;
+    background: var(--audience-bg);
+}
+#substitua-planilhas::before {
+    content: "";
+    position: absolute;
+    top: -20px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: var(--audience-bg);
+    transform: skewY(-3deg);
+    transform-origin: left top;
+    z-index: -1;
+}
+
+@media (max-width: 768px) {
+    #substitua-planilhas {
+        padding-top: 3.2rem !important;
+    }
+    .audience-section, .video-section {
+        padding-left: 0.8rem;
+        padding-right: 0.8rem;
+    }
+    .audience-title, .video-title, .who-title {
+        font-size: 2.4rem;
+        max-width: none !important;
+        padding: 0 0.3rem;
+        line-height: 1.15;
+        letter-spacing: 0.2px;
+    }
+    /* Center 'Por que escolher' cards on mobile */
+    .why-us-track {
+        justify-content: center !important;
+    }
+    .audience-card.why-us-card {
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+/* Availability label under CTAs */
+.availability {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--seal-brown);
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+}
+.availability svg,
+.availability i { width: 20px; height: 20px; }
+
+@media (max-width: 768px) {
+    .availability {
+        margin-top: -2.4rem;
+        margin-bottom: 0.2rem;
     }
 }

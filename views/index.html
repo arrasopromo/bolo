@@ -100,15 +100,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <p class="subtitle" style="margin-bottom: 0;">
                     Ferramentas feitas para confeiteiras: precifique com segurança e gerencie suas vendas do jeito certo.
                 </p>
-                <div class="mobile-only hero-gif" style="display:flex; justify-content:center; margin: -0.6rem 0 -0.8rem;">
+                <div class="mobile-only hero-gif" style="display:flex; flex-direction:column; align-items:center;">
                     <img src="/images/telefone%20e%20pc.gif" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 460px; border-radius: 12px;">
+                    <div class="availability">
+                        <span>Disponível</span>
+                        <i data-lucide="smartphone"></i>
+                        <i data-lucide="monitor"></i>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: center; margin-top: -0.3rem;">
+                <div style="display: flex; justify-content: center; margin-top: 1.6rem;">
                     <a href="#plano-completo" class="btn-primary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: #4CAF50; color: #fff; font-weight: 800; border-radius: 10px; padding: 0.7rem 1.2rem; box-shadow: 0 6px 20px rgba(76,175,80,0.4);">
                         QUERO ACESSO A FERRAMENTA
                     </a>
                 </div>
-                <div style="display: flex; justify-content: center; margin-top: 0.6rem;">
+                <div style="display: flex; justify-content: center; margin-top: 0.5rem;">
                     <a href="#video-explicativo" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: var(--navbar-bg); color: #fff; font-weight: 800; border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.9rem; box-shadow: 0 6px 16px rgba(0,0,0,0.25);">
                         VEJA COMO FUNCIONA
                     </a>
@@ -141,14 +146,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <!-- Hero visual removed, image will be background -->
     </main>
     
-    <section class="audience-section" id="substitua-planilhas" style="padding-top: 1.25rem; padding-bottom: 1.25rem;">
+    <section class="audience-section" id="substitua-planilhas" style="padding-top: 2.5rem; padding-bottom: 1.25rem;">
         <div class="section-badge">Mudança inteligente</div>
         <h2 class="audience-title">Troque planilhas de Excel ultrapassadas por ferramentas automáticas</h2>
-        <div style="display:flex; align-items:center; justify-content:center; gap:1.5rem; flex-wrap:wrap; max-width:1100px; margin:0 auto; padding:0 1rem;">
-            <div style="flex:1; min-width:260px; max-width:520px;">
-                <img src="/images/telefone%20e%20pc.gif" alt="Ferramentas automáticas Belle Cake" style="width:100%; border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,0.25);">
-            </div>
-        </div>
+        <div style="max-width:900px; margin:0 auto; padding:0 1rem;"></div>
     </section>
 
     <!-- Video Section -->
@@ -167,7 +168,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     
 
     <!-- WhatsApp Bubble -->
-    <a id="whatsappBubble" href="https://wa.me/5531973586912?text=Oi%2C%20estou%20no%20site%20e%20tenho%20d%C3%BAvidas" aria-label="Falar no WhatsApp" style="position: fixed; right: 16px; bottom: 12px; width: 72px; height: 72px; border-radius: 50%; background: transparent; display:flex; align-items:center; justify-content:center; z-index: 2147483647; text-decoration:none;" target="_blank" rel="noopener">
+    <a id="whatsappBubble" href="https://wa.me/5531973586912?text=Oi%2C%20estou%20no%20site%20e%20tenho%20d%C3%BAvidas" aria-label="Falar no WhatsApp" style="position: fixed; right: 16px; bottom: 6px; width: 72px; height: 72px; border-radius: 50%; background: transparent; display:flex; align-items:center; justify-content:center; z-index: 2147483647; text-decoration:none;" target="_blank" rel="noopener">
         <img src="/images/logo%20wpp.png" alt="WhatsApp" style="display:block; width:100%; height:100%; object-fit: contain;">
     </a>
 
@@ -290,30 +291,33 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </section>
 
     <!-- Why Choose Section (now after Ferramentas Exclusivas) -->
-    <section class="audience-section" id="por-que-escolher" style="padding-top: 1rem; padding-bottom: 1rem;">
+    <section class="audience-section" id="por-que-escolher">
         <div class="section-badge">Por que escolher</div>
         <h2 class="audience-title">Por que escolher a ferramenta da Belle Cake</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; max-width: 1100px; margin: 0 auto; padding: 0 1rem;">
-            <div class="audience-card">
+        <div class="why-us-slider-container">
+            <div class="why-us-track" id="whyChooseTrack">
+                <div class="audience-card why-us-card">
                 <div class="audience-icon"><i data-lucide="shield-check"></i></div>
                 <h3>Precificação Confiável</h3>
                 <p>Cálculos consistentes e regras claras para formar preços sem erro.</p>
             </div>
-            <div class="audience-card">
+                <div class="audience-card why-us-card">
                 <div class="audience-icon"><i data-lucide="cpu"></i></div>
                 <h3>Fluxo de Caixa + IA</h3>
                 <p>Acompanhe entradas e saídas e tenha sugestões inteligentes no dia a dia.</p>
             </div>
-            <div class="audience-card">
+                <div class="audience-card why-us-card">
                 <div class="audience-icon"><i data-lucide="target"></i></div>
                 <h3>Ponto de Equilíbrio</h3>
                 <p>Descubra o mínimo para cobrir custos e começar a lucrar com segurança.</p>
             </div>
-            <div class="audience-card">
+                <div class="audience-card why-us-card">
                 <div class="audience-icon"><i data-lucide="smartphone"></i></div>
                 <h3>Multi-dispositivo</h3>
                 <p>Use no celular e no computador, com dados sempre organizados.</p>
             </div>
+            </div>
+            <div class="why-us-dots" id="whyChooseDots"></div>
         </div>
     </section>
 
@@ -334,7 +338,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <ul class="table-features">
                     <li><i data-lucide="check"></i> Acesso Imediato à Ferramenta</li>
                     <li><i data-lucide="check"></i> Aulas de Explicação</li>
-                    <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício a Ferramenta</li>
                 </ul>
                 <a href="javascript:void(0)" onclick="openUpsellModal()" class="btn-cta" id="btn-pacote-basico-anchor" style="scroll-margin-top: 150px;">
@@ -352,7 +355,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <ul class="table-features">
                     <li><i data-lucide="check"></i> Acesso Imediato à Ferramenta</li>
                     <li><i data-lucide="check"></i> Aulas de Explicação</li>
-                    <li><i data-lucide="check"></i> Disponível para iOS e Android</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício a Ferramenta</li>
                     <li class="whatsapp-support">
                         <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -376,6 +378,51 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <a href="https://pay.cakto.com.br/984m3jr_738897" class="btn-cta cakto-checkout-btn" id="btn-checkout-premium" target="_blank">
                     OBTER PACOTE COMPLETO
                 </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="audience-section" id="faq">
+        <div class="section-badge">FAQ</div>
+        <h2 class="audience-title">Perguntas frequentes</h2>
+        <p class="audience-subtitle">Tire suas dúvidas sobre a ferramenta antes de garantir seu acesso.</p>
+        <div class="faq-list">
+            <div class="faq-item is-open">
+                <button class="faq-question" type="button">
+                    <span class="faq-question-text">Vou conseguir usar mesmo sendo iniciante?</span>
+                    <i data-lucide="chevron-down" class="faq-chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Sim. As ferramentas foram pensadas para quem está começando e explicam cada passo de forma simples, sem termos complicados.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" type="button">
+                    <span class="faq-question-text">Funciona no celular e no computador?</span>
+                    <i data-lucide="chevron-down" class="faq-chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Funciona nos dois. Você pode acessar do seu telefone ou do computador, com seus dados sempre organizados em um só lugar.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" type="button">
+                    <span class="faq-question-text">Por quanto tempo terei acesso?</span>
+                    <i data-lucide="chevron-down" class="faq-chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>O acesso é vitalício ao plano escolhido, para você usar sempre que precisar na sua rotina de vendas.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" type="button">
+                    <span class="faq-question-text">Vou ter suporte se ficar com dúvida?</span>
+                    <i data-lucide="chevron-down" class="faq-chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Sim. Você conta com suporte para tirar dúvidas sobre o uso das ferramentas e fazer sua precificação com segurança.</p>
+                </div>
             </div>
         </div>
     </section>

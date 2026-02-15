@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=/views/legado.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redirecionando…</title>
+  <script>
+    (function(){
+      var target = "/views/legado.html";
+      if (location.pathname && !location.pathname.endsWith("/")) {
+        // Ensure trailing slash support
+        target = "/views/legado.html";
+      }
+      window.location.replace(target);
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecionando para <a href="/views/legado.html">/views/legado.html</a>…</p>
+</body>
+</html>

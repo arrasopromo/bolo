@@ -156,6 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Video Slider
     initSlider('videoTrack', 'videoDots', '.video-slide', 24, 10000);
+
+    // Why Choose Slider (Por que escolher a ferramenta)
+    initSlider('whyChooseTrack', 'whyChooseDots', '.why-us-card', 24, 10000);
 });
 
 // Order Modal Logic - REMOVED/DISABLED as elements are not in HTML
@@ -330,4 +333,23 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTimer();
     // Update every second
     setInterval(updateTimer, 1000);
+});
+
+// FAQ Accordion
+document.addEventListener('DOMContentLoaded', () => {
+    const items = document.querySelectorAll('.faq-item');
+    if (!items.length) return;
+
+    items.forEach((item) => {
+        const btn = item.querySelector('.faq-question');
+        if (!btn) return;
+
+        btn.addEventListener('click', () => {
+            const isOpen = item.classList.contains('is-open');
+            items.forEach(i => i.classList.remove('is-open'));
+            if (!isOpen) {
+                item.classList.add('is-open');
+            }
+        });
+    });
 });
