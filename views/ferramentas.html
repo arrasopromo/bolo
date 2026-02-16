@@ -102,10 +102,26 @@
         function novaVenda(){
             const frame = document.getElementById('toolsFrame');
             if (!frame) return;
-            try {
-                frame.contentWindow.postMessage({ type: 'nova-venda' }, '*');
-            } catch(e) {}
-            loadFluxo('vendas');
+            const currentSrc = frame.getAttribute('src') || '';
+            const targetSrc = '/fluxo?embed=1&view=vendas';
+
+            // Já está no fluxo: só manda mensagem para abrir modal sem recarregar
+            if (currentSrc.indexOf('/fluxo') !== -1) {
+                try {
+                    frame.contentWindow.postMessage({ type: 'nova-venda' }, '*');
+                } catch(e) {}
+                return;
+            }
+
+            // Se não está no fluxo, carrega fluxo e depois dispara a mensagem
+            const handler = function () {
+                frame.removeEventListener('load', handler);
+                try {
+                    frame.contentWindow.postMessage({ type: 'nova-venda' }, '*');
+                } catch(e) {}
+            };
+            frame.addEventListener('load', handler);
+            frame.src = targetSrc;
         }
         function loadFluxo(view){
             const frame = document.getElementById('toolsFrame');

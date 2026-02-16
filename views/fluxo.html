@@ -4536,8 +4536,15 @@
 
         window.addEventListener('message', function (event) {
             if (!event || !event.data) return;
-            if (event.data.type === 'nova-venda' && typeof window.openSaleModal === 'function') {
-                try { window.openSaleModal(); } catch(e) {}
+            if (event.data.type === 'nova-venda') {
+                try {
+                    if (typeof window.switchView === 'function') {
+                        window.switchView('vendas');
+                    }
+                    if (typeof window.openSaleModal === 'function') {
+                        window.openSaleModal();
+                    }
+                } catch(e) {}
             }
         });
 
