@@ -266,7 +266,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 12000;
             backdrop-filter: blur(4px);
         }
 
@@ -303,6 +303,25 @@
             border-radius: 0;
             padding: 1.5rem;
             box-shadow: none;
+        }
+
+        /* Mobile adjustments for Estoque header */
+        @media (max-width: 900px) {
+            .estoque-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.5rem !important;
+            }
+            .estoque-header p {
+                display: none !important;
+            }
+            .estoque-actions {
+                width: 100% !important;
+                display: flex !important;
+                gap: 0.5rem !important;
+                flex-wrap: wrap !important;
+                justify-content: flex-start !important;
+            }
         }
     </style>
 </head>
@@ -351,12 +370,12 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="estoque-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <div>
                     <h1 style="font-size: 1.8rem; color: var(--text-brown); margin-bottom: 0.5rem;">Gerenciamento de Estoque</h1>
                     <p style="color: #666;">Controle a quantidade de seus ingredientes.</p>
                 </div>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
+                <div class="estoque-actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
                     <button class="btn-update" onclick="openAddStockModal()" style="display:inline-flex; align-items:center; gap:8px;">
                         <i data-lucide="plus-circle" style="width:18px;height:18px;"></i>
                         Adicionar ao Estoque
