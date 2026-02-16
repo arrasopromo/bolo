@@ -292,6 +292,18 @@
             cursor: pointer;
             color: #888;
         }
+
+        /* Embed mode: quando aberto dentro de /ferramentas */
+        .embedded-estoque .sidebar,
+        .embedded-estoque .mobile-header {
+            display: none;
+        }
+        .embedded-estoque .main-content {
+            margin-left: 0;
+            border-radius: 0;
+            padding: 1.5rem;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -406,6 +418,11 @@
     <script>
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('embed') === '1') {
+                document.body.classList.add('embedded-estoque');
+            }
+
             lucide.createIcons();
             loadStock();
             

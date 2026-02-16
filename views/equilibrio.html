@@ -306,10 +306,21 @@
             color: var(--text-muted);
             font-size: 0.8rem;
         }
+
+        /* Embed mode: when aberto dentro de /ferramentas */
+        .embedded-equilibrio .navbar {
+            display: none;
+        }
+        .embedded-equilibrio .equilibrio-section {
+            padding-top: 2rem;
+        }
+        .embedded-equilibrio #equilibrioBackContainer {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar" id="equilibrioNavbar">
         <div class="logo-container">
             <a href="/equilibrio">
                 <img src="/images/LOGO BELLE CAKE.webp" alt="Belle Cake Logo" class="nav-logo">
@@ -325,7 +336,7 @@
 
     <main class="equilibrio-section" style="padding-top: 120px;">
         
-        <div style="max-width: 600px; margin: 0 auto 1rem auto; display: flex;">
+        <div id="equilibrioBackContainer" style="max-width: 600px; margin: 0 auto 1rem auto; display: flex;">
             <a href="/membros" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--secondary-caramel); border-radius: 50%; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <i data-lucide="arrow-left"></i>
             </a>
@@ -465,6 +476,11 @@
 
         // Auth & User Info
         document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('embed') === '1') {
+                document.body.classList.add('embedded-equilibrio');
+            }
+
             console.log('DOM Loaded. Fetching user info...');
             const token = localStorage.getItem('bellecake_token');
             if (token) {

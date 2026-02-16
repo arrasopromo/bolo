@@ -7,28 +7,84 @@
     <link rel="stylesheet" href="/css/styles.css">
     <style>
         body { margin: 0; }
+
         .tools-app {
-            display: flex; min-height: 100vh; background: var(--bg-cream);
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg-cream);
         }
+
         .sidebar {
-            width: 260px; background: #73401F; color: #fff;
-            display: flex; flex-direction: column; padding: 2rem 1.25rem;
+            width: 260px;
+            background: #73401F;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.25rem;
             border-right: 1px solid rgba(255,255,255,0.08);
         }
+
         .sidebar .logo {
-            display: block; margin: 0 auto 1.2rem; max-width: 160px; filter: brightness(0) invert(1);
+            display: block;
+            margin: 0 auto 1.2rem;
+            max-width: 160px;
+            filter: brightness(0) invert(1);
         }
-        .nav-menu { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
         .nav-item {
-            display: flex; align-items: center; gap: 0.8rem;
-            padding: 0.7rem 1rem; border-radius: 12px; cursor: pointer;
-            color: rgba(255,255,255,0.82); transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.7rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.82);
+            transition: background 0.2s, transform 0.1s;
         }
-        .nav-item:hover { background: rgba(255,255,255,0.08); transform: translateX(2px); }
-        .nav-item i { width: 20px; height: 20px; }
-        .submenu { display: none; flex-direction: column; gap: 0.2rem; padding-left: 2rem; margin-top: 0.2rem; }
-        .tools-frame { flex: 1; border: none; width: 100%; height: 100vh; display: block; background: #fff; }
-        .bottom-stack { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateX(2px);
+        }
+
+        .nav-item i {
+            width: 20px;
+            height: 20px;
+        }
+
+        .submenu {
+            display: none;
+            flex-direction: column;
+            gap: 0.2rem;
+            padding-left: 2rem;
+            margin-top: 0.2rem;
+        }
+
+        .tools-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100vh;
+            display: block;
+            background: #fff;
+        }
+
+        .bottom-stack {
+            margin-top: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
         .nova-venda-btn {
             width: 100%;
             background: #4CAF50;
@@ -46,9 +102,157 @@
             margin-bottom: 1.2rem;
             box-shadow: 0 4px 10px rgba(76,175,80,0.3);
         }
+
+        /* Mobile Header (igual padrão de /fluxo e /precificacao) */
+        .mobile-header {
+            display: none;
+            background-color: #73401F !important;
+            color: #FFFFFF;
+            height: 80px;
+            padding: 0 1.5rem;
+            justify-content: flex-end;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            overflow: visible !important;
+        }
+
+        .mobile-logo {
+            position: absolute;
+            height: 120px;
+            width: auto;
+            top: -15px;
+            left: 15px;
+            filter: brightness(0) invert(1);
+            z-index: 10000;
+        }
+
+        .mobile-menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: #73401F !important;
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            z-index: 10000;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+
+        .mobile-menu-dropdown .nav-item {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .mobile-menu-dropdown .nav-item:hover,
+        .mobile-menu-dropdown .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+
+        .mobile-menu-dropdown.open {
+            display: flex;
+        }
+
+        .mobile-submenu {
+            display: none;
+            flex-direction: column;
+            gap: 0.3rem;
+            padding-left: 2.2rem;
+            margin-top: 0.2rem;
+        }
+
+        .mobile-submenu.open {
+            display: flex;
+        }
+
+        .mobile-header .nova-venda-btn {
+            width: auto;
+            padding: 0.5rem 0.9rem;
+            margin-bottom: 0;
+            font-size: 0.8rem;
+            box-shadow: 0 3px 8px rgba(76,175,80,0.4);
+        }
+
+        /* Responsivo para /ferramentas */
+        @media (max-width: 900px) {
+            .tools-app {
+                flex-direction: column;
+            }
+            .sidebar {
+                display: none;
+            }
+            .mobile-header {
+                display: flex;
+            }
+            .tools-frame {
+                height: calc(100vh - 80px);
+            }
+        }
     </style>
 </head>
 <body>
+    <header class="mobile-header">
+        <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake" class="mobile-logo">
+        <div class="mobile-header-actions" style="display:flex; align-items:center; gap:0.5rem;">
+            <button class="nova-venda-btn" onclick="novaVenda()">
+                <i data-lucide="plus-circle"></i> Nova Venda
+            </button>
+            <button onclick="toggleMobileMenu()" style="background:none; border:none; color:white;">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+        <div class="mobile-menu-dropdown" id="mobileMenu">
+            <div class="nav-item" onclick="mobileNavigate('resumo')">
+                <i data-lucide="layout-dashboard"></i> Resumo
+            </div>
+            <div class="nav-item" onclick="mobileNavigate('custos')">
+                <i data-lucide="dollar-sign"></i> Custos Fixos
+            </div>
+            <div class="nav-item" onclick="mobileNavigate('vendas')">
+                <i data-lucide="shopping-cart"></i> Vendas
+            </div>
+            <div class="nav-item" onclick="toggleMobilePrecificacao()" style="justify-content: space-between;">
+                <span style="display:flex; align-items:center; gap:0.6rem;">
+                    <i data-lucide="calculator"></i> Precificação
+                </span>
+                <i data-lucide="chevron-down" id="mobilePrecificacaoChevron"></i>
+            </div>
+            <div class="mobile-submenu" id="mobilePrecificacaoSubmenu">
+                <div class="nav-item" onclick="mobileNavigate('precificacao-produtos')" style="padding-left:0.5rem;">
+                    Produtos
+                </div>
+                <div class="nav-item" onclick="mobileNavigate('precificacao-ingredientes')" style="padding-left:0.5rem;">
+                    Ingredientes
+                </div>
+            </div>
+            <div class="nav-item" onclick="mobileNavigate('estoque')">
+                <i data-lucide="package"></i> Estoque
+            </div>
+            <div class="nav-item" onclick="mobileNavigate('equilibrio')">
+                <i data-lucide="activity"></i> Ponto de Equilíbrio
+            </div>
+            <div class="nav-item" onclick="mobileNavigate('updates')">
+                <i data-lucide="bell"></i> Atualizações
+            </div>
+            <div class="nav-item" onclick="mobileNavigate('assinatura')">
+                <i data-lucide="calendar-clock"></i> Assinatura
+            </div>
+            <div class="nav-item" onclick="window.location.href='/membros'">
+                <i data-lucide="arrow-left"></i> Voltar Painel
+            </div>
+        </div>
+    </header>
+
     <div class="tools-app">
         <aside class="sidebar">
             <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake" class="logo">
@@ -69,6 +273,7 @@
                     <div class="nav-item" onclick="event.stopPropagation(); loadPrecificacao('produtos')" style="padding:0.45rem 0.8rem;">Produtos</div>
                     <div class="nav-item" onclick="event.stopPropagation(); loadPrecificacao('ingredientes')" style="padding:0.45rem 0.8rem;">Ingredientes</div>
                 </div>
+                <div class="nav-item" onclick="loadEstoque()"><i data-lucide="package"></i> Estoque</div>
                 <div class="nav-item" onclick="loadEquilibrio()"><i data-lucide="activity"></i> Ponto de Equilíbrio</div>
                 <div class="nav-item" onclick="loadFluxo('updates')"><i data-lucide="bell"></i> Atualizações</div>
                 <div class="nav-item" onclick="loadFluxo('assinatura')"><i data-lucide="calendar-clock"></i> Assinatura</div>
@@ -91,6 +296,64 @@
             } catch (e) {
                 // ignore cross-origin or other access errors
             }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            if (!menu) return;
+            const isOpen = menu.classList.contains('open');
+            if (isOpen) {
+                menu.classList.remove('open');
+            } else {
+                menu.classList.add('open');
+            }
+        }
+
+        function toggleMobilePrecificacao() {
+            const submenu = document.getElementById('mobilePrecificacaoSubmenu');
+            const chevron = document.getElementById('mobilePrecificacaoChevron');
+            if (!submenu) return;
+            const isOpen = submenu.classList.contains('open');
+            if (isOpen) {
+                submenu.classList.remove('open');
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('open');
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function mobileNavigate(target) {
+            switch (target) {
+                case 'resumo':
+                    loadFluxo('resumo');
+                    break;
+                case 'custos':
+                    loadFluxo('custos');
+                    break;
+                case 'vendas':
+                    loadFluxo('vendas');
+                    break;
+                case 'precificacao-produtos':
+                    loadPrecificacao('produtos');
+                    break;
+                case 'precificacao-ingredientes':
+                    loadPrecificacao('ingredientes');
+                    break;
+                case 'estoque':
+                    loadEstoque();
+                    break;
+                case 'equilibrio':
+                    loadEquilibrio();
+                    break;
+                case 'updates':
+                    loadFluxo('updates');
+                    break;
+                case 'assinatura':
+                    loadFluxo('assinatura');
+                    break;
+            }
+            toggleMobileMenu();
         }
 
         function toggleSubmenu(id){
@@ -130,6 +393,10 @@
         function loadPrecificacao(tab){
             const frame = document.getElementById('toolsFrame');
             frame.src = '/precificacao?embed=1&tab=' + encodeURIComponent(tab || 'produtos');
+        }
+        function loadEstoque(){
+            const frame = document.getElementById('toolsFrame');
+            frame.src = '/estoque?embed=1';
         }
         function loadEquilibrio(){
             const frame = document.getElementById('toolsFrame');
