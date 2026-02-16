@@ -66,6 +66,21 @@ const VariableCost = require('./models/VariableCost'); // If needed
 const FinancialStrategy = require('./models/FinancialStrategy');
 const OpenAIUsage = require('./models/OpenAIUsage');
 
+function computeUsageMap(product, saleQty) {
+    const y = product && product.yield && product.yield > 0 ? product.yield : 1;
+    const factor = product && product.yieldActive ? (saleQty / y) : saleQty;
+    const map = new Map();
+    if (product && Array.isArray(product.ingredients)) {
+        for (const it of product.ingredients) {
+            const id = it && it.ingredient ? String(it.ingredient) : '';
+            const used = (it && it.quantityUsed ? it.quantityUsed : 0) * factor;
+            if (!id) continue;
+            map.set(id, (map.get(id) || 0) + used);
+        }
+    }
+    return map;
+}
+
 // OpenAI Config
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -495,6 +510,34 @@ app.post('/api/sales', authenticateToken, checkSubscription, async (req, res) =>
             user: req.user._id
         });
 
+        const usage = computeUsageMap(product, quantity);
+        const ingIds = Array.from(usage.keys());
+        if (ingIds.length > 0) {
+            const ingredients = await Ingredient.find({ _id: { $in: ingIds }, user: req.user._id });
+            const byId = new Map(ingredients.map(i => [String(i._id), i]));
+            const shortages = [];
+            for (const [id, used] of usage.entries()) {
+                const ing = byId.get(String(id));
+                if (!ing) {
+                    shortages.push(`Ingrediente não encontrado`);
+                    continue;
+                }
+                const avail = ing.currentStock || 0;
+                if (avail < used) {
+                    shortages.push(`${ing.name}: falta ${Number(used - avail).toFixed(3)} ${ing.unit}`);
+                }
+            }
+            if (shortages.length > 0) {
+                return res.status(400).json({ error: 'Estoque insuficiente', details: shortages });
+            }
+            const ops = [];
+            for (const [id, used] of usage.entries()) {
+                if (!used) continue;
+                ops.push({ updateOne: { filter: { _id: id, user: req.user._id }, update: { $inc: { currentStock: -used } } } });
+            }
+            if (ops.length > 0) await Ingredient.bulkWrite(ops);
+        }
+
         await sale.save();
         console.log(`✅ Sale registered: ${sale._id} for User: ${req.user.name}`);
         res.status(201).json(sale);
@@ -513,12 +556,49 @@ app.put('/api/sales/:id', authenticateToken, checkSubscription, async (req, res)
         const sale = await Sale.findOne({ _id: req.params.id, user: req.user._id });
         if (!sale) return res.status(404).json({ error: 'Venda não encontrada' });
 
-        const product = await Product.findById(productId);
-        if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+        const newProduct = await Product.findById(productId);
+        if (!newProduct) return res.status(404).json({ error: 'Produto não encontrado' });
+        const oldProduct = await Product.findById(sale.product);
 
-        const totalAmount = product.salePrice * quantity;
-        const totalCost = product.variableCost * quantity;
+        const totalAmount = newProduct.salePrice * quantity;
+        const totalCost = newProduct.variableCost * quantity;
         const profit = totalAmount - totalCost - platformFee - deliveryFee;
+
+        const oldUsage = oldProduct ? computeUsageMap(oldProduct, sale.quantity) : new Map();
+        const newUsage = computeUsageMap(newProduct, quantity);
+        const ingIds = new Set([...oldUsage.keys(), ...newUsage.keys()]);
+        if (ingIds.size > 0) {
+            const ingredients = await Ingredient.find({ _id: { $in: Array.from(ingIds) }, user: req.user._id });
+            const byId = new Map(ingredients.map(i => [String(i._id), i]));
+            const shortages = [];
+            for (const id of ingIds) {
+                const oldAmt = oldUsage.get(id) || 0;
+                const newAmt = newUsage.get(id) || 0;
+                const delta = newAmt - oldAmt;
+                if (delta > 0) {
+                    const ing = byId.get(String(id));
+                    if (!ing) {
+                        shortages.push(`Ingrediente não encontrado`);
+                        continue;
+                    }
+                    const avail = ing.currentStock || 0;
+                    if (avail < delta) shortages.push(`${ing.name}: falta ${Number(delta - avail).toFixed(3)} ${ing.unit}`);
+                }
+            }
+            if (shortages.length > 0) {
+                return res.status(400).json({ error: 'Estoque insuficiente', details: shortages });
+            }
+            const ops = [];
+            for (const id of ingIds) {
+                const oldAmt = oldUsage.get(id) || 0;
+                const newAmt = newUsage.get(id) || 0;
+                const delta = newAmt - oldAmt;
+                if (delta !== 0) {
+                    ops.push({ updateOne: { filter: { _id: id, user: req.user._id }, update: { $inc: { currentStock: -delta } } } });
+                }
+            }
+            if (ops.length > 0) await Ingredient.bulkWrite(ops);
+        }
 
         sale.product = productId;
         sale.quantity = quantity;
@@ -544,6 +624,16 @@ app.delete('/api/sales/:id', authenticateToken, checkSubscription, async (req, r
     try {
         const sale = await Sale.findOneAndDelete({ _id: req.params.id, user: req.user._id });
         if (!sale) return res.status(404).json({ error: 'Venda não encontrada' });
+        const product = await Product.findById(sale.product);
+        if (product) {
+            const usage = computeUsageMap(product, sale.quantity);
+            const ops = [];
+            for (const [id, used] of usage.entries()) {
+                if (!used) continue;
+                ops.push({ updateOne: { filter: { _id: id, user: req.user._id }, update: { $inc: { currentStock: used } } } });
+            }
+            if (ops.length > 0) await Ingredient.bulkWrite(ops);
+        }
         res.json({ message: 'Venda excluída com sucesso' });
     } catch (err) {
         console.error('Error deleting sale:', err);
@@ -982,6 +1072,177 @@ app.get('/api/break-even', authenticateToken, async (req, res) => {
 });
 
 // API: Transcribe Audio (Voice to Text for New Sale)
+app.post('/api/stock/photo', authenticateToken, checkSubscription, upload.single('image'), async (req, res) => {
+    let filePath = '';
+    try {
+        if (!process.env.OPENAI_API_KEY) {
+            return res.status(500).json({ error: 'OPENAI_API_KEY não configurada para análise de imagem.' });
+        }
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+        }
+
+        const originalName = req.file.originalname || '';
+        const extension = path.extname(originalName) || '.jpg';
+        filePath = req.file.path + extension;
+        fs.renameSync(req.file.path, filePath);
+
+        const buffer = fs.readFileSync(filePath);
+        const base64 = buffer.toString('base64');
+        let mime = 'image/jpeg';
+        if (extension.toLowerCase() === '.png') mime = 'image/png';
+        if (extension.toLowerCase() === '.webp') mime = 'image/webp';
+        const imageUrl = `data:${mime};base64,${base64}`;
+
+        const today = new Date().toISOString().split('T')[0];
+        const systemPrompt = `
+Hoje é ${today}. Você é uma assistente que analisa fotos de compras ou prateleiras de ingredientes de confeitaria para atualizar o estoque.
+
+Retorne APENAS um JSON com a estrutura:
+{
+  "items": [
+    {
+      "name": "nome do ingrediente",
+      "unit": "g" ou "un",
+      "quantity": 1000
+    }
+  ]
+}
+
+Regras:
+- Concentre-se em ingredientes de confeitaria (ex: leite condensado, farinha de trigo, açúcar, ovos).
+- Sempre normalize o nome em Sentence case (apenas a primeira letra maiúscula).
+- Se a unidade estiver em kg, converta para g (1 kg = 1000 g).
+- Se a unidade estiver em caixas, pacotes, latas etc, converta para unidades inteiras (unit = "un").
+- "quantity" deve representar quanto será ADICIONADO ao estoque (não o total final já existente).
+- Se tiver dúvida em algum item, ignore-o para evitar erro.`;
+
+        const completion = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                {
+                    role: 'system',
+                    content: systemPrompt
+                },
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: 'Analise esta imagem e extraia os ingredientes e quantidades para adicionar ao estoque.'
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: {
+                                url: imageUrl
+                            }
+                        }
+                    ]
+                }
+            ],
+            response_format: { type: 'json_object' }
+        });
+
+        if (completion.usage) {
+            const inputCost = (completion.usage.prompt_tokens / 1000000) * 0.15;
+            const outputCost = (completion.usage.completion_tokens / 1000000) * 0.60;
+            const totalCost = inputCost + outputCost;
+
+            await OpenAIUsage.create({
+                user: req.user._id,
+                endpoint: '/api/stock/photo',
+                model: 'gpt-4o-mini',
+                tokens_input: completion.usage.prompt_tokens,
+                tokens_output: completion.usage.completion_tokens,
+                cost_usd: totalCost
+            });
+        }
+
+        const parsed = JSON.parse(completion.choices[0].message.content);
+        const items = Array.isArray(parsed.items) ? parsed.items : [];
+
+        const userIngredients = await Ingredient.find({ user: req.user._id });
+        const byName = new Map();
+        for (const ing of userIngredients) {
+            if (!ing.name) continue;
+            byName.set(String(ing.name).trim().toLowerCase(), ing);
+        }
+
+        const ops = [];
+        const updated = [];
+        const notFound = [];
+        const skipped = [];
+
+        for (const raw of items) {
+            if (!raw || !raw.name) continue;
+            const name = String(raw.name).trim();
+            const key = name.toLowerCase();
+            const unit = (raw.unit || '').toLowerCase();
+            const qty = Number(raw.quantity);
+
+            if (!unit || (unit !== 'g' && unit !== 'un')) {
+                skipped.push({ name, reason: 'unit' });
+                continue;
+            }
+            if (!qty || !isFinite(qty) || qty <= 0) {
+                skipped.push({ name, reason: 'quantity' });
+                continue;
+            }
+
+            const ing = byName.get(key);
+            if (!ing) {
+                notFound.push(name);
+                continue;
+            }
+
+            if (ing.unit !== unit) {
+                skipped.push({ name, reason: 'unit_mismatch', expected: ing.unit, received: unit });
+                continue;
+            }
+
+            const before = ing.currentStock || 0;
+            const after = before + qty;
+
+            ops.push({
+                updateOne: {
+                    filter: { _id: ing._id, user: req.user._id },
+                    update: { $set: { currentStock: after } }
+                }
+            });
+            updated.push({
+                name,
+                unit,
+                added: qty,
+                before,
+                after
+            });
+        }
+
+        if (ops.length > 0) {
+            await Ingredient.bulkWrite(ops);
+        }
+
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+        res.json({
+            success: true,
+            updated,
+            notFound,
+            skipped
+        });
+    } catch (err) {
+        console.error('Erro ao processar imagem do estoque:', err);
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        } else if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        res.status(500).json({ error: 'Erro ao analisar foto do estoque.', details: err.message });
+    }
+});
+
 app.post('/api/transcribe', authenticateToken, checkSubscription, upload.single('audio'), async (req, res) => {
     let filePath = '';
     try {

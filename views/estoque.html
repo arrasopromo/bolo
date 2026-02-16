@@ -312,7 +312,9 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo-container">
-                <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake Logo" class="sidebar-logo">
+                <a href="/ferramentas">
+                    <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake Logo" class="sidebar-logo">
+                </a>
             </div>
             <ul class="nav-menu">
                 <a href="/estoque" class="nav-item active">
@@ -329,7 +331,9 @@
 
         <!-- Mobile Header -->
         <header class="mobile-header">
-            <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake Logo" class="mobile-logo">
+            <a href="/ferramentas">
+                <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake Logo" class="mobile-logo">
+            </a>
             <div class="mobile-header-actions">
                 <button onclick="toggleMobileMenu()" style="background:none; border:none; color:white;">
                     <i data-lucide="menu"></i>
@@ -352,10 +356,14 @@
                     <h1 style="font-size: 1.8rem; color: var(--text-brown); margin-bottom: 0.5rem;">Gerenciamento de Estoque</h1>
                     <p style="color: #666;">Controle a quantidade de seus ingredientes.</p>
                 </div>
-                <div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
                     <button class="btn-update" onclick="openAddStockModal()" style="display:inline-flex; align-items:center; gap:8px;">
                         <i data-lucide="plus-circle" style="width:18px;height:18px;"></i>
                         Adicionar ao Estoque
+                    </button>
+                    <button class="btn-update" onclick="openStockPhotoDialog()" style="display:inline-flex; align-items:center; gap:8px; background:#4CAF50;">
+                        <i data-lucide="camera" style="width:18px;height:18px;"></i>
+                        Atualizar por foto
                     </button>
                 </div>
             </div>
@@ -467,7 +475,7 @@
         </div>
     </div>
 
-    <!-- Update Stock Modal -->
+        <!-- Update Stock Modal -->
     <div id="updateStockModal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal('updateStockModal')">&times;</button>
@@ -494,6 +502,8 @@
         </div>
     </div>
 
+    <input type="file" id="stockPhotoInput" accept="image/*" style="display:none;">
+
     <script src="/js/main.js"></script>
     <script>
         // --- Initialization ---
@@ -506,6 +516,10 @@
             lucide.createIcons();
             loadStock();
             
+            const photoInput = document.getElementById('stockPhotoInput');
+            if (photoInput) {
+                photoInput.addEventListener('change', handleStockPhotoChange);
+            }
             // Mobile Menu Logic
             window.toggleMobileMenu = () => {
                 document.getElementById('mobileMenu').classList.toggle('open');
@@ -704,6 +718,54 @@
             } catch (err) {
                 console.error('Error updating stock:', err);
                 alert('Erro de conexão.');
+            }
+        };
+
+        window.openStockPhotoDialog = () => {
+            const input = document.getElementById('stockPhotoInput');
+            if (input) {
+                input.value = '';
+                input.click();
+            }
+        };
+
+        window.handleStockPhotoChange = async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const res = await fetch('/api/stock/photo', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data && data.error ? data.error : 'Erro ao processar foto.');
+                }
+                const data = await res.json();
+                await loadStock();
+                let msg = 'Atualização do estoque concluída.';
+                if (Array.isArray(data.updated) && data.updated.length) {
+                    const lines = data.updated.map(u => `${u.name}: +${u.added} ${u.unit} (de ${u.before} para ${u.after})`);
+                    msg += '\n\nAtualizados:\n' + lines.join('\n');
+                }
+                if (Array.isArray(data.notFound) && data.notFound.length) {
+                    msg += '\n\nNão encontrados no cadastro:\n' + data.notFound.join(', ');
+                }
+                if (Array.isArray(data.skipped) && data.skipped.length) {
+                    const names = data.skipped.map(s => s.name).filter(Boolean);
+                    if (names.length) {
+                        msg += '\n\nIgnorados por inconsistência de dados:\n' + names.join(', ');
+                    }
+                }
+                alert(msg);
+            } catch (err) {
+                alert(err.message || 'Erro ao enviar foto.');
+            } finally {
+                if (e.target) {
+                    e.target.value = '';
+                }
             }
         };
     </script>
