@@ -212,6 +212,42 @@ body {
     color: white;
 }
 
+/* Mobile navbar behaviors */
+@media (max-width: 768px) {
+    .theme-toggle-btn {
+        display: none !important;
+    }
+    .mobile-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.4rem;
+        margin-left: 0.5rem;
+    }
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.96);
+        backdrop-filter: blur(8px);
+        padding: 0.8rem 1rem 1rem;
+        z-index: 1200;
+        flex-direction: column;
+        gap: 0.6rem;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    }
+    .nav-links a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: 800;
+        padding: 0.6rem 0.8rem;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+}
 /* Gift Bonus Icon Standardized */
 .gift-bonus-icon {
     width: 24px !important;
@@ -309,9 +345,20 @@ body {
     margin: 0 auto;
     z-index: 2;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    gap: 3rem;
+}
+
+.hero-header {
+    width: 100%;
+    text-align: center;
+}
+
+.hero-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 4rem;
 }
 
@@ -322,6 +369,7 @@ body {
     font-weight: 800 !important;
     font-family: 'Inter', sans-serif !important;
     letter-spacing: 0.2px !important; /* letras um pouco mais próximas */
+    font-size: 2.2rem;
 }
 
 .hero-section .subtitle {
@@ -428,7 +476,7 @@ body {
 
 .annotation.left {
     top: 15%; /* Moved up slightly from 20% */
-    left: 120px; /* Moved even more right (was 80px) */
+    left: 190px;
     transform: translateX(-100%);
 }
 
@@ -439,7 +487,7 @@ body {
 
 .annotation.right {
     bottom: 50%;
-    right: 140px; /* Moved more left (was 60px) */
+    right: 90px;
     transform: translateX(100%);
 }
 
@@ -452,7 +500,7 @@ body {
     /* Heart: Bottom left, aligned horizontally with '26 years' (approx bottom 30%) */
     top: auto;
     bottom: 30%;
-    left: -20px;
+    left: 30px;
     right: auto;
     transform: translateX(-100%);
     display: flex;
@@ -780,7 +828,6 @@ body {
     }
 
     .hero-content {
-        flex-direction: column;
         text-align: center;
         align-items: flex-start;
     }
@@ -916,10 +963,10 @@ body {
         min-height: auto;
     }
     
-    .hero-text-side {
-        align-items: center;
-        text-align: center;
+    .hero-main-row {
+        flex-direction: column;
         width: 100%;
+        gap: 2rem;
     }
     
     .hero-section .btn-primary.small {
@@ -1108,7 +1155,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 }
 
 .faq-list {
-    max-width: 900px;
+    max-width: 760px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -1462,14 +1509,14 @@ body:not([data-theme="light"]) .audience-title .highlight {
 .who-image-container {
     flex: 1;
     display: flex;
-    justify-content: center;
-    max-width: 600px; /* Increased container to match image */
+    justify-content: flex-end;
+    max-width: 480px;
 }
 
 .who-image {
     width: 100%;
-    max-width: 600px; /* Base size */
-    transform: scale(1.15); /* Zoom effect */
+    max-width: 420px;
+    transform: scale(1.02);
     transform-origin: center center;
     height: auto;
     border-radius: 20px;
@@ -1855,5 +1902,49 @@ body:not([data-theme="light"]) .audience-title .highlight {
     }
     #substitua-planilhas img.phone-gif {
         max-width: 96vw !important;
+    }
+}
+
+.planilhas-layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.planilhas-copy {
+    text-align: left;
+}
+
+.planilhas-image {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+@media (min-width: 769px) {
+    .planilhas-layout {
+        flex-direction: row;
+        align-items: center;
+        gap: 3rem;
+    }
+    .planilhas-copy {
+        flex: 1;
+        max-width: 480px;
+    }
+    .planilhas-image {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .planilhas-image {
+        order: 1;
+    }
+    .planilhas-copy {
+        order: 2;
     }
 }

@@ -672,6 +672,22 @@
     </style>
 </head>
 <body>
+    <script>
+        (function() {
+            const p = new URLSearchParams(location.search);
+            if (p.get('embed') === '1') {
+                document.documentElement.setAttribute('data-embed', '1');
+            }
+            const t = p.get('tab');
+            if (t) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (typeof window.switchTab === 'function') {
+                        try { window.switchTab(t); } catch (e) {}
+                    }
+                });
+            }
+        })();
+    </script>
 
     <!-- Mobile Header -->
     <header class="mobile-header">
@@ -2385,4 +2401,18 @@
             }
         }
     </script>
+    <style>
+        [data-embed="1"] .sidebar,
+        [data-embed="1"] .mobile-header {
+            display: none !important;
+        }
+        [data-embed="1"] .app-container {
+            padding-left: 0 !important;
+        }
+        [data-embed="1"] .main-content {
+            margin: 0 !important;
+            width: 100% !important;
+            border-radius: 0 !important;
+        }
+    </style>
 </body></html>

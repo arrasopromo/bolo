@@ -78,16 +78,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <span id="moon-wrapper" style="display: none;"><i data-lucide="moon"></i></span>
         </button>
 
-        <div class="mobile-menu-btn">
+        <div class="mobile-menu-btn" aria-label="Menu">
             <i data-lucide="menu"></i>
         </div>
     </nav>
+    <div class="nav-links">
+        <a href="#inicio">Início</a>
+        <a href="#substitua-planilhas">Mudança inteligente</a>
+        <a href="#video-explicativo">Vídeo explicativo</a>
+        <a href="#quem-e">Você precisa disso?</a>
+        <a href="#por-que-escolher">Por que escolher</a>
+        <a href="#tabela-de-precos">Planos</a>
+        <a href="#faq">FAQ</a>
+    </div>
 
     <!-- Hero Section -->
     <main class="hero-section" id="inicio">
         <div class="hero-content">
-            
-            <div class="hero-text-side" style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+            <div class="hero-header">
                 <h1 class="main-title desktop-only">
                     <span class="title-line-1">Confeiteira,</span>
                     <span class="title-line-2">tenha gestão completa do seu negócio com nossas ferramentas</span>
@@ -96,50 +104,45 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <span class="title-line-1">Confeiteira,</span>
                     <span class="title-line-2">tenha gestão completa do seu negócio com nossas ferramentas</span>
                 </h1>
-                
                 <p class="subtitle" style="margin-bottom: 0;">
                     Ferramentas feitas para confeiteiras: precifique com segurança e gerencie suas vendas do jeito certo.
                 </p>
-                <div class="mobile-only hero-gif" style="display:flex; flex-direction:column; align-items:center;">
-                    <img src="/images/mockup%20tlefones%20.png" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 460px; border-radius: 12px;">
-                    <div class="availability">
-                        <span>Disponível</span>
-                        <i data-lucide="smartphone"></i>
-                        <i data-lucide="monitor"></i>
-                    </div>
-                </div>
-                <div class="mobile-only" style="display: flex; justify-content: center; margin-top: 1.6rem;">
-                    <a href="#plano-completo" class="btn-primary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: #4CAF50; color: #fff; font-weight: 800; border-radius: 10px; padding: 0.7rem 1.2rem; box-shadow: 0 6px 20px rgba(76,175,80,0.4);">
-                        QUERO ACESSO A FERRAMENTA
-                    </a>
-                </div>
-                <div class="mobile-only" style="display: flex; justify-content: center; margin-top: 0.5rem;">
-                    <a href="#video-explicativo" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: var(--navbar-bg); color: #fff; font-weight: 800; border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.9rem; box-shadow: 0 6px 16px rgba(0,0,0,0.25);">
-                        VEJA COMO FUNCIONA
-                    </a>
-                </div>
-
-                <div class="pricing-card">
-                    <div class="card-headline">OFERTA EXCLUSIVA</div>
-                    <div class="price-header">
-                        <span class="old-price">R$ 49,90</span>
-                        <span class="savings">Economize R$ 30,00</span>
-                    </div>
-                    <div class="main-price">
-                        <span class="starting-at">a partir de</span>
-                        R$ 29,90
-                    </div>
-                    
-                    <button class="btn-cta pulse" onclick="scrollToFeaturedPricing()">
-                        GARANTIR FERRAMENTA
-                        <i data-lucide="table" class="icon-btn"></i>
-                    </button>
-                    <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
-                </div>
             </div>
-
-            <div class="hero-media-side desktop-only" style="flex: 1; min-width: 320px; display: flex; justify-content: center; align-items: center;">
-                <img src="/images/mockup%20tlefones%20.png" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 580px; border-radius: 16px; box-shadow: none; margin-top: -40px;">
+            <div class="hero-main-row">
+                <div class="hero-text-side" style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                    <div class="mobile-only hero-gif" style="display:flex; flex-direction:column; align-items:center;">
+                        <img src="/images/mockup%20tlefones%20.png" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 460px; border-radius: 12px;">
+                    </div>
+                    <div class="mobile-only" style="display: flex; justify-content: center; margin-top: 1.1rem;">
+                        <a href="#plano-completo" class="btn-primary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: #4CAF50; color: #fff; font-weight: 800; border-radius: 10px; padding: 0.7rem 1.2rem; box-shadow: 0 6px 20px rgba(76,175,80,0.4);">
+                            QUERO ACESSO A FERRAMENTA
+                        </a>
+                    </div>
+                    <div class="mobile-only" style="display: flex; justify-content: center; margin-top: 0.3rem;">
+                        <a href="#video-explicativo" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: var(--navbar-bg); color: #fff; font-weight: 800; border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.9rem; box-shadow: 0 6px 16px rgba(0,0,0,0.25);">
+                            VEJA COMO FUNCIONA
+                        </a>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="card-headline">OFERTA EXCLUSIVA</div>
+                        <div class="price-header">
+                            <span class="old-price">R$ 49,90</span>
+                            <span class="savings">Economize R$ 30,00</span>
+                        </div>
+                        <div class="main-price">
+                            <span class="starting-at">a partir de</span>
+                            R$ 29,90
+                        </div>
+                        <button class="btn-cta pulse" onclick="scrollToFeaturedPricing()">
+                            GARANTIR FERRAMENTA
+                            <i data-lucide="table" class="icon-btn"></i>
+                        </button>
+                        <a href="#video-explicativo" class="how-it-works-link">Veja como funciona</a>
+                    </div>
+                </div>
+                <div class="hero-media-side desktop-only" style="flex: 1; min-width: 320px; display: flex; justify-content: center; align-items: center;">
+                    <img src="/images/mockup%20tlefones%20.png" alt="Ferramentas no telefone e computador" style="width: 100%; max-width: 640px; border-radius: 16px; box-shadow: none; margin-top: 10px;">
+                </div>
             </div>
         </div>
 
@@ -148,20 +151,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     
     <section class="audience-section" id="substitua-planilhas" style="padding-top: 4.5rem; padding-bottom: 1.25rem;">
         <div class="section-badge">Mudança inteligente</div>
-        <h2 class="audience-title">Troque planilha de Excel ultrapassada<br>por ferramentas automáticas</h2>
-        <div style="max-width:1000px; margin:0 auto; padding:0 1rem; display:flex; justify-content:center;">
-            <img class="phone-gif" src="/images/telefone%20.gif" alt="Comparação entre planilha Excel e ferramenta Belle Cake" style="width:100%; max-width:880px; height:auto; border-radius:23px;">
-        </div>
-        <div style="max-width:900px; margin:1rem auto 0; padding:0 1rem; text-align:left;">
-            <p class="subtitle" style="margin:0 0 0.4rem;">
-                Planilhas em Excel até quebram o galho, mas são <strong>lentas, cheias de fórmulas</strong> e nada amigáveis no celular.
-            </p>
-            <p class="subtitle" style="margin:0 0 0.4rem;">
-                Com as ferramentas Belle Cake, você acompanha <strong>custos, preços e lucro</strong> sem fórmulas, num painel pensado para confeiteiras.
-            </p>
-            <p class="subtitle" style="margin:0;">
-                Tudo fica organizado em <strong>um único lugar</strong>, acessível do celular, tablet ou computador.
-            </p>
+        <h2 class="audience-title">Troque planilhas de Excel<br>por ferramentas completas</h2>
+        <div class="planilhas-layout">
+            <div class="planilhas-copy">
+                <p class="subtitle" style="margin:0 0 0.6rem;">
+                    Planilhas em Excel até ajudam no básico, mas são <strong>lentas, cheias de fórmulas</strong> e nada práticas no celular.
+                </p>
+                <p class="subtitle" style="margin:0 0 0.6rem;">
+                    Com as ferramentas Belle Cake, você acompanha <strong>custos, preços e lucro</strong> em tempo real, sem fórmulas escondidas nem confusão.
+                </p>
+                <p class="subtitle" style="margin:0;">
+                    Todo o controle fica em <strong>um único lugar</strong>, acessível do celular, tablet ou computador.
+                </p>
+            </div>
+            <div class="planilhas-image">
+                <img class="phone-gif" src="/images/telefone%20.gif" alt="Comparação entre planilha Excel e ferramenta Belle Cake" style="width:100%; max-width:880px; height:auto; border-radius:23px;">
+            </div>
         </div>
     </section>
 
@@ -382,9 +387,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     </li>
                     <li class="highlight-feature">
                         <span class="bonus-label">Bônus exclusivo #2</span>
-                        <div class="bonus-content">
-                            <i data-lucide="gift" class="gift-bonus-icon"></i>
-                            Ferramenta completa para fluxo de caixa (1 mês de assinatura)
+                        <div class="bonus-content" style="display: flex; align-items: flex-start;">
+                            <i data-lucide="gift" class="gift-bonus-icon" style="flex-shrink: 0; margin-right: 8px; margin-top: 3px;"></i>
+                            <div style="display: flex; flex-direction: column; text-align: left;">
+                                <span>Ferramenta completa para fluxo de caixa (1 mês de assinatura)</span>
+                                <div style="margin: 0.2rem 0 0.2rem 0; font-size: 0.9rem; color: var(--primary-yellow); font-weight: 600;">Você terá acesso a tudo isso:</div>
+                                <ul style="list-style-type: disc; padding-left: 1.2rem; margin: 0; font-size: 0.85rem; color: inherit; opacity: 0.9; line-height: 1.3;">
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Registro de vendas integrado com banco de dados</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Relatórios detalhados do seu negócio</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Controle de custos fixos da operação</li>
+                                    <li style="margin-bottom: 4px; background: none !important; border: none !important; padding: 0 !important; display: list-item !important;">Integrações com Inteligência Artificial</li>
+                                </ul>
+                            </div>
                         </div>
                     </li>
                 </ul>
@@ -425,7 +439,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <i data-lucide="chevron-down" class="faq-chevron"></i>
                 </button>
                 <div class="faq-answer">
-                    <p>O acesso é vitalício ao plano escolhido, para você usar sempre que precisar na sua rotina de vendas.</p>
+                    <p>A Ferramenta de precificação é de acesso vitalício. As demais ferramentas do Plano Completo ficam disponíveis por 1 mês; após esse período, a mensalidade é de R$ 19,90.</p>
                 </div>
             </div>
             <div class="faq-item">
@@ -521,6 +535,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 }
             }
         })();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var menuBtn = document.querySelector('.mobile-menu-btn');
+            var navLinks = document.querySelector('.nav-links');
+            if (!menuBtn || !navLinks) return;
+            menuBtn.addEventListener('click', function () {
+                var isOpen = navLinks.style.display === 'flex';
+                navLinks.style.display = isOpen ? 'none' : 'flex';
+            });
+            navLinks.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    navLinks.style.display = 'none';
+                });
+            });
+        });
     </script>
     <script>
         // Mobile hero vertical Wistia: load early in viewport and autoplay muted
@@ -754,6 +784,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             if (basic) { basic.style.display = 'none'; }
             if (featured) {
                 featured.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(function () {
+                    window.scrollBy({ top: 80, left: 0, behavior: 'smooth' });
+                }, 400);
             } else if (sec) {
                 sec.scrollIntoView({ behavior: 'smooth' });
             }
