@@ -1531,6 +1531,10 @@
         let saleDatePicker = null;
         let mediaRecorder = null;
         let audioChunks = [];
+        let isDashboardLoading = false;
+        let pendingDashboardReload = false;
+        let isSalesLoading = false;
+        let pendingSalesReload = false;
 
         // --- Auth Logic ---
         const urlParams = new URLSearchParams(window.location.search);
@@ -2055,6 +2059,11 @@
 
         // Load Recent Sales
         async function loadRecentSales() {
+            if (isSalesLoading) {
+                pendingSalesReload = true;
+                return;
+            }
+            isSalesLoading = true;
             const tbody = document.getElementById('salesTableBody');
             if(!tbody) return;
 
@@ -2149,6 +2158,12 @@
             } catch (error) {
                 console.error('Error loading sales list:', error);
                 tbody.innerHTML = `<tr><td colspan="6" style="padding:2rem; text-align:center; color:red;">Erro ao carregar vendas: ${error.message}</td></tr>`;
+            } finally {
+                isSalesLoading = false;
+                if (pendingSalesReload) {
+                    pendingSalesReload = false;
+                    loadRecentSales();
+                }
             }
         }
 
@@ -2993,6 +3008,11 @@
         }
 
         async function loadDashboard() {
+            if (isDashboardLoading) {
+                pendingDashboardReload = true;
+                return;
+            }
+            isDashboardLoading = true;
             const loader = document.getElementById('dashboardLoading');
             try {
                 if(loader) loader.style.display = 'block';
@@ -3134,6 +3154,11 @@
                 }
             } finally {
                 if(loader) loader.style.display = 'none';
+                isDashboardLoading = false;
+                if (pendingDashboardReload) {
+                    pendingDashboardReload = false;
+                    loadDashboard();
+                }
             }
         }
         
