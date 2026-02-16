@@ -369,7 +369,7 @@ body {
     font-weight: 800 !important;
     font-family: 'Inter', sans-serif !important;
     letter-spacing: 0.2px !important; /* letras um pouco mais próximas */
-    font-size: 2.2rem;
+    font-size: 1.6rem;
 }
 
 .hero-section .subtitle {
@@ -981,7 +981,7 @@ body {
     
     
     .main-title {
-        font-size: 1.4rem;
+        font-size: 1.1rem;
         margin-bottom: 0.2rem;
         margin-top: 0.2rem;
     }
