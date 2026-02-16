@@ -79,6 +79,20 @@
     </div>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
+        function checkFrameAuth() {
+            const frame = document.getElementById('toolsFrame');
+            if (!frame || !frame.contentWindow) return;
+            try {
+                const loc = frame.contentWindow.location;
+                const path = (loc && loc.pathname) || '';
+                if (path.startsWith('/membros') || path.startsWith('/login')) {
+                    window.location.href = '/membros';
+                }
+            } catch (e) {
+                // ignore cross-origin or other access errors
+            }
+        }
+
         function toggleSubmenu(id){
             const el = document.getElementById(id);
             if(!el) return;
@@ -94,15 +108,24 @@
             loadFluxo('vendas');
         }
         function loadFluxo(view){
-            document.getElementById('toolsFrame').src = '/fluxo?embed=1&view=' + encodeURIComponent(view || 'resumo');
+            const frame = document.getElementById('toolsFrame');
+            frame.src = '/fluxo?embed=1&view=' + encodeURIComponent(view || 'resumo');
         }
         function loadPrecificacao(tab){
-            document.getElementById('toolsFrame').src = '/precificacao?embed=1&tab=' + encodeURIComponent(tab || 'produtos');
+            const frame = document.getElementById('toolsFrame');
+            frame.src = '/precificacao?embed=1&tab=' + encodeURIComponent(tab || 'produtos');
         }
         function loadEquilibrio(){
-            document.getElementById('toolsFrame').src = '/equilibrio?embed=1';
+            const frame = document.getElementById('toolsFrame');
+            frame.src = '/equilibrio?embed=1';
         }
-        try{ lucide && lucide.createIcons && lucide.createIcons(); }catch(e){}
+        document.addEventListener('DOMContentLoaded', function () {
+            const frame = document.getElementById('toolsFrame');
+            if (frame) {
+                frame.addEventListener('load', checkFrameAuth);
+            }
+            try{ lucide && lucide.createIcons && lucide.createIcons(); }catch(e){}
+        });
     </script>
 </body>
 </html>

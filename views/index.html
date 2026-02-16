@@ -783,9 +783,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             const basic = document.querySelector('.pricing-section .pricing-table:not(.featured)');
             if (basic) { basic.style.display = 'none'; }
             if (featured) {
-                featured.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                featured.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 setTimeout(function () {
-                    window.scrollBy({ top: 80, left: 0, behavior: 'smooth' });
+                    window.scrollBy({ top: 260, left: 0, behavior: 'smooth' });
                 }, 400);
             } else if (sec) {
                 sec.scrollIntoView({ behavior: 'smooth' });
