@@ -8,13 +8,13 @@
         (function(){try{if(localStorage.getItem('debug_logs')==='1')return;var c=window.console||{};var n=function(){};['log','info','debug','trace','group','groupCollapsed','time','timeEnd'].forEach(function(m){if(c[m])c[m]=n});}catch(e){}})
         ();
     </script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://track.bellecake.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PDGN6N6P');</script>
-<!-- End Google Tag Manager -->
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://track.bellecake.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PDGN6N6P');</script>
+    <!-- End Google Tag Manager -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" href="/css/styles.css" as="style" onload="this.rel='stylesheet'">
@@ -555,31 +555,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             }
         })();
     </script>
-    <script>
-        // Defer Google Tag Manager to post-interaction or idle to reduce TBT/LCP
-        (function() {
-            window.dataLayer = window.dataLayer || [];
-            function injectGTM() {
-                if (injectGTM._done) return;
-                injectGTM._done = true;
-                window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-                var s = document.createElement('script');
-                s.async = true;
-                s.src = 'https://track.bellecake.com/gtm.js?id=GTM-PDGN6N6P';
-                document.head.appendChild(s);
-            }
-            const once = (fn) => (e) => { fn(); ['click','scroll','keydown','pointerdown'].forEach(t=>window.removeEventListener(t, once(fn))); };
-            window.addEventListener('click', injectGTM, { once: true, passive: true });
-            window.addEventListener('scroll', injectGTM, { once: true, passive: true });
-            if ('requestIdleCallback' in window) {
-                requestIdleCallback(injectGTM, { timeout: 4000 });
-            } else {
-                setTimeout(injectGTM, 4000);
-            }
-        })();
-    </script>
-
-
     <!-- Rodapé -->
     <footer class="site-footer">
         <div style="color: var(--text-muted); font-size: 0.9rem; display: flex; flex-direction: column; gap: 10px; align-items: center;">
