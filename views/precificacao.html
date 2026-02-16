@@ -1540,7 +1540,7 @@
             div.innerHTML = `
                 <div style="width: 100%;">
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <select class="ing-select" onchange="validateIngredientSelection(this)" style="flex: 1; width: 0;">
+                        <select class="ing-select" onchange="validateIngredientSelection(this)" style="flex: 1;">
                             <option value="">Selecione um ingrediente...</option>
                             ${allIngredients.map(ing => `
                                 <option value="${ing._id}" data-price="${ing.price}" data-pkg="${ing.quantityPackage}" data-unit="${ing.unit}">
