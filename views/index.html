@@ -164,8 +164,18 @@
                     Todo o controle fica em <strong>um único lugar</strong>, acessível do celular, tablet ou computador.
                 </p>
             </div>
-            <div class="planilhas-image">
-                <img class="phone-gif" src="/images/telefone%20.gif" alt="Comparação entre planilha Excel e ferramenta Belle Cake" style="width:100%; max-width:880px; height:auto; border-radius:23px;">
+            <div class="planilhas-image" style="position: relative;">
+                <img class="phone-gif"
+                     src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                     data-src="/images/telefone%20.gif"
+                     alt="Comparação entre planilha Excel e ferramenta Belle Cake"
+                     style="width:100%; max-width:880px; height:auto; border-radius:23px; display:block;">
+                <button type="button"
+                        id="playPhoneGifBtn"
+                        aria-label="Reproduzir animação"
+                        style="position: absolute; inset: 0; margin: auto; width: 180px; height: 44px; border-radius: 999px; border: none; background: rgba(0,0,0,0.6); color: #fff; font-weight: 800; cursor: pointer; backdrop-filter: blur(2px);">
+                    Ver animação
+                </button>
             </div>
         </div>
     </section>
@@ -187,7 +197,7 @@
 
     <!-- WhatsApp Bubble -->
     <a id="whatsappBubble" href="https://wa.me/5531973586912?text=Oi%2C%20estou%20no%20site%20e%20tenho%20d%C3%BAvidas" aria-label="Falar no WhatsApp" style="position: fixed; right: 16px; bottom: 2px; width: 72px; height: 72px; border-radius: 50%; background: transparent; display:flex; align-items:center; justify-content:center; z-index: 2147483647; text-decoration:none;" target="_blank" rel="noopener">
-        <img src="/images/logo%20wpp.png" alt="WhatsApp" style="display:block; width:100%; height:100%; object-fit: contain;">
+        <img src="/images/logo%20wpp.png" alt="WhatsApp" width="72" height="72" loading="lazy" decoding="async" style="display:block; width:100%; height:100%; object-fit: contain;">
     </a>
 
     <!-- Audience Section -->
@@ -722,6 +732,31 @@
             }
             var schedule = window.requestIdleCallback ? requestIdleCallback : function(fn){ setTimeout(fn, 1); };
             schedule(function(){ loadLucide(function(){ if (window.lucide && lucide.createIcons) lucide.createIcons(); }); });
+        })();
+    </script>
+    <script>
+        (function() {
+            const gif = document.querySelector('.phone-gif');
+            const btn = document.getElementById('playPhoneGifBtn');
+            if (!gif) return;
+
+            function loadGif() {
+                if (!gif.getAttribute('data-src')) return;
+                gif.src = gif.getAttribute('data-src');
+                gif.removeAttribute('data-src');
+                if (btn) btn.style.display = 'none';
+            }
+
+            if ('IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        loadGif();
+                        io.disconnect();
+                    }
+                }, { rootMargin: '0px 0px -20% 0px', threshold: 0.1 });
+                io.observe(gif);
+            }
+            if (btn) btn.addEventListener('click', loadGif, { once: true });
         })();
     </script>
     <script src="/js/main.js"></script>

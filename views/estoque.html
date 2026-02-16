@@ -352,6 +352,12 @@
                     <h1 style="font-size: 1.8rem; color: var(--text-brown); margin-bottom: 0.5rem;">Gerenciamento de Estoque</h1>
                     <p style="color: #666;">Controle a quantidade de seus ingredientes.</p>
                 </div>
+                <div>
+                    <button class="btn-update" onclick="openAddStockModal()" style="display:inline-flex; align-items:center; gap:8px;">
+                        <i data-lucide="plus-circle" style="width:18px;height:18px;"></i>
+                        Adicionar ao Estoque
+                    </button>
+                </div>
             </div>
 
             <!-- Loading State -->
@@ -385,6 +391,80 @@
             </div>
 
         </main>
+    </div>
+
+    <!-- Add to Stock Modal (step 1) -->
+    <div id="addStockModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('addStockModal')">&times;</button>
+            <h2 style="margin-bottom: 1.5rem; color: var(--text-brown);">Adicionar Item ao Estoque</h2>
+            <form id="addStockForm" onsubmit="handleAddStockSubmit(event)">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display:block; margin-bottom: 0.5rem; font-weight:600;">Nome do ingrediente</label>
+                    <input type="text" id="addStockName" required minlength="2" placeholder="Ex.: Leite condensado" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                </div>
+                <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                    <div style="flex:1;">
+                        <label style="display:block; margin-bottom: 0.5rem; font-weight:600;">Quantidade</label>
+                        <input type="number" id="addStockQty" step="0.001" min="0" required placeholder="Ex.: 2" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                    </div>
+                    <div style="width:180px;">
+                        <label style="display:block; margin-bottom: 0.5rem; font-weight:600;">Unidade</label>
+                        <select id="addStockUnit" required style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                            <option value="" disabled selected>Selecione</option>
+                            <option value="g">Gramas (g)</option>
+                            <option value="un">Unidade (un)</option>
+                        </select>
+                    </div>
+                </div>
+                <p style="font-size:0.9rem; color:#666; margin:0.2rem 0 1rem 0;">
+                    Se o ingrediente já existir, você poderá ajustar o estoque. Se não existir, você cadastrará os dados obrigatórios do ingrediente na próxima etapa.
+                </p>
+                <button type="submit" class="btn-update" style="width:100%; padding:1rem;">Continuar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ingredient Details Modal (step 2 for new) -->
+    <div id="ingredientDetailsModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('ingredientDetailsModal')">&times;</button>
+            <h2 style="margin-bottom: 1.5rem; color: var(--text-brown);">Cadastrar Ingrediente</h2>
+            <form id="ingredientDetailsForm" onsubmit="handleCreateIngredientFromStock(event)">
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Nome do ingrediente</label>
+                    <input type="text" id="ingName" readonly style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px; background:#f5f5f5;">
+                </div>
+                <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                    <div style="flex:1;">
+                        <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Unidade</label>
+                        <select id="ingUnit" required style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                            <option value="g">Gramas (g)</option>
+                            <option value="un">Unidade (un)</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Qtd. por embalagem</label>
+                        <input type="number" id="ingQuantityPackage" step="0.001" min="0.001" required placeholder="Ex.: 395" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                    </div>
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Preço da embalagem (R$)</label>
+                    <input type="number" id="ingPrice" step="0.01" min="0" required placeholder="Ex.: 5,99" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                </div>
+                <div style="margin-bottom:1.2rem;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Estoque inicial</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="number" id="ingInitialStock" step="0.001" min="0" required style="flex:1; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                        <span id="ingUnitEcho" style="padding:0.8rem; background:#eee; border-radius:8px; display:flex; align-items:center; font-weight:600; color:#666;">UN</span>
+                    </div>
+                    <p style="font-size:0.85rem; color:#777; margin-top:0.4rem;">
+                        Obrigatório: informe o estoque inicial e os dados da embalagem para completar o cadastro do ingrediente.
+                    </p>
+                </div>
+                <button type="submit" class="btn-update" style="width:100%; padding:1rem;">Cadastrar Ingrediente</button>
+            </form>
+        </div>
     </div>
 
     <!-- Update Stock Modal -->
@@ -445,6 +525,7 @@
             try {
                 const res = await fetch('/api/ingredients');
                 const ingredients = await res.json();
+                window._ingredientsCache = ingredients;
                 
                 const tbody = document.getElementById('stockTableBody');
                 const table = document.getElementById('stockTable');
@@ -495,6 +576,89 @@
                 alert('Erro ao carregar estoque.');
             }
         }
+
+        // --- Add to Stock (Step 1) ---
+        window.openAddStockModal = () => {
+            document.getElementById('addStockName').value = '';
+            document.getElementById('addStockQty').value = '';
+            document.getElementById('addStockUnit').value = '';
+            document.getElementById('addStockModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.handleAddStockSubmit = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('addStockName').value.trim();
+            const qty = parseFloat(document.getElementById('addStockQty').value);
+            const unit = document.getElementById('addStockUnit').value;
+            if (!name || isNaN(qty) || qty < 0 || !unit) {
+                alert('Preencha nome, quantidade e unidade.');
+                return;
+            }
+            // Find existing ingredient by name (case-insensitive)
+            const list = Array.isArray(window._ingredientsCache) ? window._ingredientsCache : [];
+            const existing = list.find(i => (i.name || '').toLowerCase() === name.toLowerCase());
+
+            if (existing) {
+                // Open Update Stock Modal prefilled, suggest new quantity as current + qty
+                closeModal('addStockModal');
+                const current = parseFloat(existing.currentStock || 0);
+                openUpdateModal(existing._id, existing.name, current + qty, existing.unit || unit || 'un');
+            } else {
+                // Proceed to ingredient details (required)
+                closeModal('addStockModal');
+                openIngredientModalForNew(name, unit, qty);
+            }
+        };
+
+        // --- Ingredient Details (Step 2 for new) ---
+        window.openIngredientModalForNew = (name, unit, initialStock) => {
+            document.getElementById('ingName').value = name || '';
+            document.getElementById('ingUnit').value = unit || 'un';
+            document.getElementById('ingInitialStock').value = (initialStock || 0);
+            document.getElementById('ingUnitEcho').textContent = unit ? unit.toUpperCase() : 'UN';
+            // Reset required fields
+            document.getElementById('ingQuantityPackage').value = '';
+            document.getElementById('ingPrice').value = '';
+            document.getElementById('ingredientDetailsModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        document.getElementById('ingUnit').addEventListener('change', function() {
+            const unit = this.value || 'un';
+            document.getElementById('ingUnitEcho').textContent = unit.toUpperCase();
+        });
+
+        window.handleCreateIngredientFromStock = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('ingName').value.trim();
+            const unit = document.getElementById('ingUnit').value;
+            const quantityPackage = parseFloat(document.getElementById('ingQuantityPackage').value);
+            const price = parseFloat(document.getElementById('ingPrice').value);
+            const currentStock = parseFloat(document.getElementById('ingInitialStock').value);
+
+            if (!name || !unit || isNaN(quantityPackage) || quantityPackage <= 0 || isNaN(price) || price < 0 || isNaN(currentStock) || currentStock < 0) {
+                alert('Preencha todos os campos obrigatórios do ingrediente.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/ingredients', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, unit, quantityPackage, price, currentStock })
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(()=>({}));
+                    throw new Error(data && data.error ? data.error : 'Erro ao cadastrar ingrediente');
+                }
+                closeModal('ingredientDetailsModal');
+                await loadStock(); // refresh list
+                alert('Ingrediente cadastrado com sucesso no estoque.');
+            } catch (err) {
+                alert(err.message || 'Erro ao cadastrar ingrediente.');
+            }
+        };
 
         window.openUpdateModal = (id, name, current, unit) => {
             document.getElementById('stockIngId').value = id;
