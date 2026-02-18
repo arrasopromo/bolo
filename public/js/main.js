@@ -159,6 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Why Choose Slider (Por que escolher a ferramenta)
     initSlider('whyChooseTrack', 'whyChooseDots', '.why-us-card', 24, 7000);
+
+    // Testimonials Slider
+    initSlider('testimonialsTrack', 'testimonialsDots', '.testimonial-item', 16, 7000);
 });
 
 // Mobile Menu Toggle (Simple implementation)

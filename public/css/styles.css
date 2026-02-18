@@ -89,7 +89,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     background: linear-gradient(135deg, var(--seal-brown) 0%, var(--falu-red) 100%);
     background-attachment: fixed;
     color: var(--text-white);
@@ -369,7 +369,7 @@ body {
     color: var(--seal-brown) !important;
     text-transform: none !important;
     font-weight: 800 !important;
-    font-family: 'Inter', sans-serif !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
     letter-spacing: 0.2px !important; /* letras um pouco mais próximas */
     font-size: 1.6rem;
 }
@@ -393,7 +393,7 @@ body {
 }
 
 .main-title {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     font-size: 3.5rem;
     font-weight: 900;
     line-height: 1.1;
@@ -407,7 +407,7 @@ body {
 .video-title,
 .audience-title,
 .who-title {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     letter-spacing: 0.2px;
 }
 
@@ -1023,7 +1023,7 @@ body {
 }
 
 .video-title {
-    font-size: 2.25rem;
+    font-size: 1.4rem;
     font-weight: 900;
     margin-bottom: 2rem;
     color: var(--heading-color);
@@ -1120,7 +1120,7 @@ body {
 }
 
 .audience-title {
-    font-size: 2.25rem;
+    font-size: 1.4rem;
     font-weight: 900;
     margin-bottom: 1rem;
     color: var(--heading-color);
@@ -1145,6 +1145,34 @@ body:not([data-theme="light"]) .audience-title .highlight {
     max-width: 600px;
     margin: 0 auto 4rem;
     font-size: 1.1rem;
+}
+
+/* Testimonials */
+.testimonials-grid { /* legacy layout if needed */ 
+    display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin-top: 2rem;
+}
+.testimonials-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding-bottom: 1rem;
+}
+.testimonial-item {
+    flex: 0 0 360px;
+    scroll-snap-align: start;
+    width: 360px;
+}
+@media (max-width: 768px) {
+    .testimonial-item { flex: 0 0 80vw; width: 80vw; }
+}
+.testimonial-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    border: none;
+    display: block;
 }
 
 /* FAQ */
@@ -1781,7 +1809,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
     /* Adjust section titles - Reduced size as requested */
     .audience-title, .video-title, .who-title {
-        font-size: calc(1.9rem - 7px) !important;
+        font-size: 1.4rem !important;
     }
 
     /* Reduce pricing card height (padding) but keep width */
@@ -1896,7 +1924,7 @@ body:not([data-theme="light"]) .audience-title .highlight {
 
 @media (max-width: 768px) {
     #substitua-planilhas .audience-title {
-        font-size: 1.8rem !important;
+        font-size: 1.4rem !important;
         line-height: 1.2 !important;
         max-width: 22ch;
         margin-left: auto;
