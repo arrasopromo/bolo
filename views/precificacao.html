@@ -670,9 +670,26 @@
     <script>
         (function() {
             const p = new URLSearchParams(location.search);
+
+            // Handle embed mode
             if (p.get('embed') === '1') {
                 document.documentElement.setAttribute('data-embed', '1');
             }
+
+            // Handle token login via URL (e-mail link)
+            const urlToken = p.get('token');
+            if (urlToken) {
+                try {
+                    localStorage.setItem('bellecake_token', urlToken);
+                } catch (e) {}
+
+                p.delete('token');
+                const newQuery = p.toString();
+                const newUrl = window.location.pathname + (newQuery ? '?' + newQuery : '');
+                window.history.replaceState({}, document.title, newUrl);
+            }
+
+            // Handle initial tab from URL
             const t = p.get('tab');
             if (t) {
                 document.addEventListener('DOMContentLoaded', function() {
@@ -686,7 +703,7 @@
 
     <!-- Mobile Header -->
     <header class="mobile-header">
-        <a href="/ferramentas">
+        <a href="/precificacao">
             <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake" class="mobile-logo">
         </a>
         
@@ -717,7 +734,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo-container">
-                <a href="/ferramentas">
+                <a href="/precificacao">
                     <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake Logo" class="sidebar-logo">
                 </a>
             </div>
@@ -1061,6 +1078,13 @@
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
+            // Auth: ensure user token exists (login via membros or token link)
+            const storedToken = localStorage.getItem('bellecake_token');
+            if (!storedToken) {
+                window.location.href = '/membros';
+                return;
+            }
+
             // Initialize Lucide icons
             lucide.createIcons();
 
@@ -1095,12 +1119,14 @@
             });
 
             // Setup User Info
-            fetch('/api/auth/me')
-                .then(res => res.json())
+            authFetch('/api/auth/me')
+                .then(res => res.ok ? res.json() : null)
                 .then(user => {
-                    if(user.name) document.getElementById('topUserName').textContent = 'Olá, ' + user.name.split(' ')[0];
+                    if (user && user.name) {
+                        document.getElementById('topUserName').textContent = 'Olá, ' + user.name.split(' ')[0];
+                    }
                 })
-                .catch(err => console.error('Auth check failed', err));
+                .catch(() => {});
         });
 
         // --- Tabs Logic ---
@@ -1140,36 +1166,54 @@
         // --- Data Loading ---
         async function loadIngredients() {
             try {
-                const res = await fetch('/api/ingredients');
+                const res = await authFetch('/api/ingredients');
                 if (!res.ok) throw new Error('Falha ao carregar ingredientes');
                 allIngredients = await res.json();
                 renderIngredientsTable();
                 return allIngredients;
             } catch (err) {
                 console.error(err);
-                // alert('Erro ao carregar ingredientes.');
             }
         }
 
         async function authFetch(url, options = {}) {
-            options.credentials = 'include';
-            const response = await fetch(url, options);
-            if (response.status === 401 || response.status === 403) {
-                // Optional: Handle session expiry redirect
-                // window.location.href = '/login'; 
+            const token = localStorage.getItem('bellecake_token');
+
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
+
+            if (options.body instanceof FormData) {
+                delete headers['Content-Type'];
+            }
+
+            const response = await fetch(url, {
+                ...options,
+                headers,
+                credentials: 'include'
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem('bellecake_token');
+                window.location.href = '/membros';
+            }
+
             return response;
         }
 
         async function loadProducts() {
             try {
-                const res = await fetch('/api/products');
+                const res = await authFetch('/api/products');
                 if (!res.ok) throw new Error('Falha ao carregar produtos');
                 allProducts = await res.json();
                 renderProductsTable();
             } catch (err) {
                 console.error(err);
-                // alert('Erro ao carregar produtos.');
             }
         }
 
@@ -1414,7 +1458,7 @@
             const method = id ? 'PUT' : 'POST';
 
             try {
-                const res = await fetch(url, {
+                const res = await authFetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -1431,7 +1475,7 @@
         async function deleteIngredient(id) {
             if (!confirm('Tem certeza? Isso pode afetar produtos que usam este ingrediente.')) return;
             try {
-                await fetch(`/api/ingredients/${id}`, { method: 'DELETE' });
+                await authFetch(`/api/ingredients/${id}`, { method: 'DELETE' });
                 loadIngredients();
             } catch (err) {
                 alert('Erro ao excluir');
@@ -1699,7 +1743,7 @@
             const method = id ? 'PUT' : 'POST';
 
             try {
-                const res = await fetch(url, {
+                const res = await authFetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -2016,7 +2060,7 @@
             formData.append('type', 'ingredient');
 
             try {
-                const res = await fetch('/api/transcribe', { 
+                const res = await authFetch('/api/transcribe', { 
                     method: 'POST', 
                     body: formData 
                 });
@@ -2274,7 +2318,7 @@
             formData.append('type', 'ingredient'); 
 
             try {
-                const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+                const res = await authFetch('/api/transcribe', { method: 'POST', body: formData });
                 if(!res.ok) throw new Error('Erro na transcrição');
                 
                 const data = await res.json();
@@ -2346,7 +2390,7 @@
 
                 for (const item of itemsToProcess) {
                     try {
-                        const res = await fetch('/api/ingredients', {
+                        const res = await authFetch('/api/ingredients', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(item)
