@@ -605,20 +605,6 @@
                 <div class="nav-item" onclick="switchView('vendas')">
                     <i data-lucide="shopping-cart"></i> Vendas
                 </div>
-                <div class="nav-item" onclick="toggleSubmenu('mobilePrecificacaoSubmenu')">
-                    <i data-lucide="calculator"></i> Precificação
-                </div>
-                <div id="mobilePrecificacaoSubmenu" style="display:none; padding-left: 2rem; display:flex; flex-direction:column; gap:0.2rem;">
-                    <div class="nav-item" onclick="event.stopPropagation(); window.location.href='/precificacao?tab=produtos'">
-                        Produtos
-                    </div>
-                    <div class="nav-item" onclick="event.stopPropagation(); window.location.href='/precificacao?tab=ingredientes'">
-                        Ingredientes
-                    </div>
-                </div>
-                <div class="nav-item" onclick="window.location.href='/equilibrio'">
-                    <i data-lucide="activity"></i> Ponto de Equilíbrio
-                </div>
                 <div class="nav-item" onclick="switchView('updates')">
                     <i data-lucide="bell"></i> Atualizações
                 </div>
@@ -657,24 +643,7 @@
                     <i data-lucide="shopping-cart"></i> Vendas
                 </li>
             </ul>
-            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.2rem;">
-                <div class="nav-item" onclick="toggleSubmenu('precificacaoSubmenu')" style="color: rgba(255,255,255,0.8); justify-content: space-between;">
-                    <span style="display:flex; align-items:center; gap:1rem;">
-                        <i data-lucide="calculator"></i> Precificação
-                    </span>
-                    <i data-lucide="chevron-down" style="width:18px; height:18px;"></i>
-                </div>
-                <div id="precificacaoSubmenu" style="display:none; padding-left: 2.4rem; margin-top:0.15rem; display:flex; flex-direction:column; gap:0.15rem;">
-                    <div class="nav-item" onclick="event.stopPropagation(); window.location.href='/precificacao?tab=produtos'" style="padding:0.35rem 0.9rem; font-size:0.9rem;">
-                        Produtos
-                    </div>
-                    <div class="nav-item" onclick="event.stopPropagation(); window.location.href='/precificacao?tab=ingredientes'" style="padding:0.35rem 0.9rem; font-size:0.9rem;">
-                        Ingredientes
-                    </div>
-                </div>
-                <div class="nav-item" onclick="window.location.href='/equilibrio'" style="color: rgba(255,255,255,0.8);">
-                    <i data-lucide="activity"></i> Ponto de Equilíbrio
-                </div>
+            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
                 <div class="nav-item" onclick="switchView('updates')">
                     <i data-lucide="bell"></i> Atualizações
                 </div>
@@ -2180,6 +2149,11 @@
             const modal = document.getElementById('newSaleModal');
             if (modal) {
                  modal.classList.add('open');
+                 const debugEl = document.getElementById('debugStatus');
+                 if (debugEl) {
+                     debugEl.style.display = 'none';
+                     debugEl.innerText = '';
+                 }
             } else {
                 console.error('Modal element not found!');
                 alert('Erro interno: Modal não encontrado.');
@@ -3570,6 +3544,50 @@
                 });
             }
     
+            function showStockWarningModal(detailsArray) {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('stockWarningModal');
+                    if (!modal) {
+                        const fallback = confirm('Você não tem estoque suficiente para esta venda.\n\nDeseja registrar mesmo assim? O estoque não será atualizado automaticamente.');
+                        resolve(fallback);
+                        return;
+                    }
+
+                    const listEl = document.getElementById('stockWarningDetails');
+                    if (listEl) {
+                        listEl.innerHTML = '';
+                        if (Array.isArray(detailsArray) && detailsArray.length) {
+                            detailsArray.forEach((txt) => {
+                                const li = document.createElement('li');
+                                li.textContent = txt;
+                                listEl.appendChild(li);
+                            });
+                        }
+                    }
+
+                    modal.style.display = 'flex';
+
+                    const cancelBtn = document.getElementById('stockWarningCancelBtn');
+                    const confirmBtn = document.getElementById('stockWarningConfirmBtn');
+
+                    if (cancelBtn) {
+                        cancelBtn.onclick = () => {
+                            modal.style.display = 'none';
+                            if (typeof closeSaleModal === 'function') {
+                                closeSaleModal();
+                            }
+                            resolve(false);
+                        };
+                    }
+                    if (confirmBtn) {
+                        confirmBtn.onclick = () => {
+                            modal.style.display = 'none';
+                            resolve(true);
+                        };
+                    }
+                });
+            }
+
             // Register Sale (Create/Update)
             const saleForm = document.getElementById('saleForm');
             if (saleForm) {
@@ -3657,7 +3675,6 @@
         
                         logDebug(`Enviando requisição ${method} para ${url}...`);
         
-                        // Use authFetch for consistency and error handling
                         const res = await authFetch(url, {
                             method: method,
                             body: JSON.stringify(data)
@@ -3668,6 +3685,55 @@
                         if (!res.ok) {
                             const err = await res.json().catch(() => ({ error: 'Erro desconhecido no servidor' }));
                             logDebug(`Erro do servidor: ${JSON.stringify(err)}`);
+
+                            if (res.status === 400 && err.error === 'Estoque insuficiente') {
+                                const details = Array.isArray(err.details) ? err.details : [];
+                                const confirmar = await showStockWarningModal(details);
+                                
+                                if (!confirmar) {
+                                    throw new Error('Venda não registrada por falta de estoque.');
+                                }
+
+                                logDebug('Usuária optou por registrar venda mesmo sem estoque. Reenviando com ignoreStockWarnings...');
+                                
+                                const retryRes = await authFetch(url, {
+                                    method: method,
+                                    body: JSON.stringify({ ...data, ignoreStockWarnings: true })
+                                });
+
+                                if (!retryRes.ok) {
+                                    const retryErr = await retryRes.json().catch(() => ({ error: 'Erro desconhecido ao salvar venda sem estoque' }));
+                                    logDebug(`Erro ao salvar venda sem estoque: ${JSON.stringify(retryErr)}`);
+                                    throw new Error(retryErr.error || 'Erro ao registrar venda sem estoque.');
+                                }
+
+                                const retryResult = await retryRes.json();
+                                logDebug('✅ Sucesso! Venda registrada mesmo sem estoque.');
+
+                                alert(editId ? 'Venda atualizada com sucesso!' : 'Venda registrada com sucesso!');
+                                e.target.reset();
+                                if(saleDatePicker) saleDatePicker.setDate(new Date());
+                                
+                                goToStep1();
+                                
+                                document.getElementById('hasFee').checked = false;
+                                document.getElementById('hasDelivery').checked = false;
+                                toggleFeeInput();
+                                toggleDeliveryInput();
+                                
+                                switchView('vendas');
+                                loadRecentSales();
+                                loadUserInfo();
+                                
+                                setTimeout(() => {
+                                    closeSaleModal();
+                                    debugEl.style.display = 'none';
+                                    debugEl.innerText = '';
+                                }, 1000);
+
+                                return;
+                            }
+
                             throw new Error(err.error || 'Erro ao salvar venda no servidor.');
                         }
         
@@ -3678,21 +3744,17 @@
                         e.target.reset();
                         if(saleDatePicker) saleDatePicker.setDate(new Date());
                         
-                        // Reset Steps
                         goToStep1();
                         
-                        // Reset Checkboxes and Hidden Inputs
                         document.getElementById('hasFee').checked = false;
                         document.getElementById('hasDelivery').checked = false;
                         toggleFeeInput();
                         toggleDeliveryInput();
                         
-                        // Switch to Vendas view automatically
                         switchView('vendas');
                         loadRecentSales();
-                        loadUserInfo(); // Refresh progress bar
+                        loadUserInfo();
                         
-                        // Wait a bit before closing so user sees the log
                         setTimeout(() => {
                             closeSaleModal();
                             debugEl.style.display = 'none';
@@ -4233,7 +4295,7 @@
                 if (res.ok) {
                     alert('Venda excluída com sucesso!');
                     loadRecentSales();
-                    loadDashboard(); // Refresh stats
+                    loadDashboard();
                 } else {
                     const data = await res.json();
                     alert('Erro ao excluir: ' + (data.error || 'Erro desconhecido'));
@@ -4470,6 +4532,41 @@
             </form>
         </div>
     </div>
+
+    <div id="stockWarningModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 13000; justify-content: center; align-items: center; padding: 1rem;">
+        <div style="background: #FFFFFF; width: 100%; max-width: 420px; max-height: 80vh; padding: 2rem; border-radius: 20px; box-shadow: 0 18px 50px rgba(0,0,0,0.35); position: relative; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: 999px; background: #FFF4E5; display: flex; align-items: center; justify-content: center; color: #CD7A3E;">
+                    <i data-lucide="alert-triangle" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.25rem; color: #32221D;">Estoque insuficiente</h2>
+                    <p style="margin: 0.25rem 0 0; font-size: 0.9rem; color: #666;">
+                        Você não tem estoque suficiente vinculado a este produto.
+                    </p>
+                </div>
+            </div>
+
+            <div style="background: #FAFAFA; border-radius: 12px; padding: 0.75rem 1rem; max-height: 50vh; overflow-y: auto;">
+                <p style="margin: 0 0 0.5rem; font-size: 0.85rem; color: #555;">Detalhes do que está faltando:</p>
+                <ul id="stockWarningDetails" style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #444;"></ul>
+            </div>
+
+            <p style="margin: 0; font-size: 0.85rem; color: #555;">
+                Você pode registrar a venda mesmo assim. O estoque <strong>não será atualizado automaticamente</strong>. Depois, ajuste o estoque na tela de ingredientes se quiser manter o controle.
+            </p>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem;">
+                <button id="stockWarningCancelBtn" style="padding: 0.6rem 1.1rem; border-radius: 999px; border: 1px solid #E0E0E0; background: #FFFFFF; color: #555; font-size: 0.9rem; cursor: pointer;">
+                    Cancelar
+                </button>
+                <button id="stockWarningConfirmBtn" style="padding: 0.6rem 1.3rem; border-radius: 999px; border: none; background: #4CAF50; color: #FFFFFF; font-size: 0.9rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(76,175,80,0.3);">
+                    Registrar venda assim mesmo
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Subscription Expired Modal -->
     <div id="subscriptionExpiredModal" class="modal-overlay" style="z-index: 10000; backdrop-filter: blur(8px); background: rgba(0,0,0,0.85);">
         <div class="modal-content" style="max-width: 500px; text-align: center; padding: 2.5rem; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
@@ -4526,6 +4623,10 @@
             const modal = document.getElementById('subscriptionExpiredModal');
             if (modal && modal.parentElement !== document.body) {
                 document.body.appendChild(modal);
+            }
+            const stockModal = document.getElementById('stockWarningModal');
+            if (stockModal && stockModal.parentElement !== document.body) {
+                document.body.appendChild(stockModal);
             }
 
             const params = new URLSearchParams(location.search);

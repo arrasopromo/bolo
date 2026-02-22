@@ -481,19 +481,38 @@ app.post('/api/sales', authenticateToken, checkSubscription, async (req, res) =>
             return res.status(401).json({ error: 'Usuário não autenticado' });
         }
 
-        console.log('📥 Received POST /api/sales body:', req.body); // Log incoming data
-        const { productId, quantity, date, paymentMethod, platformFee = 0, deliveryFee = 0, notes } = req.body;
-        
+        console.log('📥 Received POST /api/sales body:', req.body);
+        const { productId, quantity, date, paymentMethod, platformFee = 0, deliveryFee = 0, notes, ignoreStockWarnings } = req.body;
+
+        // Helpers for date/time and formatting
+        const buildSaoPauloDate = (dateStr) => {
+            try {
+                const now = new Date();
+                const timeStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(now);
+                const [hh, mm, ss] = timeStr.split(':').map(v => parseInt(v, 10));
+                const [y, m, d] = dateStr.split('-').map(v => parseInt(v, 10));
+                // Brazil (São Paulo) currently uses UTC-3 without DST
+                const offsetHours = 3;
+                const dtUtc = new Date(Date.UTC(y, m - 1, d, hh + offsetHours, mm, ss));
+                return dtUtc;
+            } catch (e) {
+                return new Date(dateStr + 'T12:00:00-03:00');
+            }
+        };
+        const formatQty = (num) => {
+            const rounded = Number((num || 0).toFixed(3));
+            return Math.abs(rounded - Math.trunc(rounded)) < 1e-9 ? String(Math.trunc(rounded)) : String(rounded);
+        };
+
         const product = await Product.findById(productId);
         if (!product) return res.status(404).json({ error: 'Product not found' });
 
-        const variableCost = product.variableCost || 0; // Handle missing cost
+        const variableCost = product.variableCost || 0;
         const salePrice = product.salePrice || 0;
 
         const totalAmount = salePrice * quantity;
         const totalCost = variableCost * quantity;
         
-        // Calculate Net Profit: (Revenue - ProductCost - Fees - Delivery)
         const profit = totalAmount - totalCost - (parseFloat(platformFee) || 0) - (parseFloat(deliveryFee) || 0);
 
         const sale = new Sale({
@@ -506,13 +525,30 @@ app.post('/api/sales', authenticateToken, checkSubscription, async (req, res) =>
             platformFee: parseFloat(platformFee) || 0,
             deliveryFee: parseFloat(deliveryFee) || 0,
             notes: capitalizeFirstLetter(notes),
-            date: date ? new Date(date.includes('T') ? date : date + 'T12:00:00.000Z') : new Date(),
+            date: (() => {
+                if (date) {
+                    return buildSaoPauloDate(date);
+                } else {
+                    // Build São Paulo "now" date
+                    const todaySp = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+                    return buildSaoPauloDate(todaySp);
+                }
+            })(),
             user: req.user._id
         });
 
+        const skipStockCheck = ignoreStockWarnings === true || ignoreStockWarnings === 'true';
+
         const usage = computeUsageMap(product, quantity);
         const ingIds = Array.from(usage.keys());
-        if (ingIds.length > 0) {
+        if (!skipStockCheck) {
+            if (ingIds.length === 0) {
+                return res.status(400).json({
+                    error: 'Estoque insuficiente',
+                    details: ['Este produto não está vinculado ao estoque (sem ingredientes cadastrados).']
+                });
+            }
+
             const ingredients = await Ingredient.find({ _id: { $in: ingIds }, user: req.user._id });
             const byId = new Map(ingredients.map(i => [String(i._id), i]));
             const shortages = [];
@@ -524,7 +560,7 @@ app.post('/api/sales', authenticateToken, checkSubscription, async (req, res) =>
                 }
                 const avail = ing.currentStock || 0;
                 if (avail < used) {
-                    shortages.push(`${ing.name}: falta ${Number(used - avail).toFixed(3)} ${ing.unit}`);
+                    shortages.push(`${ing.name}: falta ${formatQty(used - avail)} ${ing.unit}`);
                 }
             }
             if (shortages.length > 0) {
