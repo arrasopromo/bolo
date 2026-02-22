@@ -232,16 +232,16 @@
         </div>
 
         <div class="grid-container">
-            <!-- Card 1: Ferramenta -->
+            <!-- Card único de ferramentas -->
             <div class="content-card" id="card-planilha">
                 <div class="card-image">
-                    <img src="/images/planilha%20folder.webp" alt="Capa Ferramenta">
+                    <img src="/images/planilha%20folder.webp" alt="Capa Ferramentas">
                 </div>
                 <div class="card-body">
-                    <h3 class="card-title">Ferramenta de precificação automatizada</h3>
-                    <p class="card-desc">Acesse agora a versão mais recente da sua ferramenta de precificação e comece a lucrar.</p>
-                    <a href="/precificacao" class="access-btn">
-                        <i data-lucide="layout"></i> ACESSAR FERRAMENTA
+                    <h3 class="card-title">Todas as Ferramentas</h3>
+                    <p class="card-desc">Acesse em um só lugar suas ferramentas de precificação, fluxo de caixa, ponto de equilíbrio e estoque.</p>
+                    <a href="/ferramentas" class="access-btn">
+                        <i data-lucide="layout-dashboard"></i> ACESSAR FERRAMENTAS
                     </a>
                 </div>
             </div>
@@ -260,37 +260,7 @@
                 </div>
             </div>
 
-            <!-- Card 3: IA Bonus -->
-            <div class="content-card" id="card-ia" style="border: 1px solid var(--primary-yellow);">
-                <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #CD7A3E);">
-                    <div id="badge-ia" class="trial-badge" style="display: none; background: #4CAF50; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 12px; position: absolute; top: 10px; right: 10px; font-weight: 700; z-index: 10;">TESTE GRÁTIS 7 DIAS</div>
-                    <img src="/images/ponto%20equilibrio.webp" alt="Capa IA">
-                </div>
-                <div class="card-body">
-                    <h3 class="card-title">Ponto de Equilíbrio</h3>
-                    <p class="card-desc">Descubra seu ponto de equilíbrio e receba dicas de vendas personalizadas com nossa Inteligência Artificial.</p>
-                    <a href="/equilibrio" class="access-btn" target="_blank">
-                        <i data-lucide="zap"></i> ACESSAR FERRAMENTA
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 4: Fluxo de Caixa -->
-            <div class="content-card" id="card-fluxo">
-                <div class="card-image" style="background: linear-gradient(135deg, #2b1d19, #4CAF50);">
-                    <div id="badge-fluxo" class="trial-badge" style="display: none; background: #4CAF50; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 12px; position: absolute; top: 10px; right: 10px; font-weight: 700; z-index: 10;">TESTE GRÁTIS 7 DIAS</div>
-                    <img src="/images/fluxo%20caixa%20(1).webp" alt="Capa Fluxo de Caixa">
-                </div>
-                <div class="card-body">
-                    <h3 class="card-title">Fluxo de Caixa</h3>
-                    <p class="card-desc">Controle suas vendas diárias, cadastre produtos e visualize seus lucros com gráficos detalhados.</p>
-                    <a href="/fluxo" id="btn-fluxo" class="access-btn" target="_blank">
-                        <i data-lucide="layout-dashboard"></i> ACESSAR PAINEL
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 5: Estoque (Hidden as requested) -->
+            <!-- Card 3: Estoque (Hidden as requested) -->
             <!-- 
             <div class="content-card" id="card-estoque">
                 <div class="card-image" style="background: linear-gradient(135deg, #2C3E50, #4CA1AF); display: flex; align-items: center; justify-content: center;">
@@ -751,13 +721,11 @@
                             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                             const isTrialActive = diffDays <= 7;
 
-                            // Default locked cards
-                            let cardsToLock = ['card-ia', 'card-fluxo', 'card-massas', 'card-suporte'];
+                            // Default locked cards (bônus e suporte)
+                            let cardsToLock = ['card-massas', 'card-suporte'];
 
                             if (isTrialActive) {
-                                // If trial is active, remove Fluxo and IA from locked list
-                                cardsToLock = ['card-massas', 'card-suporte'];
-                                
+                                // Se o trial estiver ativo, mantém apenas bônus e suporte bloqueados
                                 // Optional: Update status text
                                 if (statusEl) statusEl.innerHTML = 'ACESSO BÁSICO';
                                 
