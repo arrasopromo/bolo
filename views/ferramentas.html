@@ -245,7 +245,7 @@
             <div class="nav-item" onclick="mobileNavigate('updates')">
                 <i data-lucide="bell"></i> Atualizações
             </div>
-            <div class="nav-item" onclick="mobileNavigate('assinatura')">
+            <div class="nav-item" onclick="mobileNavigate('assinatura')" data-basic-hide="assinatura">
                 <i data-lucide="calendar-clock"></i> Assinatura
             </div>
             <div class="nav-item" onclick="window.location.href='/membros'">
@@ -279,7 +279,7 @@
                 <div class="nav-item" onclick="loadEstoque()"><i data-lucide="package"></i> Estoque</div>
                 <div class="nav-item" onclick="loadEquilibrio()"><i data-lucide="activity"></i> Ponto de Equilíbrio</div>
                 <div class="nav-item" onclick="loadFluxo('updates')"><i data-lucide="bell"></i> Atualizações</div>
-                <div class="nav-item" onclick="loadFluxo('assinatura')"><i data-lucide="calendar-clock"></i> Assinatura</div>
+                <div class="nav-item" onclick="loadFluxo('assinatura')" data-basic-hide="assinatura"><i data-lucide="calendar-clock"></i> Assinatura</div>
                 <div class="nav-item" onclick="window.location.href='/membros'"><i data-lucide="arrow-left"></i> Voltar Painel</div>
             </div>
         </aside>
@@ -287,6 +287,7 @@
     </div>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
+        const isBasicTools = window.location.pathname.indexOf('ferramentas-basic') !== -1;
         function checkFrameAuth() {
             const frame = document.getElementById('toolsFrame');
             if (!frame || !frame.contentWindow) return;
@@ -391,24 +392,38 @@
         }
         function loadFluxo(view){
             const frame = document.getElementById('toolsFrame');
-            frame.src = '/fluxo?embed=1&view=' + encodeURIComponent(view || 'resumo');
+            const base = '/fluxo?embed=1&view=' + encodeURIComponent(view || 'resumo');
+            frame.src = base + (isBasicTools ? '&basic=1' : '');
         }
         function loadPrecificacao(tab){
             const frame = document.getElementById('toolsFrame');
-            frame.src = '/precificacao?embed=1&tab=' + encodeURIComponent(tab || 'produtos');
+            const base = '/precificacao?embed=1&tab=' + encodeURIComponent(tab || 'produtos');
+            frame.src = base + (isBasicTools ? '&basic=1' : '');
         }
         function loadEstoque(){
             const frame = document.getElementById('toolsFrame');
-            frame.src = '/estoque?embed=1';
+            const base = '/estoque?embed=1';
+            frame.src = base + (isBasicTools ? '&basic=1' : '');
         }
         function loadEquilibrio(){
             const frame = document.getElementById('toolsFrame');
-            frame.src = '/equilibrio?embed=1';
+            const base = '/equilibrio?embed=1';
+            frame.src = base + (isBasicTools ? '&basic=1' : '');
         }
         document.addEventListener('DOMContentLoaded', function () {
             const frame = document.getElementById('toolsFrame');
             if (frame) {
                 frame.addEventListener('load', checkFrameAuth);
+                if (isBasicTools) {
+                    document.querySelectorAll('[data-basic-hide="assinatura"]').forEach(function(el){
+                        el.style.display = 'none';
+                    });
+                    const currentSrc = frame.getAttribute('src') || '';
+                    if (currentSrc.indexOf('basic=1') === -1) {
+                        const separator = currentSrc.indexOf('?') === -1 ? '?' : '&';
+                        frame.src = currentSrc + separator + 'basic=1';
+                    }
+                }
             }
             try{ lucide && lucide.createIcons && lucide.createIcons(); }catch(e){}
         });

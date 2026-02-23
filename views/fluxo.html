@@ -1456,6 +1456,9 @@
     </div>
 
     <style>
+        [data-basic="1"] #voiceRecordContainer {
+            display: none !important;
+        }
         .modal-overlay {
             display: none;
             position: fixed;
@@ -1513,6 +1516,11 @@
         // --- Auth Logic ---
         const urlParams = new URLSearchParams(window.location.search);
         const urlToken = urlParams.get('token');
+        const isBasicMode = urlParams.get('basic') === '1';
+        window.isBasicMode = isBasicMode;
+        if (isBasicMode) {
+            document.documentElement.setAttribute('data-basic', '1');
+        }
         if (urlToken) {
             localStorage.setItem('bellecake_token', urlToken);
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -2244,6 +2252,7 @@
         }
 
         async function toggleRecording() {
+            if (window.isBasicMode) return;
             const btn = document.getElementById('voiceRecordBtn');
             const status = document.getElementById('voiceStatus');
             const cancelBtn = document.getElementById('voiceCancelBtn');
@@ -2751,6 +2760,11 @@
                         mobileMenuDropdown.classList.remove('open');
                     }
                 });
+            }
+
+            if (window.isBasicMode) {
+                const voiceContainer = document.getElementById('voiceRecordContainer');
+                if (voiceContainer) voiceContainer.style.display = 'none';
             }
 
             // Init Flatpickr
@@ -3366,11 +3380,9 @@
             }
         });
 
-        // Wait for DOM to be fully loaded before attaching listeners
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM Loaded, attaching listeners...');
 
-            // Cost Classification Logic
             const btnConsultar = document.getElementById('btnConsultar');
             if (btnConsultar) {
                 btnConsultar.addEventListener('click', async () => {

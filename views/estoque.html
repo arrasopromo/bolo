@@ -523,11 +523,14 @@
 
     <input type="file" id="stockPhotoInput" accept="image/*" style="display:none;">
 
-    <script src="/js/main.js"></script>
-    <script>
-        // --- Initialization ---
+        <script src="/js/main.js"></script>
+        <script>
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
+            const isBasicMode = params.get('basic') === '1';
+            if (isBasicMode) {
+                window.isBasicMode = true;
+            }
             if (params.get('embed') === '1') {
                 document.body.classList.add('embedded-estoque');
             }
@@ -536,22 +539,26 @@
             loadStock();
             
             const photoInput = document.getElementById('stockPhotoInput');
-            if (photoInput) {
+            if (photoInput && !isBasicMode) {
                 photoInput.addEventListener('change', handleStockPhotoChange);
             }
-            // Mobile Menu Logic
+            if (isBasicMode) {
+                const photoBtn = document.querySelector('button[onclick="openStockPhotoDialog()"]');
+                if (photoBtn) {
+                    photoBtn.style.display = 'none';
+                }
+            }
             window.toggleMobileMenu = () => {
                 document.getElementById('mobileMenu').classList.toggle('open');
             };
             
-            // Close modal on outside click
-             document.querySelectorAll('.modal-overlay').forEach(overlay => {
-                 overlay.addEventListener('click', (e) => {
-                     if (e.target === overlay) {
-                         closeModal(overlay.id);
-                     }
-                 });
-             });
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        closeModal(overlay.id);
+                    }
+                });
+            });
         });
 
         async function loadStock() {

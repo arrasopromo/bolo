@@ -653,6 +653,9 @@
             transform: scale(1.1);
             background: #ff1744;
         }
+        [data-basic="1"] [data-basic-hide="voice"] {
+            display: none !important;
+        }
 
         /* Ingredients Header Actions Spacing */
         .ingredients-header-actions {
@@ -671,7 +674,11 @@
         (function() {
             const p = new URLSearchParams(location.search);
 
-            // Handle embed mode
+            if (p.get('basic') === '1') {
+                document.documentElement.setAttribute('data-basic', '1');
+                window.isBasicMode = true;
+            }
+
             if (p.get('embed') === '1') {
                 document.documentElement.setAttribute('data-embed', '1');
             }
@@ -867,8 +874,7 @@
         <div class="modal-content">
             <h2 style="margin-bottom: 1.5rem;">Novo Ingrediente</h2>
             
-            <!-- Voice Recording UI -->
-            <div style="margin-bottom: 1.5rem; text-align: center; padding-bottom: 1.5rem; border-bottom: 1px solid #eee;">
+            <div data-basic-hide="voice" style="margin-bottom: 1.5rem; text-align: center; padding-bottom: 1.5rem; border-bottom: 1px solid #eee;">
                 <button type="button" id="voiceRecordBtnIng" onclick="toggleIngredientRecording()" style="background: linear-gradient(135deg, var(--secondary-caramel) 0%, #b56b36 100%); border: none; width: 64px; height: 64px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 4px 15px rgba(181, 107, 54, 0.3); transition: all 0.2s;">
                     <i data-lucide="mic" style="width: 30px; height: 30px;"></i>
                 </button>
@@ -923,8 +929,7 @@
                 </button>
             </div>
 
-            <!-- Voice UI -->
-            <div style="margin-bottom: 1.5rem; text-align: center; padding: 1.5rem; background: #f9fafb; border-radius: 12px; border: 1px dashed #ddd; position: relative;">
+            <div data-basic-hide="voice" style="margin-bottom: 1.5rem; text-align: center; padding: 1.5rem; background: #f9fafb; border-radius: 12px; border: 1px dashed #ddd; position: relative;">
                 <div style="position: relative; width: 64px; height: 64px; margin: 0 auto;">
                     <button type="button" id="voiceRecordBtnBulk" onclick="toggleBulkIngredientRecording()" style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); border: none; width: 100%; height: 100%; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); transition: all 0.2s;">
                         <i data-lucide="mic" style="width: 30px; height: 30px;"></i>
@@ -2015,6 +2020,7 @@
         }
 
         async function toggleIngredientRecording() {
+            if (window.isBasicMode) return;
             const btn = document.getElementById('voiceRecordBtnIng');
             const status = document.getElementById('voiceStatusIng');
 
@@ -2239,6 +2245,7 @@
         }
 
         async function toggleBulkIngredientRecording() {
+            if (window.isBasicMode) return;
             const btn = document.getElementById('voiceRecordBtnBulk');
             const status = document.getElementById('voiceStatusBulk');
             const cancelBtn = document.getElementById('voiceCancelBtnBulk');

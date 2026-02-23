@@ -448,7 +448,9 @@
     <script>
         lucide.createIcons();
         
-        let metaFaturamento = 0; // Define globally at the top
+        const urlParams = new URLSearchParams(window.location.search);
+        const isBasicMode = urlParams.get('basic') === '1';
+        let metaFaturamento = 0;
 
         // Helper: Format input as currency (BRL)
         function formatCurrencyInput(input) {
@@ -479,6 +481,17 @@
             const params = new URLSearchParams(window.location.search);
             if (params.get('embed') === '1') {
                 document.body.classList.add('embedded-equilibrio');
+            }
+
+            if (isBasicMode) {
+                const loading = document.getElementById('ai-loading');
+                const tipContainer = document.getElementById('ai-tip-container');
+                const analyzeBtn = document.querySelector('#calcFormStep2 button[type="submit"]');
+                if (loading) loading.style.display = 'none';
+                if (tipContainer) tipContainer.style.display = 'none';
+                if (analyzeBtn) {
+                    analyzeBtn.style.display = 'none';
+                }
             }
 
             console.log('DOM Loaded. Fetching user info...');
@@ -683,9 +696,11 @@
             goToStep(2);
         });
 
-        // Step 2 Submission
         document.getElementById('calcFormStep2').addEventListener('submit', async function(e) {
             e.preventDefault();
+            if (isBasicMode) {
+                return;
+            }
             
             const salesCurrent = parseCurrency(document.getElementById('salesCurrent').value);
             
