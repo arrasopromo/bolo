@@ -1193,6 +1193,11 @@
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
+            // Basic Mode Bypass
+            if (window.isBasicMode) {
+                headers['X-Basic-Mode'] = '1';
+            }
+
             if (options.body instanceof FormData) {
                 delete headers['Content-Type'];
             }

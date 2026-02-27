@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Precificação Planilha - BelleCake</title>
+    <script>
+        // Force light theme immediately to prevent FOUC
+        if (window.location.pathname === '/novidade') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
     <!-- Google Tag Manager (desativado temporariamente)
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -22,6 +28,62 @@
         /* Responsive Text Utilities */
         .mobile-only { display: none !important; }
         .desktop-only { display: block !important; }
+        
+        /* Ensure body has background in light mode since we don't use the overlay div here */
+        [data-theme="light"] body {
+            background: var(--dark-bg) !important;
+        }
+
+        @media (min-width: 769px) {
+            /* Increase Hero Title Size */
+            .hero-section .main-title {
+                font-size: 2.2rem !important;
+            }
+            /* Increase Hero Image Size */
+            .hero-media-side img {
+                max-width: 900px !important;
+            }
+            
+            /* Desktop Testimonials Slider - Professional Single Item */
+            #depoimentos .why-us-slider-container {
+                max-width: 400px !important;
+                margin: 0 auto;
+                position: relative;
+            }
+            
+            #depoimentos .testimonials-track {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                gap: 0;
+                scrollbar-width: none; /* Hide scrollbar */
+                -ms-overflow-style: none;
+                padding-bottom: 0.5rem;
+            }
+            
+            #depoimentos .testimonials-track::-webkit-scrollbar {
+                display: none;
+            }
+
+            .testimonial-item {
+                flex: 0 0 100% !important;
+                width: 100% !important;
+                scroll-snap-align: center;
+                display: flex;
+                justify-content: center;
+                padding: 0 10px; /* Slight padding */
+            }
+            
+            .testimonial-item img {
+                width: 100%;
+                height: auto;
+                max-height: 700px;
+                object-fit: contain;
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.15); /* Elegant shadow */
+                display: block;
+            }
+        }
         
         @media (max-width: 768px) {
             .mobile-only { display: block !important; }
@@ -87,44 +149,18 @@
 </head>
 <body>
     
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="logo-container">
-            <a href="https://bellecake.com">
-                <img src="/images/LOGO BELLE CAKE.webp" alt="Belle Cake Logo" class="nav-logo" width="500" height="500" decoding="async" loading="eager">
-            </a>
-        </div>
-        <a href="javascript:void(0)" onclick="scrollToFeaturedPricing()" class="btn-primary small" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-            <i data-lucide="table" class="icon-small"></i> GARANTIR FERRAMENTA
-        </a>
-        
-        <!-- Theme Toggle Button -->
-        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar Tema" style="margin-left: 0.5rem; color: white;">
-            <span id="sun-wrapper"><i data-lucide="sun"></i></span>
-            <span id="moon-wrapper" style="display: none;"><i data-lucide="moon"></i></span>
-        </button>
-
-        <div class="mobile-menu-btn" aria-label="Menu">
-            <i data-lucide="menu"></i>
-        </div>
-    </nav>
-    <div class="nav-links">
-        <a href="#inicio">Início</a>
-        <a href="#substitua-planilhas">Mudança inteligente</a>
-        <a href="#video-explicativo">Vídeo explicativo</a>
-        <a href="#quem-e">Você precisa disso?</a>
-        <a href="#por-que-escolher">Por que escolher</a>
-        <a href="#tabela-de-precos">Planos</a>
-        <a href="#faq">FAQ</a>
+    <div style="text-align: center; padding: 10px 0; background-color: #4CAF50;">
+        <div class="section-badge" style="margin: 0 auto; display: inline-block; background-color: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);">Oferta por tempo limitado</div>
     </div>
 
     <!-- Hero Section -->
-    <main class="hero-section" id="inicio">
+    <main class="hero-section" id="inicio" style="padding-top: 1rem;">
         <div class="hero-content">
             <div class="hero-header">
                 <h1 class="main-title desktop-only">
                     <span class="title-line-1">Confeiteira,</span>
-                    <span class="title-line-2">tenha gestão completa do seu negócio com nossas ferramentas</span>
+                    <span class="title-line-2">tenha gestão completa do seu negócio</span>
+                    <span class="title-line-2">com nossas ferramentas</span>
                 </h1>
                 <h1 class="main-title mobile-only">
                     <span class="title-line-1">Confeiteira,</span>
@@ -153,11 +189,10 @@
                         <div class="card-headline">OFERTA EXCLUSIVA</div>
                         <div class="price-header">
                             <span class="old-price">R$ 49,90</span>
-                            <span class="savings">Economize R$ 30,00</span>
+                            <span class="savings">Economize R$ 10,00</span>
                         </div>
                         <div class="main-price">
-                            <span class="starting-at">a partir de</span>
-                            R$ 29,90
+                            R$ 39,90
                         </div>
                         <button class="btn-cta pulse" onclick="scrollToFeaturedPricing()">
                             GARANTIR FERRAMENTA
@@ -212,8 +247,10 @@
         <h2 class="video-title">Entenda como funcionam as ferramentas</h2>
         
         <div class="video-slider-container" id="videoSliderContainer" style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
-            <!-- Lazy-loaded Wistia Video (inject on view) -->
-            <div id="wistiaContainer" class="video-explicativo-container" style="width: 100%; max-width: 360px;"></div>
+            <!-- New Wistia Video Embed -->
+            <div style="width: 100%; max-width: 360px;">
+                <script src="https://fast.wistia.com/player.js" async></script><script src="https://fast.wistia.com/embed/4h90pfbig3.js" async type="module"></script><style>wistia-player[media-id='4h90pfbig3']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/4h90pfbig3/swatch'); display: block; filter: blur(5px); padding-top:177.78%; }</style> <wistia-player media-id="4h90pfbig3" aspect="0.5625"></wistia-player>
+            </div>
         </div>
     </section>
 
@@ -403,21 +440,7 @@
         </h2>
         
         <div class="pricing-tables-container">
-            <!-- Basic Plan -->
-            <div class="pricing-table">
-                <div class="table-title">Acesso Básico</div>
-                <div class="table-price">
-                    R$ 29,90 <span>/único</span>
-                </div>
-                <ul class="table-features">
-                    <li><i data-lucide="check"></i> Acesso Imediato à Ferramenta</li>
-                    <li><i data-lucide="check"></i> Aulas de Explicação</li>
-                    <li><i data-lucide="check"></i> Acesso Vitalício a Ferramenta</li>
-                </ul>
-                <a href="https://pay.cakto.com.br/3aoidkh_738778" target="_blank" class="btn-cta" id="btn-pacote-basico-anchor" style="scroll-margin-top: 150px;">
-                    OBTER PACOTE BASICO
-                </a>
-            </div>
+            <!-- Basic Plan Removed -->
 
             <!-- Premium Plan -->
             <div class="pricing-table featured" id="plano-completo" style="scroll-margin-top: 230px;">
@@ -430,21 +453,15 @@
                     <li><i data-lucide="check"></i> Acesso Imediato à Ferramenta</li>
                     <li><i data-lucide="check"></i> Aulas de Explicação</li>
                     <li><i data-lucide="check"></i> Acesso Vitalício a Ferramenta</li>
-                    <li class="whatsapp-support">
-                        <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                        Suporte Whatsapp
-                    </li>
                     <li class="highlight-feature">
-                        <span class="bonus-label">Bônus exclusivo</span>
                         <div class="bonus-content">
-                            <i data-lucide="gift" class="gift-bonus-icon"></i>
+                            <i data-lucide="calculator" class="gift-bonus-icon"></i>
                             Ferramenta para cálculo de ponto de equilíbrio com IA integrada
                         </div>
                     </li>
                     <li class="highlight-feature">
-                        <span class="bonus-label">Bônus exclusivo #2</span>
                         <div class="bonus-content" style="display: flex; align-items: flex-start;">
-                            <i data-lucide="gift" class="gift-bonus-icon" style="flex-shrink: 0; margin-right: 8px; margin-top: 3px;"></i>
+                            <i data-lucide="bar-chart-2" class="gift-bonus-icon" style="flex-shrink: 0; margin-right: 8px; margin-top: 3px;"></i>
                             <div style="display: flex; flex-direction: column; text-align: left;">
                                 <span>Ferramenta completa para fluxo de caixa</span>
                                 <div style="margin: 0.2rem 0 0.2rem 0; font-size: 0.9rem; color: var(--primary-yellow); font-weight: 600;">Você terá acesso a tudo isso:</div>
@@ -456,6 +473,10 @@
                                 </ul>
                             </div>
                         </div>
+                    </li>
+                    <li class="whatsapp-support">
+                        <svg viewBox="0 0 24 24" class="whatsapp-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        Suporte Whatsapp
                     </li>
                 </ul>
                 <a href="https://pay.cakto.com.br/984m3jr_738897" class="btn-cta cakto-checkout-btn" id="btn-checkout-premium" target="_blank">
@@ -480,15 +501,7 @@
                     <p>Sim. As ferramentas foram pensadas para quem está começando e explicam cada passo de forma simples, sem termos complicados.</p>
                 </div>
             </div>
-            <div class="faq-item">
-                <button class="faq-question" type="button">
-                    <span class="faq-question-text">Como devo informar meu perfil do Instagram?</span>
-                    <i data-lucide="chevron-down" class="faq-chevron"></i>
-                </button>
-                <div class="faq-answer">
-                    <p>Você pode inserir com ou sem @ (ex.: <strong>@usuario</strong> ou <strong>usuario</strong>). Acentos serão removidos automaticamente. Se preferir, você também pode colar o link completo do perfil (ex.: <strong>https://instagram.com/usuario</strong>).</p>
-                </div>
-            </div>
+
             <div class="faq-item">
                 <button class="faq-question" type="button">
                     <span class="faq-question-text">Funciona no celular e no computador?</span>
@@ -504,7 +517,7 @@
                     <i data-lucide="chevron-down" class="faq-chevron"></i>
                 </button>
                 <div class="faq-answer">
-                    <p>A Ferramenta de precificação é de acesso vitalício. As demais ferramentas do Plano Completo ficam disponíveis por 1 mês; após esse período, a mensalidade é de R$ 19,90.</p>
+                    <p>O acesso é vitalício. Você paga uma única vez e tem acesso para sempre, sem mensalidades.</p>
                 </div>
             </div>
             <div class="faq-item">

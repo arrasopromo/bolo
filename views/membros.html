@@ -709,53 +709,22 @@
                             memberSince.textContent = date.toLocaleDateString('pt-BR');
                         }
 
-                        // Check Plan and Lock Cards if Basic
+                        // Plano BASIC: acesso sem expiração
                         if (userData.plan === 'basic') {
                             const statusEl = document.getElementById('accountStatus');
                             if (statusEl) statusEl.innerText = 'ACESSO BÁSICO';
-
-                            // Check for 7-Day Trial (Fluxo & Ponto de Equilíbrio)
-                            const createdAt = new Date(userData.createdAt || new Date());
-                            const now = new Date();
-                            const diffTime = Math.abs(now - createdAt);
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            const isTrialActive = diffDays <= 7;
-
-                            // Default locked cards (bônus e suporte)
-                            let cardsToLock = ['card-massas', 'card-suporte'];
-
-                            if (isTrialActive) {
-                                // Se o trial estiver ativo, mantém apenas bônus e suporte bloqueados
-                                // Optional: Update status text
-                                if (statusEl) statusEl.innerHTML = 'ACESSO BÁSICO';
-                                
-                                // Ensure badges are visible (already in HTML but good to confirm)
-                                const trialBadges = document.querySelectorAll('.trial-badge');
-                                trialBadges.forEach(b => b.style.display = 'block');
-                            } else {
-                                // Trial expired - hide badges? Or keep them to show what they missed?
-                                // Better to hide or change text to "Trial Expirado"
-                                const trialBadges = document.querySelectorAll('.trial-badge');
-                                trialBadges.forEach(b => {
-                                    b.style.display = 'block';
-                                    b.style.backgroundColor = '#999';
-                                    b.innerText = 'TRIAL EXPIRADO';
-                                });
-                            }
                             
-                            cardsToLock.forEach(id => {
+                            // Manter apenas cartões específicos bloqueados (ex.: bônus e suporte)
+                            ['card-massas', 'card-suporte'].forEach(id => {
                                 const card = document.getElementById(id);
                                 if (card) {
                                     card.classList.add('locked');
-                                    
                                     const btn = card.querySelector('.access-btn');
                                     if (btn) {
                                         btn.innerHTML = '<i data-lucide="lock"></i> BLOQUEADO (Upgrade)';
                                         btn.style.backgroundColor = '#555';
                                         btn.href = '/upgrade';
                                     }
-
-                                    // Override click to go to upgrade
                                     card.onclick = (e) => {
                                         e.preventDefault();
                                         window.location.href = '/upgrade';

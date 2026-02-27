@@ -535,6 +535,33 @@
                 document.body.classList.add('embedded-estoque');
             }
 
+            // Auth Fetch Wrapper
+            window.authFetch = async (url, options = {}) => {
+                const token = localStorage.getItem('bellecake_token');
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {})
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                if (window.isBasicMode) {
+                    headers['X-Basic-Mode'] = '1';
+                }
+
+                if (options.body instanceof FormData) {
+                    delete headers['Content-Type'];
+                }
+
+                const res = await fetch(url, { ...options, headers });
+                if (res.status === 401) {
+                    // Handle 401
+                }
+                return res;
+            };
+
             lucide.createIcons();
             loadStock();
             
@@ -563,7 +590,7 @@
 
         async function loadStock() {
             try {
-                const res = await fetch('/api/ingredients');
+                const res = await window.authFetch('/api/ingredients');
                 const ingredients = await res.json();
                 window._ingredientsCache = ingredients;
                 
@@ -683,9 +710,8 @@
             }
 
             try {
-                const res = await fetch('/api/ingredients', {
+                const res = await window.authFetch('/api/ingredients', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, unit, quantityPackage, price, currentStock })
                 });
                 if (!res.ok) {
@@ -727,7 +753,7 @@
             }
             
             try {
-                const res = await fetch(`/api/ingredients/${id}`, {
+                const res = await window.authFetch(`/api/ingredients/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ currentStock: newQty })
@@ -761,7 +787,7 @@
             const formData = new FormData();
             formData.append('image', file);
             try {
-                const res = await fetch('/api/stock/photo', {
+                const res = await window.authFetch('/api/stock/photo', {
                     method: 'POST',
                     body: formData
                 });

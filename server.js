@@ -112,33 +112,11 @@ const checkSubscription = async (req, res, next) => {
 
         const now = new Date();
         
-        // --- LOGICA DE TRIAL (7 DIAS) ---
-        // Se o plano for 'basic', verificamos se está dentro dos 7 dias gratuitos
-        if (user.plan === 'basic') {
-            const createdAt = new Date(user.createdAt || now);
-            const diffTime = Math.abs(now - createdAt);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            // Se estiver dentro do período de 7 dias, PERMITIR ACESSO TOTAL
-            if (diffDays <= 7) {
-                // Trial Ativo
-                return next();
-            } 
-            
-            // Se passou dos 7 dias (Trial Expirado)
-            // Bloquear operações de escrita (POST, PUT, DELETE)
-            if (req.method !== 'GET') {
-                return res.status(403).json({ 
-                    error: 'Seu período de teste gratuito de 7 dias expirou. Assine para continuar utilizando este recurso.', 
-                    code: 'TRIAL_EXPIRED',
-                    isTrialExpired: true
-                });
-            }
-            
-            // Permitir GET (Leitura) para visualização limitada/bloqueada no front
+        // Plano BASIC: acesso ilimitado (sem expiração ou bloqueio)
+        // Also bypass if request comes from Basic Mode interface
+        if (user.plan === 'basic' || req.query.basic === '1' || req.headers['x-basic-mode'] === '1') {
             return next();
         }
-        // --- FIM LOGICA TRIAL ---
 
         // DEBUG LOG
         // console.log(`[CheckSub] User: ${user.email}, Status: ${user.subscriptionStatus}, Method: ${req.method}, Exp: ${user.subscriptionExpiresAt}`);

@@ -370,7 +370,8 @@
             const frame = document.getElementById('toolsFrame');
             if (!frame) return;
             const currentSrc = frame.getAttribute('src') || '';
-            const targetSrc = '/fluxo?embed=1&view=vendas';
+            let targetSrc = '/fluxo?embed=1&view=vendas';
+            if (isBasicTools) targetSrc += '&basic=1';
 
             // Já está no fluxo: só manda mensagem para abrir modal sem recarregar
             if (currentSrc.indexOf('/fluxo') !== -1) {

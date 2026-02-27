@@ -192,6 +192,12 @@ if (mobileMenuBtn) {
 
 // Theme Toggle Logic
 document.addEventListener('DOMContentLoaded', () => {
+    // Force light theme on /novidade and exit theme logic
+    if (window.location.pathname === '/novidade') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        return;
+    }
+
     const themeToggleBtn = document.getElementById('theme-toggle');
     const sunWrapper = document.getElementById('sun-wrapper');
     const moonWrapper = document.getElementById('moon-wrapper');

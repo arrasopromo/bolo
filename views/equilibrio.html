@@ -452,6 +452,42 @@
         const isBasicMode = urlParams.get('basic') === '1';
         let metaFaturamento = 0;
 
+        // Auth Fetch Wrapper with Basic Mode Support
+        async function authFetch(url, options = {}) {
+            const token = localStorage.getItem('bellecake_token');
+            
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            // Basic Mode Bypass
+            if (isBasicMode) {
+                headers['X-Basic-Mode'] = '1';
+            }
+            
+            // Allow FormData to set its own Content-Type
+            if (options.body instanceof FormData) {
+                delete headers['Content-Type'];
+            }
+
+            const res = await fetch(url, { ...options, headers });
+            
+            if (res.status === 401) {
+                // If unauthorized, redirect to login/members
+                // But in basic mode or embedded, we might want to handle differently
+                // For now, standard behavior:
+                // localStorage.removeItem('bellecake_token');
+                // window.location.href = '/membros';
+            }
+            
+            return res;
+        }
+
         // Helper: Format input as currency (BRL)
         function formatCurrencyInput(input) {
             let value = input.value.replace(/\D/g, ''); // Remove non-digits
@@ -498,9 +534,7 @@
             const token = localStorage.getItem('bellecake_token');
             if (token) {
                 try {
-                    const res = await fetch('/api/auth/me', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+                    const res = await authFetch('/api/auth/me');
                     if (res.ok) {
                         const userData = await res.json();
                         const nameDisplay = document.getElementById('userNameDisplay');
@@ -658,12 +692,8 @@
             try {
                 const token = localStorage.getItem('bellecake_token');
                 if (token) {
-                    const saveRes = await fetch('/api/break-even', {
+                    const saveRes = await authFetch('/api/break-even', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
                         body: JSON.stringify({
                             breakEvenPoint: metaFaturamento,
                             fixedCosts: fixedCosts,

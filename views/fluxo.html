@@ -1542,6 +1542,11 @@
                 ...options.headers,
                 'Authorization': `Bearer ${token}`
             };
+
+            // Basic Mode Bypass
+            if (window.isBasicMode) {
+                headers['X-Basic-Mode'] = '1';
+            }
             
             // Allow FormData to set its own Content-Type (multipart/form-data with boundary)
             if (options.body instanceof FormData) {
@@ -1558,6 +1563,12 @@
                     try {
                         const errData = await clone.json();
                         if (errData.code === 'SUBSCRIPTION_EXPIRED') {
+                            // BASIC MODE: Ignore expiration
+                            if (window.isBasicMode) {
+                                console.log('[Auth] Basic Mode active: ignoring expiration error.');
+                                return res;
+                            }
+
                             console.warn('[Auth] Assinatura expirada. Mostrando modal...');
                             const modal = document.getElementById('subscriptionExpiredModal');
                             if (modal) modal.classList.add('open');
@@ -1612,19 +1623,7 @@
                         checkWelcomeFluxoModal();
                     }
 
-                    // CHECK EXPIRATION IMMEDIATELY
-                    // Now that GET requests return 200 for expired users, we must check the user object explicitly
-                    const now = new Date();
-                    const createdAt = new Date(user.createdAt || Date.now());
-                    const diffTime = Math.abs(now - createdAt);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const isTrialExpired = (user.plan === 'basic' && diffDays > 7);
-
-                    if (isTrialExpired) {
-                        console.warn('[LoadUserInfo] User is expired. Showing modal.');
-                        const modal = document.getElementById('subscriptionExpiredModal');
-                        if (modal) modal.classList.add('open');
-                    }
+                    // Plano BASIC ilimitado: não exibir modal de expiração
 
                     const topName = document.getElementById('topUserName');
                     if (topName) {
@@ -1645,19 +1644,8 @@
                         const now = new Date();
                         const createdAt = new Date(user.createdAt || Date.now());
                         
-                        // Lógica de 7 dias de teste para plano BASIC
-                        const diffTime = Math.abs(now - createdAt);
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                        
-                        // Determina se é trial ativo
-                        // Se o plano for 'complete', não é trial (é premium/vitalício)
-                        const isBasic = (user.plan === 'basic');
-                        const isTrialActive = isBasic && diffDays <= 7;
-                        const isTrialExpired = isBasic && diffDays > 7;
-
-                        // Data de expiração do trial (createdAt + 7 dias)
-                        const trialExpirationDate = new Date(createdAt);
-                        trialExpirationDate.setDate(trialExpirationDate.getDate() + 7);
+                        // Consider Basic if plan is basic OR if in Basic Mode (URL param)
+                        const isBasic = (user.plan === 'basic') || window.isBasicMode;
 
                         // --- 1. STATUS ---
                         if (!isBasic) {
@@ -1726,72 +1714,12 @@
                              }
 
                         } else {
-                            // BASIC (TRIAL ou EXPIRADO)
-                            if (isTrialActive) {
-                                // TESTE GRÁTIS ATIVO
-                                subStatusText.innerHTML = 'Ativo <span style="font-size:0.6em; background:#E0E0E0; padding:2px 6px; border-radius:4px; color:#666; vertical-align: middle; text-transform: uppercase;">TESTE GRÁTIS</span>';
-                                subStatusText.style.color = '#4CAF50';
-                                
-                                subExpiresText.textContent = trialExpirationDate.toLocaleDateString('pt-BR');
-                                
-                                subDescriptionText.innerHTML = `
-                                    Você está aproveitando seus <strong>7 dias de acesso gratuito</strong>.<br>
-                                    Após ${trialExpirationDate.toLocaleDateString('pt-BR')}, será necessário assinar para continuar editando.
-                                `;
-                                
-                                // Mostrar opções de assinatura
-                                if (actionArea) {
-                                    actionArea.style.display = 'block';
-                                    actionArea.style.background = '#FFFDE7';
-                                    actionArea.innerHTML = `
-                                        <p style="font-weight: 700; color: #CD7A3E; margin-bottom: 0.8rem; font-size: 0.95rem;">
-                                            Garanta seu acesso contínuo:
-                                        </p>
-                                        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-                                            <button onclick="openPlanSelectionModal()" 
-                                                style="background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);">
-                                                RENOVAR ASSINATURA
-                                            </button>
-                                        </div>
-                                    `;
-                                }
-
-                            } else {
-                                // EXPIRADO
-                                subStatusText.textContent = 'Expirado';
-                                subStatusText.style.color = '#F44336';
-                                
-                                subExpiresText.textContent = trialExpirationDate.toLocaleDateString('pt-BR');
-                                
-                                subDescriptionText.innerHTML = `
-                                    Seu período de teste gratuito encerrou em ${trialExpirationDate.toLocaleDateString('pt-BR')}.<br>
-                                    Realize uma assinatura para voltar a registrar vendas e custos.
-                                `;
-                                
-                                // Mostrar opções de assinatura (Estilo Alerta)
-                                if (actionArea) {
-                                    actionArea.style.display = 'block';
-                                    actionArea.style.background = '#FFEBEE';
-                                    actionArea.innerHTML = `
-                                         <p style="font-weight: 700; color: #C62828; margin-bottom: 0.8rem; font-size: 0.95rem;">
-                                            Reative seu acesso agora:
-                                        </p>
-                                        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-                                            <button onclick="openPlanSelectionModal()" 
-                                                style="background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);">
-                                                RENOVAR ASSINATURA
-                                            </button>
-                                        </div>
-                                    `;
-                                }
-
-                                // Abrir modal de expiração se não estiver aberto
-                                const modal = document.getElementById('subscriptionExpiredModal');
-                                if (modal && !modal.classList.contains('open')) {
-                                    // Opcional: só abrir se o usuário tentar ação, mas pode abrir de cara
-                                    // modal.style.display = 'flex'; // Descomentar se quiser forçar popup
-                                }
-                            }
+                            // BASIC ilimitado (sem expiração)
+                            subStatusText.innerHTML = 'Ativo';
+                            subStatusText.style.color = '#2E7D32';
+                            subExpiresText.textContent = 'Sem validade';
+                            subDescriptionText.textContent = "Seu acesso básico é ilimitado.";
+                            if (actionArea) actionArea.style.display = 'none';
                         }
                     }
 

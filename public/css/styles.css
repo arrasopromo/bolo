@@ -1011,7 +1011,6 @@ body {
 /* Video Section */
 .video-section {
     padding: 6rem 2rem;
-    /* Transparent in dark mode to show body gradient */
     background: transparent;
     text-align: center;
     position: relative;
@@ -1019,6 +1018,15 @@ body {
 }
 
 [data-theme="light"] .video-section {
+    background: var(--video-bg);
+}
+
+/* Match Hero Section Background to Video Section */
+.hero-section {
+    background: transparent;
+}
+
+[data-theme="light"] .hero-section {
     background: var(--video-bg);
 }
 
@@ -1034,18 +1042,6 @@ body {
     margin: 0 auto;
     aspect-ratio: 16/9;
     background: #000;
-
-@media (max-width: 768px) {
-    .video-container {
-    .video-section {
-        padding: 3rem 1rem;
-    }
-        aspect-ratio: 9/16;
-        max-width: 360px;
-    }
-}
-    background: #000;
-    background: #000;
     border-radius: 15px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     border: 1px solid var(--primary-yellow);
@@ -1053,6 +1049,16 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+@media (max-width: 768px) {
+    .video-section {
+        padding: 3rem 1rem;
+    }
+    .video-container {
+        aspect-ratio: 9/16;
+        max-width: 360px;
+    }
 }
 
 .video-placeholder {
