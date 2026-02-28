@@ -475,14 +475,24 @@
                 delete headers['Content-Type'];
             }
 
-            const res = await fetch(url, { ...options, headers });
+            const res = await fetch(url, { ...options, headers, credentials: 'include' });
             
             if (res.status === 401) {
-                // If unauthorized, redirect to login/members
-                // But in basic mode or embedded, we might want to handle differently
-                // For now, standard behavior:
-                // localStorage.removeItem('bellecake_token');
-                // window.location.href = '/membros';
+                const params = new URLSearchParams(window.location.search);
+                const isTestMode = params.get('mode') === 'test';
+                
+                if (isTestMode) {
+                    try {
+                        window.parent.location.reload();
+                    } catch(e) {
+                        window.location.reload();
+                    }
+                    return { ok: false, status: 401, json: async () => ({}) };
+                }
+
+                // Standard behavior
+                localStorage.removeItem('bellecake_token');
+                window.location.href = '/membros';
             }
             
             return res;

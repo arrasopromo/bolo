@@ -89,11 +89,25 @@ const openai = new OpenAI({
 // Authentication Middleware
 const authenticateToken = (req, res, next) => {
     const token = req.cookies.token || req.headers['authorization']?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    
+    // DEBUG LOG for 401 Loop Diagnosis
+    // console.log(`[AuthMiddleware] URL: ${req.url}, Method: ${req.method}, TokenCookie: ${!!req.cookies.token}, TokenHeader: ${!!req.headers['authorization']}`);
+
+    if (!token) {
+        // If it's a page request, redirect to login
+        if (req.accepts('html') && req.method === 'GET') {
+             return res.redirect('/membros');
+        }
+        console.warn(`[AuthMiddleware] 401 Unauthorized - No token provided. URL: ${req.url}`);
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
-            console.error('[Auth] Verification Failed:', err.message);
+            if (req.accepts('html') && req.method === 'GET') {
+                 return res.redirect('/membros');
+            }
+            console.error(`[AuthMiddleware] 403 Forbidden - Verification Failed: ${err.message}`);
             return res.status(403).json({ error: 'Forbidden' });
         }
         req.user = user;
@@ -112,9 +126,9 @@ const checkSubscription = async (req, res, next) => {
 
         const now = new Date();
         
-        // Plano BASIC: acesso ilimitado (sem expiração ou bloqueio)
+        // Plano BASIC ou TEST: acesso ilimitado (sem expiração ou bloqueio)
         // Also bypass if request comes from Basic Mode interface
-        if (user.plan === 'basic' || req.query.basic === '1' || req.headers['x-basic-mode'] === '1') {
+        if (user.plan === 'basic' || user.plan === 'test' || req.query.basic === '1' || req.headers['x-basic-mode'] === '1') {
             return next();
         }
 
@@ -176,8 +190,81 @@ app.get('/equilibrio', (req, res) => res.sendFile(path.join(__dirname, 'views', 
 app.get('/apresentacao', (req, res) => res.sendFile(path.join(__dirname, 'views', 'apresentacao.html')));
 app.get('/aulas', (req, res) => res.sendFile(path.join(__dirname, 'views', 'aulas.html')));
 app.get('/novidade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'novidade.html')));
+
+const handleTestTools = async (req, res) => {
+    try {
+        let tokenToUse = req.cookies.token;
+        let userToUse = null;
+
+        if (tokenToUse) {
+            try {
+                const decoded = jwt.verify(tokenToUse, process.env.JWT_SECRET);
+                userToUse = decoded;
+            } catch (e) {
+                tokenToUse = null; // Invalid token
+            }
+        }
+
+        if (!tokenToUse) {
+            // Create Guest User
+            const guestId = Math.random().toString(36).substring(7);
+            const email = `guest_${Date.now()}_${guestId}@teste.bellecake`;
+            const password = await bcrypt.hash('guest123', 10);
+            
+            const user = new User({
+                name: 'Visitante',
+                email: email,
+                password: password,
+                plan: 'test'
+            });
+            await user.save();
+
+            // Generate Token
+            tokenToUse = jwt.sign(
+                { _id: user._id, name: user.name, plan: 'test' }, 
+                process.env.JWT_SECRET
+            );
+
+            // Set Cookie
+            res.cookie('token', tokenToUse, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); // 1 day
+        }
+
+        // Serve File with Token Injection
+        const filePath = path.join(__dirname, 'views', 'ferramentas.html');
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                console.error('Error reading view:', err);
+                return res.status(500).send('Erro ao carregar ferramenta.');
+            }
+            // Inject token for localStorage backup
+            const injected = data.replace('</head>', `<script>window.SERVER_TOKEN = "${tokenToUse}"; localStorage.setItem('bellecake_token', "${tokenToUse}");</script></head>`);
+            res.send(injected);
+        });
+
+    } catch (err) {
+        console.error('Error creating guest user:', err);
+        res.status(500).send('Erro ao iniciar modo de teste.');
+    }
+};
+
+app.get('/ferramenta-teste', handleTestTools);
+app.get('/ferramentas-teste', handleTestTools);
+
 app.get('/upgrade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'upgrade.html')));
-app.get('/ferramentas', (req, res) => res.sendFile(path.join(__dirname, 'views', 'ferramentas.html')));
+app.get('/ferramentas', authenticateToken, (req, res) => {
+    // Block Guest/Test users from the main tools area
+    if (req.user.plan === 'test') {
+        return res.status(403).send(`
+            <body style="font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #FFFBF7; color: #32221D;">
+                <h1>Acesso Restrito</h1>
+                <p>O acesso como Visitante é permitido apenas na página de teste.</p>
+                <a href="/ferramentas-teste" style="color: #CD7A3E; font-weight: bold; text-decoration: none; margin-bottom: 20px; display: block;">Ir para Ferramentas Teste</a>
+                <a href="/membros" style="color: #32221D; text-decoration: underline;">Fazer Login como Membro</a>
+            </body>
+        `);
+    }
+    res.sendFile(path.join(__dirname, 'views', 'ferramentas.html'));
+});
 app.get('/ferramentas-basic', (req, res) => res.sendFile(path.join(__dirname, 'views', 'ferramentas.html')));
 
 // Redirects for direct access
@@ -281,6 +368,12 @@ app.get('/api/products', authenticateToken, checkSubscription, async (req, res) 
 
 app.post('/api/products', authenticateToken, checkSubscription, async (req, res) => {
     try {
+        if (req.user.plan === 'test') {
+            const count = await Product.countDocuments({ user: req.user._id });
+            if (count >= 2) {
+                return res.status(403).json({ error: 'Limite de 2 produtos atingido no modo teste.' });
+            }
+        }
         const { name, salePrice, variableCost, ingredients, yield: yieldAmount, yieldActive, markup, platformFee, platformFeeActive, invisibleCost } = req.body;
         const product = new Product({
             name: capitalizeFirstLetter(name),
@@ -354,6 +447,12 @@ app.get('/api/ingredients', authenticateToken, checkSubscription, async (req, re
 
 app.post('/api/ingredients', authenticateToken, checkSubscription, async (req, res) => {
     try {
+        if (req.user.plan === 'test') {
+            const count = await Ingredient.countDocuments({ user: req.user._id });
+            if (count >= 10) {
+                return res.status(403).json({ error: 'Limite de 10 ingredientes atingido no modo teste.' });
+            }
+        }
         const { name, price, unit, quantityPackage, currentStock } = req.body;
         
         // Server-side duplicate check (case-insensitive)
@@ -458,6 +557,13 @@ app.post('/api/sales', authenticateToken, checkSubscription, async (req, res) =>
         if (!req.user || !req.user._id) {
             console.error('❌ User not authenticated or missing ID');
             return res.status(401).json({ error: 'Usuário não autenticado' });
+        }
+
+        if (req.user.plan === 'test') {
+            const count = await Sale.countDocuments({ user: req.user._id });
+            if (count >= 5) {
+                return res.status(403).json({ error: 'Limite de 5 vendas atingido no modo teste.' });
+            }
         }
 
         console.log('📥 Received POST /api/sales body:', req.body);

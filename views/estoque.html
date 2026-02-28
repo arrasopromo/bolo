@@ -466,6 +466,7 @@
                     <div style="flex:1;">
                         <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Unidade</label>
                         <select id="ingUnit" required style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;">
+                            <option value="" disabled selected>Selecione...</option>
                             <option value="g">Gramas (g)</option>
                             <option value="un">Unidade (un)</option>
                         </select>
@@ -555,9 +556,22 @@
                     delete headers['Content-Type'];
                 }
 
-                const res = await fetch(url, { ...options, headers });
+                const res = await fetch(url, { ...options, headers, credentials: 'include' });
                 if (res.status === 401) {
-                    // Handle 401
+                    const params = new URLSearchParams(window.location.search);
+                    const isTestMode = params.get('mode') === 'test';
+                    
+                    if (isTestMode) {
+                        try {
+                            window.parent.location.reload();
+                        } catch(e) {
+                            window.location.reload();
+                        }
+                        return { ok: false, status: 401, json: async () => ({}) };
+                    }
+                    
+                    localStorage.removeItem('bellecake_token');
+                    window.location.href = '/membros';
                 }
                 return res;
             };
@@ -591,6 +605,7 @@
         async function loadStock() {
             try {
                 const res = await window.authFetch('/api/ingredients');
+                if (!res.ok) return; // Handle auth error/reload gracefully
                 const ingredients = await res.json();
                 window._ingredientsCache = ingredients;
                 
@@ -626,7 +641,7 @@
                         <td data-label="Unidade">${ing.unit || 'un'}</td>
                         <td data-label="Status">${statusHtml}</td>
                         <td data-label="Ações">
-                            <button onclick="openUpdateModal('${ing._id}', '${ing.name}', ${current}, '${ing.unit}')" class="btn-update" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                            <button onclick="openUpdateModal('${ing._id}')" class="btn-update" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
                                 Ajustar
                             </button>
                         </td>
@@ -670,7 +685,7 @@
                 // Open Update Stock Modal prefilled, suggest new quantity as current + qty
                 closeModal('addStockModal');
                 const current = parseFloat(existing.currentStock || 0);
-                openUpdateModal(existing._id, existing.name, current + qty, existing.unit || unit || 'un');
+                openUpdateModal(existing._id, current + qty);
             } else {
                 // Proceed to ingredient details (required)
                 closeModal('addStockModal');
@@ -726,11 +741,21 @@
             }
         };
 
-        window.openUpdateModal = (id, name, current, unit) => {
-            document.getElementById('stockIngId').value = id;
-            document.getElementById('stockIngName').value = name;
-            document.getElementById('stockNewQty').value = current;
-            document.getElementById('stockUnitDisplay').textContent = unit || 'UN';
+        window.openUpdateModal = (id, qtyOverride = null) => {
+            const list = window._ingredientsCache || [];
+            const ing = list.find(i => i._id === id);
+            if (!ing) return;
+
+            document.getElementById('stockIngId').value = ing._id;
+            document.getElementById('stockIngName').value = ing.name;
+            
+            if (qtyOverride !== null) {
+                document.getElementById('stockNewQty').value = qtyOverride;
+            } else {
+                document.getElementById('stockNewQty').value = ing.currentStock || 0;
+            }
+
+            document.getElementById('stockUnitDisplay').textContent = ing.unit || 'UN';
             
             document.getElementById('updateStockModal').style.display = 'flex';
             document.body.style.overflow = 'hidden'; // Lock body scroll

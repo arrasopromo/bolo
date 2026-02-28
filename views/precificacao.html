@@ -841,6 +841,9 @@
             <div id="tab-ingredientes" class="view-section" style="display: none;">
                 
                 <div class="ingredients-header-actions">
+                    <div id="ingredientCounter" style="display: none; background: #fff; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #eee; font-weight: 600; color: var(--secondary-caramel); margin-right: auto;">
+                        Ingredientes: 0 / 10
+                    </div>
                     <button onclick="openStandardIngredientsModal()" class="btn-submit" style="width: auto; padding: 0.8rem 1.5rem; background: var(--text-brown); height: 46px; display: flex; align-items: center;">
                         <i data-lucide="download"></i> Produtos Pré-cadastrados
                     </button>
@@ -905,6 +908,7 @@
                     <div>
                         <label>Unidade</label>
                         <select id="ingUnit" required>
+                            <option value="" disabled selected>Selecione...</option>
                             <option value="g">Gramas (g)</option>
                             <!-- <option value="ml">Mililitros (ml)</option> -->
                             <option value="un">Unidade (un)</option>
@@ -1171,6 +1175,15 @@
         // --- Data Loading ---
         async function loadIngredients() {
             try {
+                // Test Mode Local Storage Override
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('mode') === 'test') {
+                    const localData = localStorage.getItem('bellecake_test_ingredients');
+                    allIngredients = localData ? JSON.parse(localData) : [];
+                    renderIngredientsTable();
+                    return allIngredients;
+                }
+
                 const res = await authFetch('/api/ingredients');
                 if (!res.ok) throw new Error('Falha ao carregar ingredientes');
                 allIngredients = await res.json();
@@ -1209,6 +1222,19 @@
             });
 
             if (response.status === 401) {
+                const params = new URLSearchParams(window.location.search);
+                const isTestMode = params.get('mode') === 'test';
+                
+                if (isTestMode) {
+                    // Try to reload parent to regenerate guest session
+                    try {
+                        window.parent.location.reload();
+                    } catch(e) {
+                        window.location.reload();
+                    }
+                    return { ok: false, status: 401, json: async () => ({}) };
+                }
+
                 localStorage.removeItem('bellecake_token');
                 window.location.href = '/membros';
             }
@@ -1218,6 +1244,15 @@
 
         async function loadProducts() {
             try {
+                // Test Mode Local Storage Override
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('mode') === 'test') {
+                    const localData = localStorage.getItem('bellecake_test_products');
+                    allProducts = localData ? JSON.parse(localData) : [];
+                    renderProductsTable();
+                    return;
+                }
+
                 const res = await authFetch('/api/products');
                 if (!res.ok) throw new Error('Falha ao carregar produtos');
                 allProducts = await res.json();
@@ -1229,6 +1264,23 @@
 
         // --- Rendering ---
         function renderIngredientsTable() {
+            // Update Counter (Test Mode)
+            const params = new URLSearchParams(window.location.search);
+            const isTestMode = params.get('mode') === 'test';
+            const counterDiv = document.getElementById('ingredientCounter');
+            
+            if (isTestMode && counterDiv) {
+                counterDiv.style.display = 'block';
+                counterDiv.textContent = `Ingredientes: ${allIngredients.length} / 10`;
+                if (allIngredients.length >= 10) {
+                    counterDiv.style.color = '#ef4444'; // Red
+                    counterDiv.style.borderColor = '#ef4444';
+                } else {
+                    counterDiv.style.color = 'var(--secondary-caramel)';
+                    counterDiv.style.borderColor = '#eee';
+                }
+            }
+
             const tbody = document.querySelector('#ingredientsTable tbody');
             tbody.innerHTML = '';
 
@@ -1239,7 +1291,7 @@
                     <td data-label="Preço Pago">${formatCurrency(ing.price)}</td>
                     <td data-label="Qtd. Emb.">${ing.quantityPackage} ${ing.unit}</td>
                     <td data-label="Ações">
-                        <button class="action-btn" onclick='openIngredientModal(${JSON.stringify(ing)})' title="Editar">
+                        <button class="action-btn" onclick="openIngredientModal('${ing._id}')" title="Editar">
                             <i data-lucide="edit-2"></i>
                         </button>
                         <button class="action-btn" onclick="deleteIngredient('${ing._id}')" title="Excluir" style="color: #ef4444;">
@@ -1413,9 +1465,18 @@
             }
         }
 
-        function openIngredientModal(ing = null) {
+        function openIngredientModal(ingOrId = null) {
             const modal = document.getElementById('ingredientModal');
             const form = document.getElementById('ingredientForm');
+            
+            let ing = null;
+            if (ingOrId) {
+                if (typeof ingOrId === 'string') {
+                    ing = allIngredients.find(i => i._id === ingOrId);
+                } else {
+                    ing = ingOrId;
+                }
+            }
             
             // Reset Voice UI
             if (typeof resetIngredientVoiceUI === 'function') {
@@ -1442,6 +1503,15 @@
                 modal.querySelector('h2').textContent = 'Editar Ingrediente';
             } else {
                 // New
+                // Check Test Mode Limit
+                const params = new URLSearchParams(window.location.search);
+                const isTestMode = params.get('mode') === 'test';
+                
+                if (isTestMode && allIngredients.length >= 10) {
+                    alert('Você atingiu o limite de 10 ingredientes no modo teste. Atualize para a versão completa para cadastrar mais!');
+                    return;
+                }
+
                 form.reset();
                 document.getElementById('ingId').value = '';
                 modal.querySelector('h2').textContent = 'Novo Ingrediente';
@@ -1464,6 +1534,44 @@
                 unit: document.getElementById('ingUnit').value
             };
 
+            // Test Mode Local Storage Override
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'test') {
+                try {
+                    let ingredients = JSON.parse(localStorage.getItem('bellecake_test_ingredients') || '[]');
+                    
+                    if (id) {
+                        // Edit
+                        const index = ingredients.findIndex(i => i._id === id);
+                        if (index !== -1) {
+                            ingredients[index] = { ...ingredients[index], ...data };
+                        }
+                    } else {
+                        // New - Check Limit
+                        if (ingredients.length >= 10) {
+                            alert('Limite de 10 ingredientes atingido no modo teste.');
+                            return;
+                        }
+                        // Check Duplicate
+                        if (ingredients.some(i => i.name.toLowerCase() === data.name.toLowerCase())) {
+                            alert('Ingrediente já cadastrado.');
+                            return;
+                        }
+                        
+                        data._id = 'local_' + Date.now();
+                        ingredients.push(data);
+                    }
+                    
+                    localStorage.setItem('bellecake_test_ingredients', JSON.stringify(ingredients));
+                    closeModal('ingredientModal');
+                    loadIngredients();
+                    return;
+                } catch (err) {
+                    alert('Erro ao salvar localmente: ' + err.message);
+                    return;
+                }
+            }
+
             const url = id ? `/api/ingredients/${id}` : '/api/ingredients';
             const method = id ? 'PUT' : 'POST';
 
@@ -1484,6 +1592,22 @@
 
         async function deleteIngredient(id) {
             if (!confirm('Tem certeza? Isso pode afetar produtos que usam este ingrediente.')) return;
+            
+            // Test Mode Local Storage Override
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'test') {
+                try {
+                    let ingredients = JSON.parse(localStorage.getItem('bellecake_test_ingredients') || '[]');
+                    ingredients = ingredients.filter(i => i._id !== id);
+                    localStorage.setItem('bellecake_test_ingredients', JSON.stringify(ingredients));
+                    loadIngredients();
+                    return;
+                } catch (err) {
+                    alert('Erro ao excluir localmente');
+                    return;
+                }
+            }
+
             try {
                 await authFetch(`/api/ingredients/${id}`, { method: 'DELETE' });
                 loadIngredients();
@@ -1749,6 +1873,39 @@
             // Model Schema expects a Number. Let's store the value from input.
 
             const id = document.getElementById('prodId').value;
+
+            // Test Mode Local Storage Override
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'test') {
+                try {
+                    let products = JSON.parse(localStorage.getItem('bellecake_test_products') || '[]');
+                    
+                    if (id) {
+                        // Edit
+                        const index = products.findIndex(p => p._id === id);
+                        if (index !== -1) {
+                            products[index] = { ...products[index], ...data };
+                        }
+                    } else {
+                        // New - Check Limit (2 products)
+                        if (products.length >= 2) {
+                            alert('Limite de 2 produtos atingido no modo teste.');
+                            return;
+                        }
+                        data._id = 'local_prod_' + Date.now();
+                        products.push(data);
+                    }
+                    
+                    localStorage.setItem('bellecake_test_products', JSON.stringify(products));
+                    closeModal('productModal');
+                    loadProducts();
+                    return;
+                } catch (err) {
+                    alert('Erro ao salvar localmente: ' + err.message);
+                    return;
+                }
+            }
+
             const url = id ? `/api/products/${id}` : '/api/products';
             const method = id ? 'PUT' : 'POST';
 
@@ -1769,6 +1926,22 @@
 
         async function deleteProduct(id) {
         if (!confirm('Excluir este produto?')) return;
+        
+        // Test Mode Local Storage Override
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'test') {
+            try {
+                let products = JSON.parse(localStorage.getItem('bellecake_test_products') || '[]');
+                products = products.filter(p => p._id !== id);
+                localStorage.setItem('bellecake_test_products', JSON.stringify(products));
+                loadProducts();
+                return;
+            } catch (err) {
+                alert('Erro ao excluir localmente');
+                return;
+            }
+        }
+
         try {
             await authFetch(`/api/products/${id}`, { method: 'DELETE' });
             loadProducts();

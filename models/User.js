@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
     cpf: { type: String },
     phone: { type: String },
     token: { type: String },
-    plan: { type: String, enum: ['basic', 'complete'], default: 'basic' },
+    plan: { type: String, enum: ['basic', 'complete', 'test'], default: 'basic' },
     status: { type: String, default: 'pending' },
     subscriptionStatus: { type: String, enum: ['active', 'inactive', 'expired'], default: 'inactive' },
     subscriptionExpiresAt: { type: Date },

@@ -287,7 +287,12 @@
     </div>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        const isBasicTools = window.location.pathname.indexOf('ferramentas-basic') !== -1;
+        if (window.SERVER_TOKEN) {
+            localStorage.setItem('bellecake_token', window.SERVER_TOKEN);
+        }
+        const isBasicTools = window.location.pathname.indexOf('ferramentas-basic') !== -1 || window.location.pathname.indexOf('ferramenta-teste') !== -1 || window.location.pathname.indexOf('ferramentas-teste') !== -1;
+        const isTestMode = window.location.pathname.indexOf('ferramenta-teste') !== -1 || window.location.pathname.indexOf('ferramentas-teste') !== -1;
+
         function checkFrameAuth() {
             const frame = document.getElementById('toolsFrame');
             if (!frame || !frame.contentWindow) return;
@@ -371,8 +376,7 @@
             if (!frame) return;
             const currentSrc = frame.getAttribute('src') || '';
             let targetSrc = '/fluxo?embed=1&view=vendas';
-            if (isBasicTools) targetSrc += '&basic=1';
-
+            
             // Já está no fluxo: só manda mensagem para abrir modal sem recarregar
             if (currentSrc.indexOf('/fluxo') !== -1) {
                 try {
@@ -389,41 +393,72 @@
                 } catch(e) {}
             };
             frame.addEventListener('load', handler);
-            frame.src = targetSrc;
+            
+            let params = '';
+            if (isBasicTools) params += '&basic=1';
+            if (isTestMode) params += '&mode=test';
+            
+            frame.src = targetSrc + params;
         }
         function loadFluxo(view){
             const frame = document.getElementById('toolsFrame');
             const base = '/fluxo?embed=1&view=' + encodeURIComponent(view || 'resumo');
-            frame.src = base + (isBasicTools ? '&basic=1' : '');
+            let params = '';
+            if (isBasicTools) params += '&basic=1';
+            if (isTestMode) params += '&mode=test';
+            frame.src = base + params;
         }
         function loadPrecificacao(tab){
             const frame = document.getElementById('toolsFrame');
             const base = '/precificacao?embed=1&tab=' + encodeURIComponent(tab || 'produtos');
-            frame.src = base + (isBasicTools ? '&basic=1' : '');
+            let params = '';
+            if (isBasicTools) params += '&basic=1';
+            if (isTestMode) params += '&mode=test';
+            frame.src = base + params;
         }
         function loadEstoque(){
             const frame = document.getElementById('toolsFrame');
             const base = '/estoque?embed=1';
-            frame.src = base + (isBasicTools ? '&basic=1' : '');
+            let params = '';
+            if (isBasicTools) params += '&basic=1';
+            if (isTestMode) params += '&mode=test';
+            frame.src = base + params;
         }
         function loadEquilibrio(){
             const frame = document.getElementById('toolsFrame');
             const base = '/equilibrio?embed=1';
-            frame.src = base + (isBasicTools ? '&basic=1' : '');
+            let params = '';
+            if (isBasicTools) params += '&basic=1';
+            if (isTestMode) params += '&mode=test';
+            frame.src = base + params;
         }
         document.addEventListener('DOMContentLoaded', function () {
             const frame = document.getElementById('toolsFrame');
             if (frame) {
                 frame.addEventListener('load', checkFrameAuth);
-                if (isBasicTools) {
+                
+                // Handle Initial Params (Basic & Test)
+                const currentSrc = frame.getAttribute('src') || '';
+                let newSrc = currentSrc;
+                let hasChanged = false;
+
+                if (isBasicTools && currentSrc.indexOf('basic=1') === -1) {
+                    const separator = newSrc.indexOf('?') === -1 ? '?' : '&';
+                    newSrc += separator + 'basic=1';
+                    hasChanged = true;
                     document.querySelectorAll('[data-basic-hide="assinatura"]').forEach(function(el){
                         el.style.display = 'none';
                     });
-                    const currentSrc = frame.getAttribute('src') || '';
-                    if (currentSrc.indexOf('basic=1') === -1) {
-                        const separator = currentSrc.indexOf('?') === -1 ? '?' : '&';
-                        frame.src = currentSrc + separator + 'basic=1';
-                    }
+                }
+
+                if (isTestMode && currentSrc.indexOf('mode=test') === -1) {
+                    const separator = newSrc.indexOf('?') === -1 ? '?' : '&';
+                    newSrc += separator + 'mode=test';
+                    hasChanged = true;
+                }
+
+                if (hasChanged) {
+                    frame.src = newSrc;
                 }
             }
             try{ lucide && lucide.createIcons && lucide.createIcons(); }catch(e){}

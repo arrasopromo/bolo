@@ -1517,6 +1517,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const urlToken = urlParams.get('token');
         const isBasicMode = urlParams.get('basic') === '1';
+        const isTestMode = urlParams.get('mode') === 'test';
         window.isBasicMode = isBasicMode;
         if (isBasicMode) {
             document.documentElement.setAttribute('data-basic', '1');
@@ -1527,7 +1528,7 @@
         }
 
         const authToken = localStorage.getItem('bellecake_token');
-        if (!authToken) {
+        if (!authToken && !isTestMode) {
             console.warn('No token found');
             window.location.href = '/membros';
         }
@@ -1535,13 +1536,13 @@
         // Wrapper for authenticated requests
         async function authFetch(url, options = {}) {
             const token = localStorage.getItem('bellecake_token');
-            console.log('[Auth] Token exists:', !!token); 
+            // console.log('[Auth] Token exists:', !!token); 
             
             const headers = {
                 'Content-Type': 'application/json',
-                ...options.headers,
-                'Authorization': `Bearer ${token}`
+                ...options.headers
             };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
 
             // Basic Mode Bypass
             if (window.isBasicMode) {
@@ -1554,9 +1555,9 @@
             }
             
             try {
-                console.log(`[Auth] Fetching ${url}...`);
-                const res = await fetch(url, { ...options, headers });
-                console.log(`[Auth] Response ${url}:`, res.status);
+                // console.log(`[Auth] Fetching ${url}...`);
+                const res = await fetch(url, { ...options, headers, credentials: 'include' });
+                // console.log(`[Auth] Response ${url}:`, res.status);
 
                 if (res.status === 403) {
                     const clone = res.clone();
@@ -1583,6 +1584,18 @@
                 }
 
                 if (res.status === 401 || res.status === 403) {
+                    const params = new URLSearchParams(window.location.search);
+                    const isTestMode = params.get('mode') === 'test';
+
+                    if (isTestMode) {
+                    try {
+                        window.parent.location.reload();
+                    } catch(e) {
+                        window.location.reload();
+                    }
+                    return { ok: false, status: 401, json: async () => ({}) };
+                }
+
                     console.warn(`[Auth] ${res.status} Error. Redirecting...`);
                     // alert('Sessão expirada ou inválida. Por favor, acesse via link de membro.');
                     localStorage.removeItem('bellecake_token'); // Clear token
@@ -1873,6 +1886,7 @@
         async function loadProductsList() {
             try {
                 const res = await authFetch('/api/products');
+                if (!res.ok) return; // Handle auth error/reload gracefully
                 const products = await res.json();
                 const container = document.getElementById('productsList');
                 container.innerHTML = '';
