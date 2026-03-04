@@ -588,7 +588,7 @@
             <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake" class="mobile-logo">
         </a>
         <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
-            <button onclick="openSaleModal()" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+            <button onclick="openSaleModal()" style="background: #25D366; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px;">
                 <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Nova Venda
             </button>
             <button id="mobileMenuBtn" style="background:none; border:none; color:#FFFFFF; cursor: pointer;">
@@ -627,7 +627,7 @@
             </div>
             
             <div style="padding: 0 1.5rem; margin-bottom: 1rem;">
-                <button onclick="openSaleModal()" style="width: 100%; background: #4CAF50; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); transition: all 0.2s;">
+                <button onclick="openSaleModal()" style="width: 100%; background: #25D366; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3); transition: all 0.2s;">
                     <i data-lucide="plus-circle" style="width: 20px;"></i> NOVA VENDA
                 </button>
             </div>
@@ -1032,7 +1032,7 @@
 
                         <div class="form-group" id="purchaseDateGroup">
                             <label>Data</label>
-                            <input type="date" id="costPurchaseDate">
+                            <input type="text" id="costPurchaseDate" placeholder="Selecione a data" style="background-color: #fff;">
                         </div>
 
                         <button type="submit" class="btn-submit">Registrar Custo</button>
@@ -1506,6 +1506,8 @@
         
         // GLOBAL VARIABLES (Fixes TDZ errors)
         let saleDatePicker = null;
+        let fixedCostDatePicker = null;
+        let editFixedCostDatePicker = null;
         let mediaRecorder = null;
         let audioChunks = [];
         let isDashboardLoading = false;
@@ -2514,9 +2516,17 @@
             
             if (date) {
                 const d = new Date(date);
-                document.getElementById('modalCostPurchaseDate').value = d.toISOString().split('T')[0];
+                if (editFixedCostDatePicker) {
+                    editFixedCostDatePicker.setDate(d);
+                } else {
+                    document.getElementById('modalCostPurchaseDate').value = d.toISOString().split('T')[0];
+                }
             } else {
-                document.getElementById('modalCostPurchaseDate').value = '';
+                if (editFixedCostDatePicker) {
+                    editFixedCostDatePicker.clear();
+                } else {
+                    document.getElementById('modalCostPurchaseDate').value = '';
+                }
             }
 
             if (recurrenceType === 'installment') {
@@ -2723,6 +2733,32 @@
                     }
                 }
             });
+
+            // Init Flatpickr for Fixed Cost
+            const fixedCostInput = document.getElementById("costPurchaseDate");
+            if (fixedCostInput) {
+                fixedCostDatePicker = flatpickr("#costPurchaseDate", {
+                    dateFormat: "Y-m-d",
+                    locale: "pt",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    defaultDate: "today",
+                    disableMobile: "true"
+                });
+            }
+
+            // Init Flatpickr for Edit Fixed Cost
+            const editFixedCostInput = document.getElementById("modalCostPurchaseDate");
+            if (editFixedCostInput) {
+                editFixedCostDatePicker = flatpickr("#modalCostPurchaseDate", {
+                    dateFormat: "Y-m-d",
+                    locale: "pt",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    defaultDate: "today",
+                    disableMobile: "true"
+                });
+            }
 
             // Default to Today for Resumo
             const todayResumo = new Date();
@@ -4410,6 +4446,10 @@
                     font-size: 1.4rem !important;
                     margin-bottom: 1rem !important;
                 }
+                .modal-recurrence-options {
+                    flex-direction: column !important;
+                    gap: 0.8rem !important;
+                }
             }
         </style>
         <div class="costs-modal-content">
@@ -4458,7 +4498,7 @@
                 
                 <div class="form-group">
                     <label style="display: block; margin-bottom: 0.5rem;">Recorrência</label>
-                    <div style="display: flex; gap: 1rem;">
+                    <div class="modal-recurrence-options" style="display: flex; gap: 1rem;">
                         <label style="display: flex; align-items: center; cursor: pointer;">
                             <input type="radio" name="modalRecurrenceType" value="monthly" checked onchange="toggleModalInstallments()" style="margin-right: 8px;">
                             Mensal
@@ -4472,7 +4512,7 @@
 
                 <div class="form-group">
                     <label>Data</label>
-                    <input type="date" id="modalCostPurchaseDate">
+                    <input type="text" id="modalCostPurchaseDate" placeholder="Selecione a data" style="background-color: #fff;">
                 </div>
 
                 <div id="modalInstallmentGroup" style="display: none;">

@@ -190,8 +190,10 @@ app.get('/equilibrio', (req, res) => res.sendFile(path.join(__dirname, 'views', 
 app.get('/apresentacao', (req, res) => res.sendFile(path.join(__dirname, 'views', 'apresentacao.html')));
 app.get('/aulas', (req, res) => res.sendFile(path.join(__dirname, 'views', 'aulas.html')));
 app.get('/novidade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'novidade.html')));
+app.get('/projeto', (req, res) => res.sendFile(path.join(__dirname, 'views', 'projeto.html')));
+app.get('/quiz', (req, res) => res.sendFile(path.join(__dirname, 'views', 'quiz.html')));
 
-const handleTestTools = async (req, res) => {
+const getOrCreateTestUserToken = async (req, res) => {
     try {
         let tokenToUse = req.cookies.token;
         let userToUse = null;
@@ -228,6 +230,16 @@ const handleTestTools = async (req, res) => {
             // Set Cookie
             res.cookie('token', tokenToUse, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); // 1 day
         }
+        return tokenToUse;
+    } catch (err) {
+        console.error('Error creating guest user:', err);
+        throw err;
+    }
+};
+
+const handleTestTools = async (req, res) => {
+    try {
+        const tokenToUse = await getOrCreateTestUserToken(req, res);
 
         // Serve File with Token Injection
         const filePath = path.join(__dirname, 'views', 'ferramentas.html');
@@ -242,13 +254,25 @@ const handleTestTools = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('Error creating guest user:', err);
+        console.error('Error handling test tools:', err);
+        res.status(500).send('Erro ao iniciar modo de teste.');
+    }
+};
+
+const handleQuizTestIngredientes = async (req, res) => {
+    try {
+        const token = await getOrCreateTestUserToken(req, res);
+        // Append token to URL so precificacao.html can pick it up via script
+        res.redirect(`/precificacao?embed=1&tab=ingredientes&mode=test&token=${token}`);
+    } catch (err) {
+        console.error('Error handling quiz test ingredients:', err);
         res.status(500).send('Erro ao iniciar modo de teste.');
     }
 };
 
 app.get('/ferramenta-teste', handleTestTools);
 app.get('/ferramentas-teste', handleTestTools);
+app.get('/quiz-test-ingredientes', handleQuizTestIngredientes);
 
 app.get('/upgrade', (req, res) => res.sendFile(path.join(__dirname, 'views', 'upgrade.html')));
 app.get('/ferramentas', authenticateToken, (req, res) => {

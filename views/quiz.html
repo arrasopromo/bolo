@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz - BelleCake</title>
+    <!-- Preload core fonts and styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="/css/styles.css?v=20260218">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        // Force light theme
+        document.documentElement.setAttribute('data-theme', 'light');
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body {
+            background-color: #f0f2f5; /* Light gray background for contrast */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.2s;
+            z-index: 10;
+        }
+
+        .back-btn:hover {
+            background: rgba(0,0,0,0.05);
+            color: #333;
+        }
+
+        .quiz-container {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            min-height: 500px; /* Ensure consistent height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header / Progress Bar could go here */
+        .quiz-header {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .quiz-logo {
+            max-width: 120px;
+            height: auto;
+        }
+
+        /* Steps */
+        .step {
+            display: none; /* Hidden by default */
+            padding: 2rem;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .step.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Step 1: Welcome */
+        .welcome-image {
+            width: 280px;
+            height: 380px; /* Increased height */
+            border-radius: 20px; /* Rounded square frame */
+            object-fit: cover;
+            margin-bottom: 0.5rem; /* Reduced from 1.5rem */
+            /* border removed */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        /* Audio Player Styles */
+        .wa-audio-container {
+            background-color: #f0f2f5;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin: 0 auto 1.5rem;
+        }
+
+        .wa-top-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .wa-avatar-container {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .wa-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #ccc;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        .wa-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .wa-mic-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: #09D261;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border: 2px solid #f0f2f5;
+        }
+
+        .wa-play-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        
+        .wa-play-btn svg {
+            width: 32px;
+            height: 32px;
+            fill: #999;
+        }
+
+        .wa-play-btn:hover svg {
+            fill: #25D366; /* Unified Green */
+        }
+        
+        .wa-play-btn.playing svg {
+            fill: #25D366; /* Unified Green */
+        }
+
+        .wa-center-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .wa-progress-container {
+            width: 100%;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .wa-progress-bg {
+            width: 100%;
+            height: 4px;
+            background-color: #d1d7db;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .wa-progress-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #00a884;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .wa-progress-thumb {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background-color: #00a884;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .wa-progress-container:hover .wa-progress-thumb {
+            opacity: 1;
+        }
+
+        .wa-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #667781;
+            margin-top: 4px;
+        }
+
+        .wa-speed-controls {
+            display: flex;
+            gap: 2px;
+            background: #e9edef;
+            padding: 2px;
+            border-radius: 12px;
+        }
+
+        .wa-speed-btn {
+            background: none;
+            border: none;
+            font-size: 10px;
+            font-weight: 600;
+            color: #667781;
+            padding: 2px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wa-speed-btn.active {
+            background-color: #25D366; /* Unified Green */
+            color: white;
+        }
+
+        /* Video Placeholder */
+        .video-placeholder {
+            width: 100%;
+            max-width: 180px; /* Reduced width to prevent scrolling */
+            aspect-ratio: 9/16; /* Vertical video */
+            background-color: #eee;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: #888;
+            font-size: 0.8rem;
+            border: 2px dashed #ccc;
+        }
+
+        .welcome-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        /* Step 2: Question */
+        .question-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            color: #222;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            color: #444;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-yellow, #D4AF37);
+            background-color: #fff9e6;
+            transform: translateY(-2px);
+        }
+
+        .option-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Buttons */
+        .btn-start {
+            background: #25D366; /* WhatsApp/Success Green */
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem; /* Reduced padding */
+            border-radius: 50px;
+            font-size: 0.95rem; /* Reduced font size */
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem; /* Reduced gap */
+        }
+
+        .btn-start:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+        }
+
+        /* Loading state */
+        .loading-dots::after {
+            content: ' .';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);}
+            40% { color: white; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);}
+            60% { text-shadow: .25em 0 0 white, .5em 0 0 rgba(0,0,0,0);}
+            80%, 100% { text-shadow: .25em 0 0 white, .5em 0 0 white;}
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <!-- Back Button -->
+        <button id="backBtn" class="back-btn" onclick="prevStep()" style="display: none;" aria-label="Voltar">
+            <i data-lucide="arrow-left"></i>
+        </button>
+
+        <!-- STEP 1: Intro -->
+        <div id="step-1" class="step active" style="padding-top: 1rem;">
+            <!-- Logo (Step 1 only) -->
+            <div style="text-align: center; margin-bottom: 0.5rem;">
+                <img src="/images/logo preta bellecake.webp" alt="Belle Cake Logo" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+            </div>
+
+            <!-- Using the specified image -->
+            <img src="/images/imagem ferramenta isabelle.png" alt="Atendente" class="welcome-image">
+            
+            <h1 class="welcome-title" style="margin-bottom: 0.25rem; font-size: 1.25rem;">Ferramenta de precificação completo</h1>
+            <p class="welcome-subtitle" style="margin-bottom: 1rem; font-size: 0.9rem;">
+                Pesquisa rápida para apresentar e ver se a ferramenta será útil para o seu perfil.
+            </p>
+            
+            <button class="btn-start" onclick="nextStep(2)">
+                INICIAR ATENDIMENTO
+                <i data-lucide="message-circle"></i>
+            </button>
+        </div>
+
+        <!-- STEP 2: Question 1 -->
+        <div id="step-2" class="step">
+            <div style="width: 100%; margin-bottom: 1rem;">
+                <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Pergunta 1 de 4</span>
+                <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
+                    <div style="height: 100%; width: 25%; background: var(--primary-yellow, #D4AF37); border-radius: 2px;"></div>
+                </div>
+            </div>
+
+            <h2 class="question-text">Como você faz a precificação dos seus produtos?</h2>
+            
+            <div class="options-grid">
+                <button class="option-btn" onclick="selectAnswer(2, 'A')">
+                    <span>A. Anotando no caderno</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(2, 'B')">
+                    <span>B. Calculo na mão e deixo registrado no telefone</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(2, 'C')">
+                    <span>C. Uso planilha Excel</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(2, 'D')">
+                    <span>D. Faço uma média baseada no que concorrentes cobram</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Question 2 -->
+        <div id="step-3" class="step">
+            <div style="width: 100%; margin-bottom: 1rem;">
+                <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Pergunta 2 de 4</span>
+                <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
+                    <div style="height: 100%; width: 50%; background: var(--primary-yellow, #D4AF37); border-radius: 2px;"></div>
+                </div>
+            </div>
+
+            <h2 class="question-text">Se os ingrediente mudam de valor como voce faz?</h2>
+            
+            <div class="options-grid">
+                <button class="option-btn" onclick="selectAnswer(3, 'A')">
+                    <span>A. Recalculo todas receitas manualmente</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(3, 'B')">
+                    <span>B. Aumento o preco das receitas pela minha cabeça</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(3, 'C')">
+                    <span>C. Recalculo os preços usando minhas planilha Excel</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(3, 'D')">
+                    <span>D. Depois de um tempinho eu aumento</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 4: Question 3 -->
+        <div id="step-4" class="step">
+            <div style="width: 100%; margin-bottom: 1rem;">
+                <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Pergunta 3 de 4</span>
+                <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
+                    <div style="height: 100%; width: 75%; background: var(--primary-yellow, #D4AF37); border-radius: 2px;"></div>
+                </div>
+            </div>
+
+            <h2 class="question-text">Você sabe o custo variável e a margem de lucro REAL dos seus produtos?</h2>
+            
+            <div class="options-grid">
+                <button class="option-btn" onclick="selectAnswer(4, 'A')">
+                    <span>A) Sim, sei exatamente quanto custa e quanto sobra em cada item</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(4, 'B')">
+                    <span>B) Tenho uma noção, mas não sei o valor exato</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(4, 'C')">
+                    <span>C) Tenho dificuldade para calcular margem corretamente</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(4, 'D')">
+                    <span>D) Não sei separar custo variável de lucro</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 5: Media (Audio + Video) -->
+        <div id="step-5" class="step">
+            <div style="width: 100%; margin-bottom: 1rem;">
+                <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Entenda a Ferramenta</span>
+                <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
+                    <div style="height: 100%; width: 85%; background: var(--primary-yellow, #D4AF37); border-radius: 2px;"></div>
+                </div>
+            </div>
+
+            <h2 class="question-text">Veja como é simples precificar</h2>
+            
+            <!-- Audio Player (WhatsApp Style) -->
+            <div class="wa-audio-container">
+                <div class="wa-top-row">
+                    <button class="wa-play-btn" id="waPlayBtn" onclick="toggleAudio()">
+                        <i data-lucide="play" fill="currentColor"></i>
+                    </button>
+                    
+                    <div class="wa-center-col">
+                        <div class="wa-progress-container" onclick="seekAudio(event)">
+                            <div class="wa-progress-bg">
+                                <div class="wa-progress-fill" id="waProgressFill">
+                                    <div class="wa-progress-thumb"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wa-meta-row">
+                            <div class="wa-time-display" id="waTimeDisplay">0:00</div>
+                            <div class="wa-speed-controls">
+                                <button class="wa-speed-btn active" onclick="setSpeed(1, this)">1x</button>
+                                <button class="wa-speed-btn" onclick="setSpeed(1.5, this)">1.5x</button>
+                                <button class="wa-speed-btn" onclick="setSpeed(2, this)">2x</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wa-avatar-container">
+                        <div class="wa-avatar">
+                            <img src="/images/isa.webp" alt="Isa">
+                        </div>
+                        <div class="wa-mic-badge">
+                            <i data-lucide="mic" style="width: 14px; height: 14px;"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <audio id="waAudio" preload="metadata">
+                        <source src="/images/audio%20upgrade.MP3" type="audio/mpeg">
+                </audio>
+            </div>
+
+            <!-- Video Placeholder -->
+            <div class="video-placeholder">
+                <div style="text-align: center;">
+                    <i data-lucide="video" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
+                    <div>Vídeo explicativo (9:16)</div>
+                </div>
+            </div>
+
+            <button class="btn-start" onclick="nextStep(6)" style="width: 100%; justify-content: center;">
+                QUERO PRECIFICAR AGORA
+                <i data-lucide="arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- STEP 6: Tool Embed -->
+        <div id="step-6" class="step" style="padding: 0; height: 100vh; flex-direction: column;">
+            <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem; text-align: center; background: #fff;">
+                <h2 class="question-text" style="margin-bottom: 0.5rem; font-size: 1.1rem;">Teste nossa ferramenta</h2>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
+                    Tente registrar alguns ingredientes abaixo:
+                </p>
+            </div>
+            
+            <div style="flex: 1; width: 100%; position: relative; background: #f9f9f9; overflow: hidden;">
+                <!-- Iframe loading the ingredients tool in test mode -->
+                <iframe id="toolFrame" style="width: 100%; height: 100%; border: none; display: block;" title="Teste de Ferramenta"></iframe>
+            </div>
+
+            <div id="continueBtnContainer" style="padding: 1rem; background: #fff; border-top: 1px solid #eee; width: 100%; box-sizing: border-box; display: none;">
+                <button class="btn-start" onclick="nextStep(7)" style="width: 100%; justify-content: center; background-color: #4CAF50;">
+                    MUITO BEM! CONTINUAR
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 7: Question 4 -->
+        <div id="step-7" class="step">
+            <div style="width: 100%; margin-bottom: 1rem;">
+                <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Pergunta 4 de 4</span>
+                <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
+                    <div style="height: 100%; width: 100%; background: var(--primary-yellow, #D4AF37); border-radius: 2px;"></div>
+                </div>
+            </div>
+
+            <h2 class="question-text">Você registra os custos fixos do seu negócio?</h2>
+            
+            <div class="options-grid">
+                <button class="option-btn" onclick="selectAnswer(7, 'A')">
+                    <span>a. Sim, registro</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(7, 'B')">
+                    <span>b. Não registro</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(7, 'C')">
+                    <span>c. Não sei quais são esses custos</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+                <button class="option-btn" onclick="selectAnswer(7, 'D')">
+                    <span>d. Registrava, mas parei</span>
+                    <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 8: Final Audio + CTA -->
+        <div id="step-8" class="step">
+            <div style="width: 100%; margin-bottom: 1rem;">
+                <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Entenda a Ferramenta</span>
+                <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
+                    <div style="height: 100%; width: 100%; background: var(--primary-yellow, #D4AF37); border-radius: 2px;"></div>
+                </div>
+            </div>
+
+            <h2 class="question-text">Veja como é simples precificar</h2>
+            
+            <!-- Audio Player 2 (WhatsApp Style) -->
+            <div class="wa-audio-container">
+                <div class="wa-top-row">
+                    <button class="wa-play-btn" id="waPlayBtn2" onclick="toggleAudio2()">
+                        <i data-lucide="play" fill="currentColor"></i>
+                    </button>
+                    
+                    <div class="wa-center-col">
+                        <div class="wa-progress-container" onclick="seekAudio2(event)">
+                            <div class="wa-progress-bg">
+                                <div class="wa-progress-fill" id="waProgressFill2">
+                                    <div class="wa-progress-thumb"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wa-meta-row">
+                            <div class="wa-time-display" id="waTimeDisplay2">0:00</div>
+                            <div class="wa-speed-controls">
+                                <button class="wa-speed-btn active" onclick="setSpeed2(1, this)">1x</button>
+                                <button class="wa-speed-btn" onclick="setSpeed2(1.5, this)">1.5x</button>
+                                <button class="wa-speed-btn" onclick="setSpeed2(2, this)">2x</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wa-avatar-container">
+                        <div class="wa-avatar">
+                            <img src="/images/isa.webp" alt="Isa">
+                        </div>
+                        <div class="wa-mic-badge" id="waMicBadge2">
+                            <i data-lucide="mic" style="width: 14px; height: 14px;"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <audio id="waAudio2" preload="metadata">
+                        <source src="/images/audio%20upgrade.MP3" type="audio/mpeg">
+                </audio>
+            </div>
+
+            <button class="btn-start" onclick="window.location.href='/ferramentas?tab=produtos'" style="width: 100%; justify-content: center;">
+                QUERO PRECIFICAR AGORA
+                <i data-lucide="arrow-right"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+        
+        let currentStepGlobal = 1;
+
+        function nextStep(stepNumber) {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            
+            // Show target step
+            const target = document.getElementById(`step-${stepNumber}`);
+            if (target) {
+                target.classList.add('active');
+            }
+            
+            // Update global tracker
+            currentStepGlobal = stepNumber;
+
+            // Show/Hide Back Button
+            const backBtn = document.getElementById('backBtn');
+            if (stepNumber > 1) {
+                backBtn.style.display = 'block';
+            } else {
+                backBtn.style.display = 'none';
+            }
+
+            // Layout Adjustment for Step 6 (Full Screen Embed)
+            const container = document.querySelector('.quiz-container');
+            const btnContainer = document.getElementById('continueBtnContainer');
+
+            if (stepNumber === 6) {
+                container.style.maxWidth = '100%';
+                container.style.width = '100%';
+                container.style.height = '100vh';
+                container.style.borderRadius = '0';
+                document.body.style.padding = '0';
+                document.body.style.alignItems = 'flex-start';
+                document.body.style.overflow = 'hidden';
+                
+                // Ensure button is hidden initially when entering this step
+                if (btnContainer) btnContainer.style.display = 'none';
+            } else {
+                container.style.maxWidth = '480px';
+                container.style.width = '100%';
+                container.style.height = ''; 
+                container.style.borderRadius = '20px';
+                document.body.style.padding = '1rem';
+                document.body.style.alignItems = 'center';
+                document.body.style.overflow = '';
+            }
+
+            // Special handling for Step 6 (Load Iframe only when needed)
+            if (stepNumber === 6) {
+                const frame = document.getElementById('toolFrame');
+                if (frame) {
+                    if (!frame.src) {
+                        // Use the new route that authenticates as guest and redirects
+                        frame.src = "/quiz-test-ingredientes?tab=ingredientes";
+                    } else {
+                        // If frame is already loaded, ensure we are on the ingredients tab
+                        // Add a small delay to ensure the iframe is visible and ready to receive messages
+                        setTimeout(() => {
+                            frame.contentWindow.postMessage({ type: 'SWITCH_TAB', tab: 'ingredientes' }, '*');
+                        }, 100);
+                        
+                        // Reset pricing phase so logic can restart if needed
+                        pricingPhaseStarted = false;
+                    }
+                }
+            }
+        }
+        
+        // Listen for messages from the embedded iframe
+        let pricingPhaseStarted = false;
+        
+        window.addEventListener('message', function(event) {
+            if (!event.data) return;
+            
+            // Handle Status Update (Comprehensive State Sync)
+            if (event.data.type === 'STATUS_UPDATE') {
+                const ingCount = event.data.ingredientCount || 0;
+                const prodCount = event.data.productCount || 0;
+                const currentTab = event.data.currentTab;
+                
+                console.log('Status Update:', { ingCount, prodCount, currentTab });
+                
+                const btnContainer = document.getElementById('continueBtnContainer');
+                const btn = btnContainer.querySelector('button');
+                
+                if (prodCount > 0) {
+                    // User has products, always allow continuing
+                    btn.innerHTML = 'MUITO BEM! CONTINUAR <i data-lucide="arrow-right"></i>';
+                    btn.style.color = '#FFFFFF';
+                    btn.onclick = function() {
+                        nextStep(7);
+                    };
+                    btnContainer.style.display = 'block';
+                } else if (ingCount >= 7) {
+                    // User has enough ingredients but no products yet
+                    if (currentTab === 'ingredientes') {
+                        // Show button to go to pricing
+                        // User requested "Muito bem continuar" behavior here too
+                        btn.innerHTML = 'MUITO BEM! CONTINUAR <i data-lucide="arrow-right"></i>';
+                        btn.style.color = '#FFFFFF';
+                        btn.onclick = function() {
+                            startPricingPhase();
+                        };
+                        btnContainer.style.display = 'block';
+                    } else {
+                        // In products tab but no products yet - hide button
+                        btnContainer.style.display = 'none';
+                    }
+                } else {
+                    // Not enough ingredients
+                    btnContainer.style.display = 'none';
+                }
+                
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return; 
+            }
+
+            // Handle Ingredient Updates (Legacy/Specific)
+            if (event.data.type === 'INGREDIENT_UPDATE') {
+                // If we receive this, we might want to wait for STATUS_UPDATE or use this if simple
+                // But STATUS_UPDATE is better. We can keep this for backward compatibility or immediate feedback
+                // simpler to just rely on STATUS_UPDATE if precificacao sends it often enough.
+                // However, precificacao sends INGREDIENT_UPDATE on render.
+                // Let's rely on the logic above if possible. 
+                // To be safe, let's map this to the same logic if product count is unknown, 
+                // but simpler to just trust STATUS_UPDATE which we added to switchTab.
+                // We should ensure precificacao sends STATUS_UPDATE on load/render too.
+            }
+            
+            // Handle Product Saved (Legacy/Specific)
+            if (event.data.type === 'PRODUCT_SAVED') {
+                 // Force a status check or just show button
+                 const btnContainer = document.getElementById('continueBtnContainer');
+                 const btn = btnContainer.querySelector('button');
+                 
+                 btn.innerHTML = 'MUITO BEM! CONTINUAR <i data-lucide="arrow-right"></i>';
+                 btn.onclick = function() {
+                     nextStep(7);
+                 };
+                 btnContainer.style.display = 'block';
+                 if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        });
+        
+        function startPricingPhase() {
+            pricingPhaseStarted = true;
+            
+            // Send message to iframe to switch tab
+            const frame = document.getElementById('toolFrame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.postMessage({ type: 'SWITCH_TAB', tab: 'produtos' }, '*');
+            }
+            
+            // Update UI
+            const btnContainer = document.getElementById('continueBtnContainer');
+            if (btnContainer) btnContainer.style.display = 'none'; // Hide until product saved
+            
+            // Optional: Show a toast or message?
+            // For now, the iframe switching tabs is feedback enough
+        }
+
+        function prevStep() {
+            if (currentStepGlobal > 1) {
+                nextStep(currentStepGlobal - 1);
+            }
+        }
+
+        function selectAnswer(currentStep, answer) {
+            console.log(`Step ${currentStep} Answer: ${answer}`);
+            
+            // Visual feedback - Reset siblings first
+            const stepContainer = document.getElementById(`step-${currentStep}`);
+            if (stepContainer) {
+                const buttons = stepContainer.querySelectorAll('.option-btn');
+                buttons.forEach(b => {
+                    b.style.borderColor = '#e0e0e0';
+                    b.style.backgroundColor = '#fff';
+                });
+            }
+
+            const btn = event.currentTarget;
+            btn.style.borderColor = '#25D366';
+            btn.style.backgroundColor = '#e8f5e9';
+            
+            // Wait a moment then proceed
+            setTimeout(() => {
+                // If current step is 4, next is 5 (Media)
+                // If current step is 7, finish (for now just alert or log)
+                if (currentStep < 8) {
+                    nextStep(currentStep + 1);
+                } else {
+                    // Finished
+                    window.location.href = '/ferramentas?tab=produtos';
+                }
+            }, 400);
+        }
+
+        // --- Audio Player Logic ---
+        const audio = document.getElementById('waAudio');
+        const playBtn = document.getElementById('waPlayBtn');
+        const progressFill = document.getElementById('waProgressFill');
+        const timeDisplay = document.getElementById('waTimeDisplay');
+        
+        let isPlaying = false;
+
+        function toggleAudio() {
+            if (isPlaying) {
+                audio.pause();
+            } else {
+                audio.play();
+            }
+        }
+
+        if (audio) {
+            audio.addEventListener('play', () => {
+                isPlaying = true;
+                playBtn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+                playBtn.classList.add('playing');
+                document.querySelector('.wa-mic-badge').classList.add('animating');
+                lucide.createIcons();
+            });
+
+            audio.addEventListener('pause', () => {
+                isPlaying = false;
+                playBtn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+                playBtn.classList.remove('playing');
+                document.querySelector('.wa-mic-badge').classList.remove('animating');
+                lucide.createIcons();
+            });
+
+            audio.addEventListener('timeupdate', () => {
+                const duration = audio.duration || 0;
+                const currentTime = audio.currentTime;
+                const percent = duration > 0 ? (currentTime / duration) * 100 : 0;
+                
+                if (progressFill) progressFill.style.width = percent + '%';
+                
+                // Update time text
+                const current = formatTime(currentTime);
+                const total = formatTime(duration);
+                if (timeDisplay) {
+                    const spans = timeDisplay.querySelectorAll('span');
+                    if (spans.length === 2) {
+                        spans[0].textContent = current;
+                        spans[1].textContent = total;
+                    } else {
+                        timeDisplay.textContent = `${current} / ${total}`;
+                    }
+                }
+            });
+        }
+
+        function seekAudio(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percent = x / rect.width;
+            if (audio && audio.duration) {
+                audio.currentTime = percent * audio.duration;
+            }
+        }
+
+        function setSpeed(speed, btn) {
+            if (audio) audio.playbackRate = speed;
+            
+            // Update UI
+            document.querySelectorAll('.wa-speed-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // --- Audio Player 2 Logic (Step 8) ---
+        const audio2 = document.getElementById('waAudio2');
+        const playBtn2 = document.getElementById('waPlayBtn2');
+        const progressFill2 = document.getElementById('waProgressFill2');
+        const timeDisplay2 = document.getElementById('waTimeDisplay2');
+        const micBadge2 = document.getElementById('waMicBadge2');
+
+        let isPlaying2 = false;
+
+        function toggleAudio2() {
+            if (isPlaying2) {
+                audio2.pause();
+            } else {
+                audio2.play();
+            }
+        }
+
+        if (audio2) {
+            audio2.addEventListener('play', () => {
+                isPlaying2 = true;
+                playBtn2.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+                playBtn2.classList.add('playing');
+                if(micBadge2) micBadge2.classList.add('animating');
+                lucide.createIcons();
+            });
+
+            audio2.addEventListener('pause', () => {
+                isPlaying2 = false;
+                playBtn2.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+                playBtn2.classList.remove('playing');
+                if(micBadge2) micBadge2.classList.remove('animating');
+                lucide.createIcons();
+            });
+
+            audio2.addEventListener('timeupdate', () => {
+                const duration = audio2.duration || 0;
+                const currentTime = audio2.currentTime;
+                const percent = duration > 0 ? (currentTime / duration) * 100 : 0;
+                
+                if (progressFill2) progressFill2.style.width = percent + '%';
+                
+                // Update time text
+                const current = formatTime(currentTime);
+                const total = formatTime(duration);
+                if (timeDisplay2) {
+                    const spans = timeDisplay2.querySelectorAll('span');
+                    if (spans.length === 2) {
+                        spans[0].textContent = current;
+                        spans[1].textContent = total;
+                    } else {
+                        timeDisplay2.textContent = `${current} / ${total}`;
+                    }
+                }
+            });
+        }
+
+        function seekAudio2(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percent = x / rect.width;
+            if (audio2 && audio2.duration) {
+                audio2.currentTime = percent * audio2.duration;
+            }
+        }
+
+        function setSpeed2(speed, btn) {
+            if (audio2) audio2.playbackRate = speed;
+            
+            // Update UI
+            // Clear siblings active class
+            if(btn.parentElement) {
+                const siblings = btn.parentElement.querySelectorAll('.wa-speed-btn');
+                siblings.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>

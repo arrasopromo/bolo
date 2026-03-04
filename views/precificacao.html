@@ -681,6 +681,16 @@
 
             if (p.get('embed') === '1') {
                 document.documentElement.setAttribute('data-embed', '1');
+                // Force hide sidebar and header immediately via JS
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    .sidebar, .mobile-header, .page-title { display: none !important; }
+                    .main-content { margin: 0 !important; width: 100% !important; padding: 1rem !important; }
+                    .app-container { padding-left: 0 !important; }
+                    .user-top-bar { margin-top: 5rem !important; margin-bottom: 2rem !important; padding-right: 1rem !important; display: flex !important; position: relative; z-index: 10; } 
+                    .modal-overlay { z-index: 99999 !important; }
+                `;
+                document.head.appendChild(style);
             }
 
             // Handle token login via URL (e-mail link)
@@ -767,7 +777,7 @@
         <main class="main-content">
             
             <!-- Top User Bar -->
-            <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; margin-bottom: 2rem;">
+            <div class="user-top-bar" style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; margin-bottom: 2rem;">
                 <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 0.5rem 1rem; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;">
                     <div style="width: 32px; height: 32px; background: #FFFBF7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--secondary-caramel);">
                         <i data-lucide="user" style="width: 18px; height: 18px;"></i>
@@ -776,7 +786,7 @@
                 </div>
             </div>
 
-            <h1 id="pageTitle" style="margin-bottom: 2rem;">Precificação de Produtos</h1>
+            <h1 id="pageTitle" class="page-title" style="margin-bottom: 2rem;">Precificação de Produtos</h1>
 
             <!-- View: Produtos -->
             <div id="tab-produtos" class="view-section" style="display: block;">
@@ -948,7 +958,7 @@
             </div>
 
             <!-- Staging Table -->
-            <div style="overflow-x: auto; max-height: 40vh; margin-bottom: 1.5rem; border: 1px solid #eee; border-radius: 8px;">
+            <div style="overflow-x: auto; max-height: 65vh; margin-bottom: 1.5rem; border: 1px solid #eee; border-radius: 8px;" id="bulkTableContainer">
                 <table class="data-table" style="margin: 0;">
                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                         <tr>
@@ -1121,10 +1131,31 @@
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab') || 'produtos';
             switchTab(tab);
+            
+            // Listen for messages from parent (Embed Control)
+            window.addEventListener('message', (event) => {
+                if (event.data) {
+                    if (event.data.type === 'SWITCH_TAB') {
+                        if (event.data.tab) {
+                            switchTab(event.data.tab);
+                        }
+                    }
+                }
+            });
 
-            // Load initial data
+            // Load initial data with explicit catch and debug
+            console.log('Starting initial load...');
             loadIngredients().then(() => {
-                loadProducts(); // Load products after ingredients to map names if needed
+                console.log('Ingredients loaded');
+                loadProducts(); 
+            }).catch(err => {
+                console.error('Initial load failed:', err);
+                if (document.documentElement.getAttribute('data-embed') === '1') {
+                    const errDiv = document.createElement('div');
+                    errDiv.style.color = 'red';
+                    errDiv.textContent = 'Erro ao carregar: ' + err.message;
+                    document.body.prepend(errDiv);
+                }
             });
 
             // Setup User Info
@@ -1139,6 +1170,20 @@
         });
 
         // --- Tabs Logic ---
+        function sendStatusUpdate() {
+            if (document.documentElement.getAttribute('data-embed') === '1') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentTab = urlParams.get('tab') || 'produtos';
+                
+                window.parent.postMessage({ 
+                    type: 'STATUS_UPDATE', 
+                    ingredientCount: typeof allIngredients !== 'undefined' ? allIngredients.length : 0,
+                    productCount: typeof allProducts !== 'undefined' ? allProducts.length : 0,
+                    currentTab: currentTab
+                }, '*');
+            }
+        }
+
         function switchTab(tabName) {
             // Update URL without reload
             const url = new URL(window.location);
@@ -1170,6 +1215,9 @@
                     pageTitle.innerText = 'Precificação de Produtos';
                 }
             }
+
+            // Notify parent of status (Embed Mode)
+            sendStatusUpdate();
         }
 
         // --- Data Loading ---
@@ -1272,6 +1320,12 @@
             if (isTestMode && counterDiv) {
                 counterDiv.style.display = 'block';
                 counterDiv.textContent = `Ingredientes: ${allIngredients.length} / 10`;
+                
+                // Notify parent if embedded (send TOTAL count)
+                if (document.documentElement.getAttribute('data-embed') === '1') {
+                    window.parent.postMessage({ type: 'INGREDIENT_UPDATE', count: allIngredients.length }, '*');
+                }
+
                 if (allIngredients.length >= 10) {
                     counterDiv.style.color = '#ef4444'; // Red
                     counterDiv.style.borderColor = '#ef4444';
@@ -1302,6 +1356,9 @@
                 tbody.appendChild(tr);
             });
             lucide.createIcons();
+            
+            // Send update whenever table is rendered (includes load, add, delete)
+            sendStatusUpdate();
         }
 
         function toggleMobileSortMenu() {
@@ -1347,6 +1404,12 @@
             tbody.innerHTML = '';
 
             let displayProducts = [...allProducts];
+
+            // Notify parent if embedded
+            sendStatusUpdate();
+            if (document.documentElement.getAttribute('data-embed') === '1' && displayProducts.length > 0) {
+                 window.parent.postMessage({ type: 'PRODUCT_SAVED' }, '*');
+            }
 
             if (currentSort.field) {
                 displayProducts.sort((a, b) => {
@@ -1404,13 +1467,13 @@
                         </span>
                     </td>
                     <td data-label="Ações">
-                        <button class="action-btn" onclick="openProductModal('${prod._id}')" title="Editar">
+                        <button type="button" class="action-btn" onclick="openProductModal('${prod._id}')" title="Editar">
                             <i data-lucide="edit-2"></i>
                         </button>
-                        <button class="action-btn" onclick="duplicateProduct('${prod._id}')" title="Duplicar">
+                        <button type="button" class="action-btn" onclick="duplicateProduct('${prod._id}')" title="Duplicar">
                             <i data-lucide="copy"></i>
                         </button>
-                        <button class="action-btn" onclick="deleteProduct('${prod._id}')" title="Excluir" style="color: #ef4444;">
+                        <button type="button" class="action-btn" onclick="deleteProduct('${prod._id}')" title="Excluir" style="color: #ef4444;">
                             <i data-lucide="trash-2"></i>
                         </button>
                     </td>
@@ -1466,62 +1529,94 @@
         }
 
         function openIngredientModal(ingOrId = null) {
-            const modal = document.getElementById('ingredientModal');
-            const form = document.getElementById('ingredientForm');
-            
-            let ing = null;
-            if (ingOrId) {
-                if (typeof ingOrId === 'string') {
-                    ing = allIngredients.find(i => i._id === ingOrId);
-                } else {
-                    ing = ingOrId;
-                }
-            }
-            
-            // Reset Voice UI
-            if (typeof resetIngredientVoiceUI === 'function') {
-                resetIngredientVoiceUI();
-            }
-
-            // Reset Error State
-            const errorSpan = document.getElementById('ingNameError');
-            const submitBtn = document.getElementById('btnSaveIngredient');
-            if(errorSpan) errorSpan.style.display = 'none';
-            if(submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.style.opacity = '1';
-                submitBtn.style.cursor = 'pointer';
-            }
-
-            if (ing) {
-                // Edit
-                document.getElementById('ingId').value = ing._id;
-                document.getElementById('ingName').value = ing.name;
-                document.getElementById('ingPrice').value = ing.price;
-                document.getElementById('ingQty').value = ing.quantityPackage;
-                document.getElementById('ingUnit').value = ing.unit;
-                modal.querySelector('h2').textContent = 'Editar Ingrediente';
-            } else {
-                // New
-                // Check Test Mode Limit
-                const params = new URLSearchParams(window.location.search);
-                const isTestMode = params.get('mode') === 'test';
-                
-                if (isTestMode && allIngredients.length >= 10) {
-                    alert('Você atingiu o limite de 10 ingredientes no modo teste. Atualize para a versão completa para cadastrar mais!');
+            console.log('openIngredientModal called', ingOrId);
+            try {
+                const modal = document.getElementById('ingredientModal');
+                if (!modal) {
+                    console.error('Modal ingredientModal not found in DOM');
+                    alert('Erro: Modal de ingredientes não encontrado.');
                     return;
                 }
 
-                form.reset();
-                document.getElementById('ingId').value = '';
-                modal.querySelector('h2').textContent = 'Novo Ingrediente';
+                // Force z-index and ensure visibility for embed mode
+                modal.style.zIndex = '999999';
+
+                const form = document.getElementById('ingredientForm');
+                
+                let ing = null;
+                if (ingOrId) {
+                    if (typeof ingOrId === 'string') {
+                        if (typeof allIngredients !== 'undefined') {
+                            ing = allIngredients.find(i => i._id === ingOrId);
+                        }
+                    } else {
+                        ing = ingOrId;
+                    }
+                }
+                
+                // Reset Voice UI safely
+                if (typeof resetIngredientVoiceUI === 'function') {
+                    try { resetIngredientVoiceUI(); } catch(e) { console.warn('Voice UI reset error', e); }
+                }
+
+                // Reset Error State
+                const errorSpan = document.getElementById('ingNameError');
+                const submitBtn = document.getElementById('btnSaveIngredient');
+                if(errorSpan) errorSpan.style.display = 'none';
+                if(submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+
+                if (ing) {
+                    // Edit
+                    const idInput = document.getElementById('ingId');
+                    if(idInput) idInput.value = ing._id || '';
+                    
+                    const nameInput = document.getElementById('ingName');
+                    if(nameInput) nameInput.value = ing.name || '';
+                    
+                    const priceInput = document.getElementById('ingPrice');
+                    if(priceInput) priceInput.value = ing.price || 0;
+                    
+                    const qtyInput = document.getElementById('ingQty');
+                    if(qtyInput) qtyInput.value = ing.quantityPackage || 0;
+                    
+                    const unitInput = document.getElementById('ingUnit');
+                    if(unitInput) unitInput.value = ing.unit || 'un';
+                    
+                    const h2 = modal.querySelector('h2');
+                    if(h2) h2.textContent = 'Editar Ingrediente';
+                } else {
+                    // New
+                    // Check Test Mode Limit
+                    const params = new URLSearchParams(window.location.search);
+                    const isTestMode = params.get('mode') === 'test';
+                    
+                    if (isTestMode && typeof allIngredients !== 'undefined' && allIngredients.length >= 10) {
+                        alert('Você atingiu o limite de 10 ingredientes no modo teste. Atualize para a versão completa para cadastrar mais!');
+                        return;
+                    }
+
+                    if(form) form.reset();
+                    const idInput = document.getElementById('ingId');
+                    if(idInput) idInput.value = '';
+                    
+                    const h2 = modal.querySelector('h2');
+                    if(h2) h2.textContent = 'Novo Ingrediente';
+                }
+                
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Lock body scroll
+                
+                // Scroll to top fix for mobile
+                const content = modal.querySelector('.modal-content');
+                if (content) content.scrollTop = 0;
+            } catch (err) {
+                console.error('Error opening ingredient modal:', err);
+                alert('Erro ao abrir modal de ingrediente: ' + err.message);
             }
-            
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Lock body scroll
-            // Scroll to top fix for mobile
-            const content = modal.querySelector('.modal-content');
-            if (content) content.scrollTop = 0;
         }
 
         async function saveIngredient(e) {
@@ -1565,6 +1660,12 @@
                     localStorage.setItem('bellecake_test_ingredients', JSON.stringify(ingredients));
                     closeModal('ingredientModal');
                     loadIngredients();
+                    
+                    // Notify parent if embedded
+                    if (document.documentElement.getAttribute('data-embed') === '1') {
+                        window.parent.postMessage({ type: 'INGREDIENT_SAVED', count: 1 }, '*');
+                    }
+                    
                     return;
                 } catch (err) {
                     alert('Erro ao salvar localmente: ' + err.message);
@@ -1619,62 +1720,120 @@
 
         // --- Product Actions & Calculation Logic ---
         function openProductModal(prodOrId = null) {
-            const modal = document.getElementById('productModal');
-            const form = document.getElementById('productForm');
-            const ingredientsContainer = document.getElementById('recipeIngredients');
-            ingredientsContainer.innerHTML = ''; // Clear
-
-            let prod = null;
-            if (prodOrId) {
-                if (typeof prodOrId === 'string') {
-                    prod = allProducts.find(p => p._id === prodOrId);
-                } else {
-                    prod = prodOrId;
+            console.log('openProductModal called', prodOrId);
+            try {
+                const modal = document.getElementById('productModal');
+                if (!modal) {
+                    console.error('Modal productModal not found');
+                    alert('Erro interno: Modal de produto não encontrado.');
+                    return;
                 }
-            }
 
-            if (prod) {
-                // Edit
-                document.getElementById('prodId').value = prod._id;
-                document.getElementById('prodName').value = prod.name;
-                document.getElementById('prodInvisibleCost').value = prod.invisibleCost || 0;
-                document.getElementById('prodMarkup').value = prod.markup || 0;
-                document.getElementById('prodSalePrice').value = prod.salePrice || 0;
-                
-                // Yield
-                document.getElementById('yieldActive').checked = prod.yieldActive;
-                document.getElementById('prodYield').value = prod.yield || 1;
-                toggleYieldInput();
+                // Force z-index and ensure visibility for embed mode
+                modal.style.zIndex = '999999';
 
-                // Platform Fee
-                document.getElementById('platformFeeActive').checked = prod.platformFeeActive;
-                document.getElementById('prodPlatformFee').value = prod.platformFee || 0;
-                togglePlatformFee();
+                const form = document.getElementById('productForm');
+                const ingredientsContainer = document.getElementById('recipeIngredients');
+                if(ingredientsContainer) ingredientsContainer.innerHTML = ''; // Clear
 
-                // Ingredients
-                if (prod.ingredients && prod.ingredients.length > 0) {
-                    prod.ingredients.forEach(ing => addIngredientRow(ing));
-                } else {
-                    addIngredientRow(); // Add one empty
+                let prod = null;
+                if (prodOrId) {
+                    if (typeof prodOrId === 'string') {
+                        if (typeof allProducts !== 'undefined') {
+                            prod = allProducts.find(p => p._id === prodOrId);
+                        }
+                    } else {
+                        prod = prodOrId;
+                    }
                 }
                 
-                modal.querySelector('h2').textContent = 'Editar Produto';
-            } else {
-                // New
-                form.reset();
-                document.getElementById('prodId').value = '';
-                addIngredientRow(); // Initial row
-                toggleYieldInput();
-                togglePlatformFee();
-                modal.querySelector('h2').textContent = 'Novo Produto';
+                console.log('Product to edit:', prod);
+
+                if (prod) {
+                    // Edit
+                    const idInput = document.getElementById('prodId');
+                    if(idInput) idInput.value = prod._id || '';
+                    
+                    const nameInput = document.getElementById('prodName');
+                    if(nameInput) nameInput.value = prod.name || '';
+                    
+                    const invCost = document.getElementById('prodInvisibleCost');
+                    if(invCost) invCost.value = prod.invisibleCost || 0;
+                    
+                    const markup = document.getElementById('prodMarkup');
+                    if(markup) markup.value = prod.markup || 0;
+                    
+                    const salePrice = document.getElementById('prodSalePrice');
+                    if(salePrice) salePrice.value = prod.salePrice || 0;
+                    
+                    // Yield
+                    const yieldCheck = document.getElementById('yieldActive');
+                    if(yieldCheck) yieldCheck.checked = prod.yieldActive || false;
+                    
+                    const yieldInput = document.getElementById('prodYield');
+                    if(yieldInput) yieldInput.value = prod.yield || 1;
+                    
+                    toggleYieldInput();
+
+                    // Platform Fee
+                    const feeCheck = document.getElementById('platformFeeActive');
+                    if(feeCheck) feeCheck.checked = prod.platformFeeActive || false;
+                    
+                    const feeInput = document.getElementById('prodPlatformFee');
+                    if(feeInput) feeInput.value = prod.platformFee || 0;
+                    
+                    togglePlatformFee();
+
+                    // Ingredients
+                    if (prod.ingredients && prod.ingredients.length > 0) {
+                        prod.ingredients.forEach(ing => addIngredientRow(ing));
+                    } else {
+                        addIngredientRow(); // Add one empty
+                    }
+                    
+                    const h2 = modal.querySelector('h2');
+                    if(h2) h2.textContent = 'Editar Produto';
+                } else {
+                    // New
+                    // Check Test Mode Limit
+                    const params = new URLSearchParams(window.location.search);
+                    const isTestMode = params.get('mode') === 'test';
+                    
+                    if (isTestMode && typeof allProducts !== 'undefined' && allProducts.length >= 2) {
+                        alert('Você atingiu o limite de 2 produtos no modo teste. Atualize para a versão completa para cadastrar mais!');
+                        return;
+                    }
+
+                    if(form) form.reset();
+                    const idInput = document.getElementById('prodId');
+                    if(idInput) idInput.value = '';
+                    
+                    addIngredientRow(); // Initial row
+                    toggleYieldInput();
+                    togglePlatformFee();
+                    
+                    const h2 = modal.querySelector('h2');
+                    if(h2) h2.textContent = 'Novo Produto';
+                }
+                
+                try {
+                    calculateProductTotals(); // Initial calc
+                } catch(e) {
+                    console.error('Error calculating totals:', e);
+                }
+                
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Lock body scroll
+                
+                // Scroll to top fix for mobile
+                const content = modal.querySelector('.modal-content');
+                if (content) content.scrollTop = 0;
+                
+                console.log('Modal opened successfully');
+            } catch (err) {
+                console.error('Error opening product modal:', err);
+                alert('Erro ao abrir modal de produto: ' + err.message);
             }
-            
-            calculateProductTotals(); // Initial calc
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Lock body scroll
-            // Scroll to top fix for mobile
-            const content = modal.querySelector('.modal-content');
-            if (content) content.scrollTop = 0;
         }
 
         function validateIngredientSelection(selectElement) {
@@ -1715,7 +1874,7 @@
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <select class="ing-select" onchange="validateIngredientSelection(this)" style="flex: 1;">
                             <option value="">Selecione um ingrediente...</option>
-                            ${allIngredients.map(ing => `
+                            ${(typeof allIngredients !== 'undefined' ? allIngredients : []).map(ing => `
                                 <option value="${ing._id}" data-price="${ing.price}" data-pkg="${ing.quantityPackage}" data-unit="${ing.unit}">
                                     ${ing.name}
                                 </option>
@@ -1733,7 +1892,7 @@
             `;
             
             container.appendChild(div);
-            lucide.createIcons();
+            try { if(window.lucide && window.lucide.createIcons) window.lucide.createIcons(); } catch(e){}
 
             if (data) {
                 const select = div.querySelector('.ing-select');
@@ -1744,6 +1903,10 @@
         }
 
         function calculateProductTotals() {
+            // Define salePrice at the start to avoid ReferenceError
+            const salePriceInput = document.getElementById('prodSalePrice');
+            const salePrice = salePriceInput ? (parseFloat(salePriceInput.value) || 0) : 0;
+
             // 1. Calculate Ingredients Cost
             let totalIngredientsCost = 0;
             const rows = document.querySelectorAll('.ingredient-row');
@@ -1792,23 +1955,21 @@
                 totalVariableCost = totalVariableCost / yieldAmount;
             }
 
-            // 4. Platform Fee (Added to Variable Cost as requested)
-            const salePrice = parseFloat(document.getElementById('prodSalePrice').value) || 0;
+            // 4. Platform Fee (Added to Variable Cost)
+            // User Request: Calculate fee based on Total Variable Cost (before fee), not Sale Price
             const platformFeeActive = document.getElementById('platformFeeActive').checked;
             let platformFeeValue = 0;
             
             if (platformFeeActive) {
                 const feePercent = parseFloat(document.getElementById('prodPlatformFee').value) || 0;
-                platformFeeValue = salePrice * (feePercent / 100);
+                // Base is current totalVariableCost (Ingredients + Invisible / Yield)
+                platformFeeValue = totalVariableCost * (feePercent / 100);
                 
                 const displayEl = document.getElementById('platformFeeValueDisplay');
                 if(displayEl) {
-                    if (salePrice > 0) {
+                    if (feePercent > 0) {
                         displayEl.textContent = `(${formatCurrency(platformFeeValue)})`;
                         displayEl.style.color = 'var(--secondary-caramel)';
-                    } else if (feePercent > 0) {
-                        displayEl.textContent = '(Defina Preço Venda)';
-                        displayEl.style.color = '#ef4444';
                     } else {
                         displayEl.textContent = '';
                     }
@@ -1827,10 +1988,14 @@
 
             // 6. Profit Analysis based on Actual Sale Price
             // Net Profit = Sale Price - Total Variable Cost (which now includes Fee)
+            // salePrice is already defined at the top of function
             const netProfit = salePrice - totalVariableCost;
             
-            document.getElementById('prodNetProfit').textContent = formatCurrency(netProfit);
-            document.getElementById('prodNetProfit').style.color = netProfit > 0 ? '#10b981' : '#ef4444';
+            const netProfitEl = document.getElementById('prodNetProfit');
+            if (netProfitEl) {
+                netProfitEl.textContent = formatCurrency(netProfit);
+                netProfitEl.style.color = netProfit > 0 ? '#10b981' : '#ef4444';
+            }
 
             const costPercent = salePrice > 0 ? (totalVariableCost / salePrice) * 100 : 0;
             document.getElementById('prodCostPercent').textContent = costPercent.toFixed(1) + '%';
@@ -1899,6 +2064,12 @@
                     localStorage.setItem('bellecake_test_products', JSON.stringify(products));
                     closeModal('productModal');
                     loadProducts();
+
+                    // Notify parent if embedded (PRODUCT_SAVED)
+                    if (document.documentElement.getAttribute('data-embed') === '1') {
+                        window.parent.postMessage({ type: 'PRODUCT_SAVED' }, '*');
+                    }
+
                     return;
                 } catch (err) {
                     alert('Erro ao salvar localmente: ' + err.message);
@@ -1919,6 +2090,53 @@
                 
                 closeModal('productModal');
                 loadProducts();
+
+                // Notify parent if embedded
+                if (document.documentElement.getAttribute('data-embed') === '1') {
+                    window.parent.postMessage({ type: 'PRODUCT_SAVED' }, '*');
+                    
+                    // Interactive Tutorial Flow
+                    setTimeout(() => {
+                        // Custom styled confirm/alert would be better, but using native for reliability
+                        if(confirm('Produto salvo com sucesso!\n\nAgora altere o valor de um ingrediente e veja os dados de custo do produto cadastrado se alterarem automaticamente.')) {
+                            switchTab('ingredientes');
+                            
+                            setTimeout(() => {
+                                const rows = document.querySelectorAll('#ingredientsTable tbody tr');
+                                if (rows.length > 0) {
+                                    // Highlight the first ingredient
+                                    const targetRow = rows[0];
+                                    targetRow.style.transition = 'background-color 0.5s';
+                                    targetRow.style.backgroundColor = '#ffe0b2'; // Highlight color
+                                    targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    
+                                    // Blink effect
+                                    setTimeout(() => targetRow.style.backgroundColor = '', 2000);
+                                    
+                                    // Show instruction
+                                    // Create a temporary tooltip/banner
+                                    const banner = document.createElement('div');
+                                    banner.style.position = 'fixed';
+                                    banner.style.bottom = '20px';
+                                    banner.style.left = '50%';
+                                    banner.style.transform = 'translateX(-50%)';
+                                    banner.style.background = '#333';
+                                    banner.style.color = 'white';
+                                    banner.style.padding = '12px 24px';
+                                    banner.style.borderRadius = '30px';
+                                    banner.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+                                    banner.style.zIndex = '10000';
+                                    banner.style.fontWeight = 'bold';
+                                    banner.innerHTML = 'Edite este ingrediente <i data-lucide="pencil" style="display:inline; width:16px;"></i> e mude o preço!';
+                                    document.body.appendChild(banner);
+                                    if(typeof lucide !== 'undefined') lucide.createIcons();
+                                    
+                                    setTimeout(() => banner.remove(), 5000);
+                                }
+                            }, 500);
+                        }
+                    }, 300);
+                }
             } catch (err) {
                 alert('Erro: ' + err.message);
             }
@@ -2091,22 +2309,27 @@
                     <i data-lucide="plus-circle" style="color: var(--secondary-caramel);"></i>
                 `;
                 item.onclick = () => {
+                    // Normalize units: kg->g, l->g (ml is disabled), ml->g
+                    let qty = ing.quantityPackage;
+                    let unit = ing.unit;
+                    
+                    if (unit === 'kg') {
+                        qty = qty * 1000;
+                        unit = 'g';
+                    } else if (unit === 'l') {
+                        qty = qty * 1000;
+                        unit = 'g'; 
+                    } else if (unit === 'ml') {
+                        unit = 'g';
+                    }
+
                     openIngredientModal({
-                        _id: null, // New
+                        _id: null,
                         name: ing.name,
                         price: ing.price,
-                        quantityPackage: ing.quantityPackage,
-                        unit: ing.unit === 'l' ? 'ml' : (ing.unit === 'kg' ? 'g' : ing.unit) // Normalize to g/ml/un
+                        quantityPackage: qty,
+                        unit: unit
                     });
-                    // Normalize units logic if needed (kg -> 1000g)
-                    if(ing.unit === 'kg') {
-                        document.getElementById('ingQty').value = ing.quantityPackage * 1000;
-                        document.getElementById('ingUnit').value = 'g';
-                    } else if (ing.unit === 'l') {
-                        document.getElementById('ingQty').value = ing.quantityPackage * 1000;
-                        document.getElementById('ingUnit').value = 'ml'; // Note: HTML select doesn't have ml in my snippet, checking...
-                        // If select doesn't have ml, fallback to g or un? My snippet had g and un.
-                    }
                     closeModal('standardIngredientsModal');
                 };
                 list.appendChild(item);
@@ -2154,13 +2377,13 @@
         display: grid; 
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
         gap: 1rem; 
-        max-height: 50vh; 
+        max-height: 60vh; 
         overflow-y: auto; 
         padding-right: 0.5rem;
     }
     @media (max-width: 768px) {
         .standard-ingredients-list {
-            max-height: 35vh; /* Reduced height for mobile */
+            max-height: 65vh; /* Increased height for mobile */
             grid-template-columns: 1fr 1fr; /* 2 columns on mobile */
         }
     }
@@ -2612,6 +2835,11 @@
                     closeModal('bulkIngredientModal');
                     loadIngredients();
                     alert(`✅ Sucesso! Todos os ${successCount} ingredientes foram salvos:\n\n${successNames.join(', ')}`);
+                    
+                    // Notify parent if embedded
+                    if (document.documentElement.getAttribute('data-embed') === '1') {
+                        window.parent.postMessage({ type: 'INGREDIENT_SAVED', count: successCount }, '*');
+                    }
                 }
             } catch (err) {
                 console.error('Critical error in bulk save:', err);
@@ -2641,6 +2869,85 @@
         [data-embed="1"] .main-content > div[style*="margin-top: 2rem"] {
             margin-top: 0.75rem !important;
             margin-bottom: 1rem !important;
+        }
+        
+        /* Embed Full Screen Fixes */
+        [data-embed="1"] html,
+        [data-embed="1"] body {
+            height: 100%;
+            overflow-x: hidden;
+            background-color: #fff;
+        }
+        [data-embed="1"] .app-container {
+            min-height: 100vh;
+            padding: 0 !important;
+            display: flex;
+            flex-direction: column;
+        }
+        [data-embed="1"] .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 80px !important; /* Space for fixed bottom buttons if any */
+        }
+        
+        /* Full screen modals for embed removed to allow traditional modal */
+        /* [data-embed="1"] .modal-overlay {
+            align-items: flex-start;
+            padding: 0;
+            background: #fff;
+        }
+        [data-embed="1"] .modal-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100vh;
+            max-height: 100vh;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            box-shadow: none;
+            overflow-y: auto;
+        } */
+        
+        /* Ensure traditional modal behavior in embed */
+        [data-embed="1"] .modal-overlay {
+            z-index: 99999 !important; /* Force high z-index */
+            position: fixed !important; /* Ensure fixed positioning relative to viewport (iframe) */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5); /* Dimmed background */
+            display: none;
+            justify-content: center;
+            align-items: center; /* Center modal */
+            padding: 1rem;
+        }
+        
+        [data-embed="1"] .modal-content {
+            /* Restore default modal styles or similar */
+            background: #fff;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: modalFadeIn 0.3s ease-out;
+            margin: auto; /* Ensure centering if flex fails */
+        }
+        
+        /* Ensure product modal is wider if needed */
+        [data-embed="1"] #productModal .modal-content {
+            max-width: 800px;
+        }
+        [data-embed="1"] .bulk-table-container {
+            max-height: none !important; /* Remove fixed height constraint */
+            flex: 1; /* Allow to expand */
+            min-height: 300px;
         }
     </style>
 </body></html>

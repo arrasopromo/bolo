@@ -86,22 +86,22 @@
         }
 
         .nova-venda-btn {
-            width: 100%;
-            background: #4CAF50;
-            color: #fff;
-            border: none;
-            padding: 0.8rem 0.6rem;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 1.2rem;
-            box-shadow: 0 4px 10px rgba(76,175,80,0.3);
-        }
+        width: 100%;
+        background: #25D366;
+        color: #fff;
+        border: none;
+        padding: 0.8rem 0.6rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+    }
 
         /* Mobile Header (igual padrão de /fluxo e /precificacao) */
         .mobile-header {
@@ -203,7 +203,9 @@
 </head>
 <body>
     <header class="mobile-header">
-        <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake" class="mobile-logo">
+        <a href="/ferramentas">
+            <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake" class="mobile-logo">
+        </a>
         <div class="mobile-header-actions" style="display:flex; align-items:center; gap:0.5rem;">
             <button class="nova-venda-btn" onclick="novaVenda()">
                 <i data-lucide="plus-circle"></i> Nova Venda
@@ -256,9 +258,10 @@
 
     <div class="tools-app">
         <aside class="sidebar">
-            <a href="/ferramentas">
+            <a href="/ferramentas" style="display: block; margin: 0 auto 1.2rem;">
                 <img src="/images/LOGO%20BELLE%20CAKE.webp" alt="Belle Cake" class="logo">
             </a>
+            <div id="userGreeting" style="display: none;"></div>
             <button class="nova-venda-btn" onclick="novaVenda()">
                 <i data-lucide="plus-circle"></i> Nova Venda
             </button>
@@ -461,6 +464,26 @@
                     frame.src = newSrc;
                 }
             }
+
+            // Load User Name
+            const token = localStorage.getItem('bellecake_token');
+            if(token) {
+                fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.ok ? res.json() : null)
+                .then(user => {
+                    if(user && user.name) {
+                        const name = user.name.split(' ')[0];
+                        const span = document.getElementById('userNameSpan');
+                        const div = document.getElementById('userGreeting');
+                        if(span) span.textContent = name;
+                        if(div) div.style.display = 'block';
+                    }
+                })
+                .catch(err => console.error('Error fetching user:', err));
+            }
+
             try{ lucide && lucide.createIcons && lucide.createIcons(); }catch(e){}
         });
     </script>
