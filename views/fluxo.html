@@ -4446,10 +4446,6 @@
                     font-size: 1.4rem !important;
                     margin-bottom: 1rem !important;
                 }
-                .modal-recurrence-options {
-                    flex-direction: column !important;
-                    gap: 0.8rem !important;
-                }
             }
         </style>
         <div class="costs-modal-content">
@@ -4498,14 +4494,12 @@
                 
                 <div class="form-group">
                     <label style="display: block; margin-bottom: 0.5rem;">Recorrência</label>
-                    <div class="modal-recurrence-options" style="display: flex; gap: 1rem;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="modalRecurrenceType" value="monthly" checked onchange="toggleModalInstallments()" style="margin-right: 8px;">
-                            Mensal
+                    <div style="display: flex; gap: 10px;">
+                        <label style="font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="radio" name="modalRecurrenceType" value="monthly" checked onchange="toggleModalInstallments()"> Mensal
                         </label>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="modalRecurrenceType" value="installment" onchange="toggleModalInstallments()" style="margin-right: 8px;">
-                            Parcelado
+                        <label style="font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="radio" name="modalRecurrenceType" value="installment" onchange="toggleModalInstallments()"> Parcelado
                         </label>
                     </div>
                 </div>
