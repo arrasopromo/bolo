@@ -13,6 +13,16 @@
     <script>
         // Force light theme
         document.documentElement.setAttribute('data-theme', 'light');
+
+        // Reset any saved quiz progress or selection on load
+        window.addEventListener('load', function() {
+             // Reset all option buttons
+             document.querySelectorAll('.option-btn').forEach(btn => {
+                 btn.style.borderColor = '#e0e0e0';
+                 btn.style.backgroundColor = '#fff';
+                 btn.classList.remove('selected');
+             });
+        });
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -68,8 +78,9 @@
         }
 
         .quiz-logo {
-            max-width: 120px;
+            max-width: 200px; /* Increased size again */
             height: auto;
+            margin: -1.5rem 0; /* Prevent spacing increase */
         }
 
         /* Steps */
@@ -100,6 +111,7 @@
             border-radius: 20px; /* Rounded square frame */
             object-fit: cover;
             margin-bottom: 0.5rem; /* Reduced from 1.5rem */
+            margin-top: 0; /* Reset position */
             /* border removed */
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
@@ -333,6 +345,12 @@
             font-family: 'Inter', sans-serif;
             font-weight: 500;
         }
+        
+        /* Ensure default state overrides any potential external styles */
+        .option-btn:not(.selected) {
+            background-color: #fff !important;
+            border-color: #e0e0e0 !important;
+        }
 
         .option-btn:hover {
             border-color: var(--primary-yellow, #D4AF37);
@@ -390,16 +408,17 @@
 
         <!-- STEP 1: Intro -->
         <div id="step-1" class="step active" style="padding-top: 1rem;">
-            <!-- Logo (Step 1 only) -->
+            <!-- Title replacing Logo -->
             <div style="text-align: center; margin-bottom: 0.5rem;">
-                <img src="/images/logo preta bellecake.webp" alt="Belle Cake Logo" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+                <h1 style="font-size: 1.4rem; font-weight: 800; color: #32221D; margin: 0; line-height: 1.3;">
+                    Ferramenta de precificação para confeiteiras
+                </h1>
             </div>
 
             <!-- Using the specified image -->
             <img src="/images/imagem ferramenta isabelle.png" alt="Atendente" class="welcome-image">
             
-            <h1 class="welcome-title" style="margin-bottom: 0.25rem; font-size: 1.25rem;">Ferramenta de precificação completo</h1>
-            <p class="welcome-subtitle" style="margin-bottom: 1rem; font-size: 0.9rem;">
+            <p class="welcome-subtitle" style="margin-bottom: 1.5rem; font-size: 0.95rem; color: #666; max-width: 90%;">
                 Pesquisa rápida para apresentar e ver se a ferramenta será útil para o seu perfil.
             </p>
             
@@ -570,8 +589,8 @@
         <!-- STEP 6: Tool Embed -->
         <div id="step-6" class="step" style="padding: 0; height: 100vh; flex-direction: column;">
             <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem; text-align: center; background: #fff;">
-                <h2 class="question-text" style="margin-bottom: 0.5rem; font-size: 1.1rem;">Teste nossa ferramenta</h2>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
+                <h2 id="toolStepTitle" class="question-text" style="margin-bottom: 0.5rem; font-size: 1.1rem;">Teste nossa ferramenta</h2>
+                <p id="toolStepDesc" style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
                     Tente registrar alguns ingredientes abaixo:
                 </p>
             </div>
@@ -589,8 +608,26 @@
             </div>
         </div>
 
-        <!-- STEP 7: Question 4 -->
+        <!-- STEP 7: Congratulation -->
         <div id="step-7" class="step">
+            <div style="text-align: center; margin-bottom: 2rem; padding: 1rem;">
+                <h2 class="question-text" style="margin-bottom: 1rem; color: #2e7d32;">Parabéns!</h2>
+                <p style="font-size: 1.1rem; color: #555; line-height: 1.6;">
+                    Você conseguiu realizar a primeira precificação de receita!
+                </p>
+                <p style="font-size: 1.1rem; color: #555; line-height: 1.6; margin-top: 1rem;">
+                    Esse foi apenas um esboço da ferramenta. Dentro da ferramenta completa você pode cadastrar quantos ingredientes e receitas quiser.
+                </p>
+            </div>
+
+            <button class="btn-start" onclick="nextStep(8)" style="width: 100%; justify-content: center; background-color: #25D366;">
+                CONTINUAR
+                <i data-lucide="arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- STEP 8: Question 4 -->
+        <div id="step-8" class="step">
             <div style="width: 100%; margin-bottom: 1rem;">
                 <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Pergunta 4 de 4</span>
                 <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
@@ -601,27 +638,27 @@
             <h2 class="question-text">Você registra os custos fixos do seu negócio?</h2>
             
             <div class="options-grid">
-                <button class="option-btn" onclick="selectAnswer(7, 'A')">
+                <button class="option-btn" onclick="selectAnswer(8, 'A')">
                     <span>a. Sim, registro</span>
                     <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
                 </button>
-                <button class="option-btn" onclick="selectAnswer(7, 'B')">
+                <button class="option-btn" onclick="selectAnswer(8, 'B')">
                     <span>b. Não registro</span>
                     <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
                 </button>
-                <button class="option-btn" onclick="selectAnswer(7, 'C')">
+                <button class="option-btn" onclick="selectAnswer(8, 'C')">
                     <span>c. Não sei quais são esses custos</span>
                     <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
                 </button>
-                <button class="option-btn" onclick="selectAnswer(7, 'D')">
+                <button class="option-btn" onclick="selectAnswer(8, 'D')">
                     <span>d. Registrava, mas parei</span>
                     <i data-lucide="chevron-right" style="opacity: 0.5;"></i>
                 </button>
             </div>
         </div>
 
-        <!-- STEP 8: Final Audio + CTA -->
-        <div id="step-8" class="step">
+        <!-- STEP 9: Final Audio + CTA -->
+        <div id="step-9" class="step">
             <div style="width: 100%; margin-bottom: 1rem;">
                 <span style="font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 1px;">Entenda a Ferramenta</span>
                 <div style="height: 4px; width: 100%; background: #eee; border-radius: 2px; margin-top: 0.5rem;">
@@ -629,7 +666,7 @@
                 </div>
             </div>
 
-            <h2 class="question-text">Veja como é simples precificar</h2>
+            <h2 class="question-text">Entenda os Custos Fixos</h2>
             
             <!-- Audio Player 2 (WhatsApp Style) -->
             <div class="wa-audio-container">
@@ -671,8 +708,16 @@
                 </audio>
             </div>
 
-            <button class="btn-start" onclick="window.location.href='/ferramentas?tab=produtos'" style="width: 100%; justify-content: center;">
-                QUERO PRECIFICAR AGORA
+            <!-- Video Placeholder -->
+            <div class="video-placeholder">
+                <div style="text-align: center;">
+                    <i data-lucide="video" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
+                    <div>Vídeo explicativo (9:16)</div>
+                </div>
+            </div>
+
+            <button class="btn-start" onclick="window.location.href='/fluxo'" style="width: 100%; justify-content: center;">
+                VEJA COMO REGISTRAR SEU CUSTO FIXO
                 <i data-lucide="arrow-right"></i>
             </button>
         </div>
@@ -682,6 +727,15 @@
     <script>
         // Initialize Icons
         lucide.createIcons();
+        
+        // Ensure no option is pre-selected visually on load
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.style.backgroundColor = '#fff';
+                btn.style.borderColor = '#e0e0e0';
+            });
+        });
         
         let currentStepGlobal = 1;
 
@@ -737,12 +791,25 @@
                 if (frame) {
                     if (!frame.src) {
                         // Use the new route that authenticates as guest and redirects
-                        frame.src = "/quiz-test-ingredientes?tab=ingredientes";
+                        frame.src = "/quiz-test-ingredientes?tab=ingredientes&embed=1";
+                        
+                        // Wait for iframe to load then inject the instruction message
+                        frame.onload = function() {
+                            // Inject instruction message
+                            // User requested to remove the "minimum 5" message
+                            // if (frame.contentWindow) {
+                            //    frame.contentWindow.postMessage({ type: 'SHOW_INSTRUCTION' }, '*');
+                            // }
+                        };
                     } else {
                         // If frame is already loaded, ensure we are on the ingredients tab
                         // Add a small delay to ensure the iframe is visible and ready to receive messages
                         setTimeout(() => {
-                            frame.contentWindow.postMessage({ type: 'SWITCH_TAB', tab: 'ingredientes' }, '*');
+                            if (frame.contentWindow) {
+                                frame.contentWindow.postMessage({ type: 'SWITCH_TAB', tab: 'ingredientes' }, '*');
+                                // Re-inject instruction just in case - REMOVED per user request
+                                // frame.contentWindow.postMessage({ type: 'SHOW_INSTRUCTION' }, '*');
+                            }
                         }, 100);
                         
                         // Reset pricing phase so logic can restart if needed
@@ -769,48 +836,50 @@
                 const btnContainer = document.getElementById('continueBtnContainer');
                 const btn = btnContainer.querySelector('button');
                 
-                if (prodCount > 0) {
-                    // User has products, always allow continuing
+                if (currentTab === 'ingredientes') {
+                    if (ingCount >= 10) {
+                        // Show button to go to pricing
+                        btn.innerHTML = 'MUITO BEM! CONTINUAR <i data-lucide="arrow-right"></i>';
+                        btn.style.color = '#FFFFFF';
+                        btn.onclick = function() {
+                            // Navigate to /ferramentas?tab=produtos inside the iframe
+                            const frame = document.getElementById('toolFrame');
+                            if (frame) {
+                                // Use postMessage to switch tabs without reloading the iframe
+                                // Reloading (frame.src) causes issues because /quiz-test-ingredientes redirects back to ingredients
+                                if (frame.contentWindow) {
+                                    frame.contentWindow.postMessage({ type: 'SWITCH_TAB', tab: 'produtos' }, '*');
+                                }
+
+                                // Hide button until product is added (or status update shows products)
+                                btnContainer.style.display = 'none';
+                                
+                                // Update Step 6 UI to indicate Product phase
+                                const title = document.getElementById('toolStepTitle');
+                                const desc = document.getElementById('toolStepDesc');
+                                if (title) title.textContent = 'Precifique seu Produto';
+                                if (desc) desc.textContent = 'Agora cadastre seu produto usando os ingredientes.';
+                            }
+                        };
+                        btnContainer.style.display = 'block';
+                    } else {
+                        btnContainer.style.display = 'none';
+                    }
+                } else if (prodCount > 0) {
+                    // User has products AND is not on ingredients tab (likely on products tab)
                     btn.innerHTML = 'MUITO BEM! CONTINUAR <i data-lucide="arrow-right"></i>';
                     btn.style.color = '#FFFFFF';
                     btn.onclick = function() {
                         nextStep(7);
                     };
                     btnContainer.style.display = 'block';
-                } else if (ingCount >= 7) {
-                    // User has enough ingredients but no products yet
-                    if (currentTab === 'ingredientes') {
-                        // Show button to go to pricing
-                        // User requested "Muito bem continuar" behavior here too
-                        btn.innerHTML = 'MUITO BEM! CONTINUAR <i data-lucide="arrow-right"></i>';
-                        btn.style.color = '#FFFFFF';
-                        btn.onclick = function() {
-                            startPricingPhase();
-                        };
-                        btnContainer.style.display = 'block';
-                    } else {
-                        // In products tab but no products yet - hide button
-                        btnContainer.style.display = 'none';
-                    }
                 } else {
-                    // Not enough ingredients
+                    // Not enough ingredients OR on products tab with no products
                     btnContainer.style.display = 'none';
                 }
                 
                 if (typeof lucide !== 'undefined') lucide.createIcons();
                 return; 
-            }
-
-            // Handle Ingredient Updates (Legacy/Specific)
-            if (event.data.type === 'INGREDIENT_UPDATE') {
-                // If we receive this, we might want to wait for STATUS_UPDATE or use this if simple
-                // But STATUS_UPDATE is better. We can keep this for backward compatibility or immediate feedback
-                // simpler to just rely on STATUS_UPDATE if precificacao sends it often enough.
-                // However, precificacao sends INGREDIENT_UPDATE on render.
-                // Let's rely on the logic above if possible. 
-                // To be safe, let's map this to the same logic if product count is unknown, 
-                // but simpler to just trust STATUS_UPDATE which we added to switchTab.
-                // We should ensure precificacao sends STATUS_UPDATE on load/render too.
             }
             
             // Handle Product Saved (Legacy/Specific)
@@ -828,23 +897,6 @@
             }
         });
         
-        function startPricingPhase() {
-            pricingPhaseStarted = true;
-            
-            // Send message to iframe to switch tab
-            const frame = document.getElementById('toolFrame');
-            if (frame && frame.contentWindow) {
-                frame.contentWindow.postMessage({ type: 'SWITCH_TAB', tab: 'produtos' }, '*');
-            }
-            
-            // Update UI
-            const btnContainer = document.getElementById('continueBtnContainer');
-            if (btnContainer) btnContainer.style.display = 'none'; // Hide until product saved
-            
-            // Optional: Show a toast or message?
-            // For now, the iframe switching tabs is feedback enough
-        }
-
         function prevStep() {
             if (currentStepGlobal > 1) {
                 nextStep(currentStepGlobal - 1);
@@ -861,18 +913,20 @@
                 buttons.forEach(b => {
                     b.style.borderColor = '#e0e0e0';
                     b.style.backgroundColor = '#fff';
+                    b.classList.remove('selected');
                 });
             }
 
             const btn = event.currentTarget;
             btn.style.borderColor = '#25D366';
             btn.style.backgroundColor = '#e8f5e9';
+            btn.classList.add('selected');
             
             // Wait a moment then proceed
             setTimeout(() => {
                 // If current step is 4, next is 5 (Media)
-                // If current step is 7, finish (for now just alert or log)
-                if (currentStep < 8) {
+                // If current step is 8, next is 9 (Final)
+                if (currentStep < 9) {
                     nextStep(currentStep + 1);
                 } else {
                     // Finished
