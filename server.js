@@ -262,8 +262,10 @@ const handleTestTools = async (req, res) => {
 const handleQuizTestIngredientes = async (req, res) => {
     try {
         const token = await getOrCreateTestUserToken(req, res);
+        const tab = req.query.tab || 'ingredientes';
+        const t = req.query.t || Date.now(); // Ensure timestamp is passed or generated
         // Append token to URL so precificacao.html can pick it up via script
-        res.redirect(`/precificacao?embed=1&tab=ingredientes&mode=test&token=${token}`);
+        res.redirect(`/precificacao?embed=1&tab=${tab}&mode=test&token=${token}&t=${t}`);
     } catch (err) {
         console.error('Error handling quiz test ingredients:', err);
         res.status(500).send('Erro ao iniciar modo de teste.');

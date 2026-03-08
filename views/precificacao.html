@@ -281,10 +281,21 @@
             .mobile-header { display: flex; }
             .main-content {
                 margin-left: 0;
-                padding: 1.5rem;
+                padding: 1rem; /* Reduced from 1.5rem */
                 padding-top: 75px;
                 border-radius: 0;
                 background: var(--bg-cream);
+            }
+            
+            /* Embed specific adjustments */
+            html[data-embed="1"] .main-content {
+                padding: 0 !important;
+                padding-top: 0 !important; /* Remove header space */
+            }
+            html[data-embed="1"] .ingredient-row {
+                max-width: 100% !important;
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
             }
         }
 
@@ -332,7 +343,7 @@
             border-collapse: collapse;
             background: white;
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible; /* Changed from hidden to visible for balloon */
             box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         }
 
@@ -685,10 +696,13 @@
                 const style = document.createElement('style');
                 style.innerHTML = `
                     .sidebar, .mobile-header, .page-title { display: none !important; }
-                    .main-content { margin: 0 !important; width: 100% !important; padding: 1rem !important; }
-                    .app-container { padding-left: 0 !important; }
-                    .user-top-bar { margin-top: 5rem !important; margin-bottom: 2rem !important; padding-right: 1rem !important; display: flex !important; position: relative; z-index: 10; } 
-                    .modal-overlay { z-index: 99999 !important; }
+            .main-content { margin: 0 !important; width: 100% !important; padding: 0.5rem !important; }
+            .app-container { padding-left: 0 !important; }
+            .user-top-bar { margin-top: 5rem !important; margin-bottom: 2rem !important; padding-right: 1rem !important; display: flex !important; position: relative; z-index: 10; } 
+            .modal-overlay { z-index: 99999 !important; }
+                    [data-basic-hide="pre-register"] { display: none !important; }
+                    /* Hide Pre-registered Products button in Embed Mode */
+                    button[onclick="openStandardIngredientsModal()"] { display: none !important; }
                 `;
                 document.head.appendChild(style);
             }
@@ -850,7 +864,7 @@
             <!-- View: Ingredientes -->
             <div id="tab-ingredientes" class="view-section" style="display: none;">
                 
-                <div id="quizInstructionMsg" style="display: none; background: #e3f2fd; color: #0d47a1; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #bbdefb; font-weight: 500; text-align: center;">
+                <div id="quizInstructionMsg" style="display: none !important; background: #e3f2fd; color: #0d47a1; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #bbdefb; font-weight: 500; text-align: center;">
                     Cadastre no mínimo 5 ingredientes para passar para próxima etapa
                 </div>
 
@@ -898,7 +912,7 @@
                 <p id="voiceStatusIng" style="margin-top: 12px; font-size: 0.95rem; color: #666; font-weight: 500;">Toque para falar o ingrediente</p>
                 <small style="color: #999; display: block; margin-top: 4px;">Ex: "Farinha de Trigo, 5 reais, pacote de 1 quilo"</small>
                 
-                <button type="button" onclick="openBulkIngredientModal()" style="margin-top: 15px; background: none; border: 1px solid #4A90E2; color: #4A90E2; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" onclick="openBulkIngredientModal()" style="margin-top: 15px; background: none; border: 1px solid #4A90E2; color: #4A90E2; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" data-basic-hide="pre-register">
                     <i data-lucide="layers" style="width: 14px; height: 14px;"></i> Cadastro em Massa
                 </button>
             </div>
@@ -1187,11 +1201,24 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentTab = tabOverride || urlParams.get('tab') || 'produtos';
                 
+                // Count user ingredients in seed product
+                let userIngredientsInSeedProduct = 0;
+                if (typeof allProducts !== 'undefined') {
+                    const seedProduct = allProducts.find(p => p._id === 'seed_prod_1');
+                    if (seedProduct && seedProduct.ingredients) {
+                        userIngredientsInSeedProduct = seedProduct.ingredients.filter(item => {
+                            // item.ingredient is the ID string
+                            return item.ingredient && !item.ingredient.startsWith('seed_');
+                        }).length;
+                    }
+                }
+                
                 window.parent.postMessage({ 
                     type: 'STATUS_UPDATE', 
                     ingredientCount: typeof allIngredients !== 'undefined' ? allIngredients.length : 0,
                     productCount: typeof allProducts !== 'undefined' ? allProducts.length : 0,
-                    currentTab: currentTab
+                    currentTab: currentTab,
+                    userIngredientsInSeedProduct: userIngredientsInSeedProduct
                 }, '*');
             }
         }
@@ -1239,34 +1266,50 @@
                 const params = new URLSearchParams(window.location.search);
                 if (params.get('mode') === 'test') {
                     // Check version to force reset
-                    const currentVersion = '1.1'; // Increment version to force update
+                    const currentVersion = '2.0'; // Bump version to force update
                     const storedVersion = localStorage.getItem('bellecake_test_version');
                     
+                    let userItems = [];
+
+                    // Try to load existing user items first
+                    const localData = localStorage.getItem('bellecake_test_ingredients');
+                    if (localData) {
+                        try {
+                            userItems = JSON.parse(localData).filter(i => i._id && !i._id.startsWith('seed_'));
+                        } catch(e) {}
+                    }
+                    
                     if (storedVersion !== currentVersion) {
+                        console.log(`Test Data Version Mismatch: Stored ${storedVersion} vs Current ${currentVersion}. Updating seed data.`);
+                        
+                        // Clear old data but we already have userItems in memory
                         localStorage.removeItem('bellecake_test_ingredients');
-                        localStorage.removeItem('bellecake_test_products');
+                        localStorage.removeItem('bellecake_test_products'); // Reset products too to force re-seed
+                        
                         localStorage.setItem('bellecake_test_version', currentVersion);
                     }
 
-                    const localData = localStorage.getItem('bellecake_test_ingredients');
-                    if (localData) {
-                        allIngredients = JSON.parse(localData);
-                    } else {
-                        // Seed default ingredients if empty
-                        allIngredients = [
-                            { _id: 'seed_1', name: 'Açúcar', price: 5.00, unit: 'g', quantityPackage: 1000, currentStock: 0 },
-                            { _id: 'seed_2', name: 'Caixa 25cm', price: 7.00, unit: 'un', quantityPackage: 1, currentStock: 0 },
-                            { _id: 'seed_3', name: 'Cakeboard 25cm', price: 7.00, unit: 'un', quantityPackage: 1, currentStock: 0 },
-                            { _id: 'seed_4', name: 'Chantilly', price: 23.00, unit: 'g', quantityPackage: 1000, currentStock: 0 },
-                            { _id: 'seed_5', name: 'Creme de Leite', price: 2.48, unit: 'un', quantityPackage: 1, currentStock: 0 },
-                            { _id: 'seed_6', name: 'Farinha de Trigo', price: 5.00, unit: 'g', quantityPackage: 1000, currentStock: 0 },
-                            { _id: 'seed_7', name: 'Leite Condensado', price: 5.99, unit: 'un', quantityPackage: 1, currentStock: 0 },
-                            { _id: 'seed_8', name: 'Ovos', price: 20.00, unit: 'un', quantityPackage: 20, currentStock: 0 }
-                        ];
-                        // Sort alphabetically by name
-                        allIngredients.sort((a, b) => a.name.localeCompare(b.name));
-                        localStorage.setItem('bellecake_test_ingredients', JSON.stringify(allIngredients));
-                    }
+                    // Define Seed Ingredients
+                    const seedIngredients = [
+                        { _id: 'seed_1', name: 'Açúcar', price: 5.00, unit: 'g', quantityPackage: 1000, currentStock: 0 },
+                        { _id: 'seed_2', name: 'Caixa 25cm', price: 7.00, unit: 'un', quantityPackage: 1, currentStock: 0 },
+                        { _id: 'seed_3', name: 'Cakeboard 25cm', price: 7.00, unit: 'un', quantityPackage: 1, currentStock: 0 },
+                        { _id: 'seed_4', name: 'Chantilly', price: 23.00, unit: 'g', quantityPackage: 1000, currentStock: 0 },
+                        { _id: 'seed_5', name: 'Creme de Leite', price: 2.48, unit: 'un', quantityPackage: 1, currentStock: 0 },
+                        { _id: 'seed_6', name: 'Farinha de Trigo', price: 5.00, unit: 'g', quantityPackage: 1000, currentStock: 0 },
+                        { _id: 'seed_7', name: 'Leite Condensado', price: 5.99, unit: 'un', quantityPackage: 1, currentStock: 0 },
+                        { _id: 'seed_8', name: 'Ovos', price: 20.00, unit: 'un', quantityPackage: 20, currentStock: 0 }
+                    ];
+
+                    // Combine Seeds + User Items
+                    allIngredients = [...seedIngredients, ...userItems];
+                    
+                    // Sort alphabetically
+                    allIngredients.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    // Save back
+                    localStorage.setItem('bellecake_test_ingredients', JSON.stringify(allIngredients));
+                    
                     renderIngredientsTable();
                     return allIngredients;
                 }
@@ -1335,44 +1378,71 @@
                 const params = new URLSearchParams(window.location.search);
                 if (params.get('mode') === 'test') {
                     const localData = localStorage.getItem('bellecake_test_products');
-                    if (localData) {
-                        allProducts = JSON.parse(localData);
-                    } else {
-                        // Seed default product if empty
-                        // Calculate costs based on NEW seeded ingredients
-                        // Açúcar: 5.00/1000g = 0.005/g. Use 200g = 1.00
-                        // Caixa 25cm: 7.00/1un = 7.00. Use 1 = 7.00
-                        // Cakeboard 25cm: 7.00/1un = 7.00. Use 1 = 7.00
-                        // Chantilly: 23.00/1000g = 0.023/g. Use 200g = 4.60
-                        // Creme de Leite: 2.48/1un = 2.48. Use 1 = 2.48
-                        // Farinha de Trigo: 5.00/1000g = 0.005/g. Use 300g = 1.50
-                        // Leite Condensado: 5.99/1un = 5.99. Use 1 = 5.99
-                        // Ovos: 20.00/20un = 1.00/un. Use 3 = 3.00
-                        
-                        // Total Variable Cost = 1.00 + 7.00 + 7.00 + 4.60 + 2.48 + 1.50 + 5.99 + 3.00 = 32.57
+                    allProducts = localData ? JSON.parse(localData) : [];
 
-                        allProducts = [{
-                            _id: 'seed_prod_1',
-                            name: 'Bolo de Ninho com Nutella 15cm',
-                            salePrice: 120.00,
-                            ingredients: [
-                                { _id: 'seed_1', name: 'Açúcar', price: 5.00, unit: 'g', quantityPackage: 1000, usedQuantity: 200, cost: 1.00 },
-                                { _id: 'seed_2', name: 'Caixa 25cm', price: 7.00, unit: 'un', quantityPackage: 1, usedQuantity: 1, cost: 7.00 },
-                                { _id: 'seed_3', name: 'Cakeboard 25cm', price: 7.00, unit: 'un', quantityPackage: 1, usedQuantity: 1, cost: 7.00 },
-                                { _id: 'seed_4', name: 'Chantilly', price: 23.00, unit: 'g', quantityPackage: 1000, usedQuantity: 200, cost: 4.60 },
-                                { _id: 'seed_5', name: 'Creme de Leite', price: 2.48, unit: 'un', quantityPackage: 1, usedQuantity: 1, cost: 2.48 },
-                                { _id: 'seed_6', name: 'Farinha de Trigo', price: 5.00, unit: 'g', quantityPackage: 1000, usedQuantity: 300, cost: 1.50 },
-                                { _id: 'seed_7', name: 'Leite Condensado', price: 5.99, unit: 'un', quantityPackage: 1, usedQuantity: 1, cost: 5.99 },
-                                { _id: 'seed_8', name: 'Ovos', price: 20.00, unit: 'un', quantityPackage: 20, usedQuantity: 3, cost: 3.00 }
-                            ],
-                            variableCost: 32.57, // Sum of costs
-                            invisibleCost: 0,
-                            markup: 0,
-                            yieldActive: false,
-                            yield: 1
-                        }];
-                        localStorage.setItem('bellecake_test_products', JSON.stringify(allProducts));
+                    // Always ensure seed product exists and is up to date with correct name/ingredients
+                    // Map seeded ingredients to product ingredients structure
+                    const ingredientsList = [
+                        { id: 'seed_1', used: 200 }, // Açúcar
+                        { id: 'seed_2', used: 1 },   // Caixa
+                        { id: 'seed_3', used: 1 },   // Cakeboard
+                        { id: 'seed_4', used: 300 }, // Chantilly
+                        { id: 'seed_5', used: 1 },   // Creme de Leite
+                        { id: 'seed_6', used: 250 }, // Farinha
+                        { id: 'seed_7', used: 1 },   // Leite Condensado
+                        { id: 'seed_8', used: 3 }    // Ovos
+                    ];
+
+                    const productIngredients = ingredientsList.map(item => {
+                        const ing = allIngredients.find(i => i._id === item.id);
+                        if (!ing) return null;
+                        
+                        // Calculate cost
+                        let cost = 0;
+                        if (ing.unit === 'un') {
+                            cost = (ing.price / ing.quantityPackage) * item.used;
+                        } else { // g, ml
+                            cost = (ing.price / ing.quantityPackage) * item.used;
+                        }
+                        
+                        return {
+                            ingredient: ing._id,
+                            quantityUsed: item.used,
+                            cost: parseFloat(cost.toFixed(2))
+                        };
+                    }).filter(Boolean);
+
+                    const variableCost = productIngredients.reduce((acc, curr) => acc + curr.cost, 0);
+
+                    const seedProduct = {
+                        _id: 'seed_prod_1',
+                        name: 'Bolo de Nutella com Ninho - Aro 15cm',
+                        salePrice: 120.00,
+                        ingredients: productIngredients,
+                        variableCost: parseFloat(variableCost.toFixed(2)),
+                        invisibleCost: 0,
+                        markup: 0,
+                        yieldActive: false,
+                        yield: 1
+                    };
+
+                    const seedIndex = allProducts.findIndex(p => p._id === 'seed_prod_1');
+                    if (seedIndex !== -1) {
+                        // Update existing to ensure correct name
+                        allProducts[seedIndex].name = seedProduct.name;
+                        
+                        // Only reset ingredients if they are empty (safety check for broken state)
+                        // This allows user edits (adding ingredients) to persist
+                        if (!allProducts[seedIndex].ingredients || allProducts[seedIndex].ingredients.length === 0) {
+                             allProducts[seedIndex].ingredients = seedProduct.ingredients;
+                             allProducts[seedIndex].variableCost = seedProduct.variableCost;
+                        }
+                    } else {
+                        // Add if missing
+                        allProducts.push(seedProduct);
                     }
+                    
+                    localStorage.setItem('bellecake_test_products', JSON.stringify(allProducts));
                     renderProductsTable();
                     return;
                 }
@@ -1555,15 +1625,94 @@
                         </span>
                     </td>
                     <td data-label="Ações">
-                        <button type="button" class="action-btn" onclick="openProductModal('${prod._id}')" title="Editar">
-                            <i data-lucide="edit-2"></i>
-                        </button>
-                        <button type="button" class="action-btn" onclick="duplicateProduct('${prod._id}')" title="Duplicar">
-                            <i data-lucide="copy"></i>
-                        </button>
-                        <button type="button" class="action-btn" onclick="deleteProduct('${prod._id}')" title="Excluir" style="color: #ef4444;">
-                            <i data-lucide="trash-2"></i>
-                        </button>
+                        <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                        ${(function(){
+                            const isEmbed = document.documentElement.getAttribute('data-embed') === '1';
+                            let html = '';
+                            
+                            // Edit Button with Balloon for Seed Product in Embed Mode
+                            html += `<div style="position: relative; display: inline-block;">
+                                <button type="button" class="action-btn" onclick="openProductModal('${prod._id}')" title="Editar">
+                                    <i data-lucide="edit-2"></i>
+                                </button>
+                                ${isEmbed && prod._id === 'seed_prod_1' ? `
+                                <div class="edit-balloon" style="
+                                    position: absolute;
+                                    bottom: 110%;
+                                    right: -10px; /* Adjusted for mobile */
+                                    background: #25D366;
+                                    color: white;
+                                    padding: 8px 12px;
+                                    border-radius: 8px;
+                                    font-size: 0.75rem;
+                                    white-space: nowrap;
+                                    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                                    z-index: 100;
+                                    pointer-events: none;
+                                    animation: bounce 2s infinite;
+                                ">
+                                    Adicione seus 2 ingredientes aqui!
+                                    <div style="
+                                        position: absolute;
+                                        top: 100%;
+                                        right: 20px;
+                                        border-width: 6px;
+                                        border-style: solid;
+                                        border-color: #25D366 transparent transparent transparent;
+                                    "></div>
+                                </div>
+                                <style>
+                                    @keyframes bounce {
+                                        0%, 100% { transform: translateY(0); }
+                                        50% { transform: translateY(-5px); }
+                                    }
+                                    @media (max-width: 768px) {
+                                        .edit-balloon {
+                                            right: 0 !important;
+                                            left: auto !important;
+                                            bottom: 140% !important; /* Move ABOVE on mobile */
+                                            top: auto !important;
+                                            white-space: normal !important;
+                                            width: 180px;
+                                            text-align: center;
+                                            transform: none !important;
+                                            z-index: 9999;
+                                        }
+                                        .edit-balloon > div {
+                                            top: 100% !important;
+                                            bottom: auto !important;
+                                            right: 15px !important;
+                                            left: auto !important;
+                                            border-color: #25D366 transparent transparent transparent !important;
+                                        }
+                                    }
+                                </style>
+                                ` : ''}
+                            </div>`;
+
+                            // Duplicate & Delete Buttons
+                            if (isEmbed) {
+                                html += `
+                                    <button type="button" class="action-btn" style="opacity: 0.3; cursor: not-allowed; background: #f5f5f5;" title="Bloqueado no teste">
+                                        <i data-lucide="copy"></i>
+                                    </button>
+                                    <button type="button" class="action-btn" style="color: #ef4444; opacity: 0.3; cursor: not-allowed; background: #f5f5f5;" title="Bloqueado no teste">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                `;
+                            } else {
+                                html += `
+                                    <button type="button" class="action-btn" onclick="duplicateProduct('${prod._id}')" title="Duplicar">
+                                        <i data-lucide="copy"></i>
+                                    </button>
+                                    <button type="button" class="action-btn" onclick="deleteProduct('${prod._id}')" title="Excluir" style="color: #ef4444;">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                `;
+                            }
+                            return html;
+                        })()}
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1874,7 +2023,11 @@
 
                     // Ingredients
                     if (prod.ingredients && prod.ingredients.length > 0) {
-                        prod.ingredients.forEach(ing => addIngredientRow(ing));
+                        prod.ingredients.forEach(ing => {
+                            // Check if this ingredient is user-added (starts with local_ or not seed_)
+                            const isUserAdded = ing.ingredient && !ing.ingredient.startsWith('seed_');
+                            addIngredientRow(ing, isUserAdded);
+                        });
                     } else {
                         addIngredientRow(); // Add one empty
                     }
@@ -1951,14 +2104,22 @@
             calculateProductTotals();
         }
 
-        function addIngredientRow(data = null) {
+        function addIngredientRow(data = null, isUserAdded = false) {
             const container = document.getElementById('recipeIngredients');
             const id = Date.now() + Math.random().toString(36).substr(2, 9); // Unique ID for DOM
 
             const div = document.createElement('div');
             div.className = 'ingredient-row';
+            
+            // Highlight user added ingredients in embed mode
+            const isEmbed = document.documentElement.getAttribute('data-embed') === '1';
+            let style = '';
+            if (isEmbed && isUserAdded) {
+                style = 'border: 2px solid #25D366; background-color: rgba(37, 211, 102, 0.1); border-radius: 8px; padding: 8px; margin-bottom: 8px;';
+            }
+
             div.innerHTML = `
-                <div style="width: 100%;">
+                <div style="width: 100%; ${style}">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <select class="ing-select" onchange="validateIngredientSelection(this)" style="flex: 1;">
                             <option value="">Selecione um ingrediente...</option>
