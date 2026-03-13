@@ -1557,16 +1557,12 @@
 
             // Notify parent if embedded
             sendStatusUpdate();
-            if (document.documentElement.getAttribute('data-embed') === '1') {
-                 // Limit to 1 product in Quiz Mode
-                 const newBtn = document.getElementById('btnNewProduct');
-                 if (newBtn) {
-                     if (displayProducts.length >= 1) {
-                         newBtn.style.display = 'none';
-                     } else {
-                         newBtn.style.display = 'flex';
-                     }
-                 }
+            const params = new URLSearchParams(window.location.search);
+            const isEmbed = document.documentElement.getAttribute('data-embed') === '1';
+            const hideNewProduct = params.get('hideNewProduct') === '1';
+            if (isEmbed || hideNewProduct) {
+                const newBtn = document.getElementById('btnNewProduct');
+                if (newBtn) newBtn.style.display = hideNewProduct ? 'none' : 'flex';
             }
 
             if (currentSort.field) {

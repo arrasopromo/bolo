@@ -964,7 +964,7 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
 
             sales.forEach(sale => {
                 const amount = sale.totalAmount || 0;
-                const variableCost = sale.totalCost || 0;
+                let variableCost = sale.totalCost || 0;
 
                 totalRevenue += amount;
                 totalVariableCost += variableCost;
