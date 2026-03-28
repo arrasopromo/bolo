@@ -1372,6 +1372,18 @@
             return response;
         }
 
+        async function getApiErrorMessage(res) {
+            try {
+                const data = await res.json();
+                if (data && typeof data === 'object') {
+                    return data.error || data.message || `HTTP ${res.status}`;
+                }
+                return `HTTP ${res.status}`;
+            } catch (e) {
+                return `HTTP ${res.status}`;
+            }
+        }
+
         async function loadProducts() {
             try {
                 // Test Mode Local Storage Override
@@ -1915,7 +1927,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (!res.ok) throw new Error('Erro ao salvar');
+                if (!res.ok) {
+                    const msg = await getApiErrorMessage(res);
+                    throw new Error(msg);
+                }
                 
                 closeModal('ingredientModal');
                 loadIngredients(); // Reloads both tables
@@ -1943,10 +1958,14 @@
             }
 
             try {
-                await authFetch(`/api/ingredients/${id}`, { method: 'DELETE' });
+                const res = await authFetch(`/api/ingredients/${id}`, { method: 'DELETE' });
+                if (!res.ok) {
+                    const msg = await getApiErrorMessage(res);
+                    throw new Error(msg);
+                }
                 loadIngredients();
             } catch (err) {
-                alert('Erro ao excluir');
+                alert('Erro ao excluir: ' + err.message);
             }
         }
 

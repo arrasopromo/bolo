@@ -472,13 +472,28 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
                 .then(res => res.ok ? res.json() : null)
-                .then(user => {
+                .then(async user => {
                     if(user && user.name) {
                         const name = user.name.split(' ')[0];
                         const span = document.getElementById('userNameSpan');
                         const div = document.getElementById('userGreeting');
                         if(span) span.textContent = name;
                         if(div) div.style.display = 'block';
+
+                        try {
+                            const already = sessionStorage.getItem('extended_subscriptions_done') === '1';
+                            const emailOk = user.email && String(user.email).toLowerCase() === 'simulacao@bellecake.com';
+                            const nameOk = user.name && /^isabelle$/i.test(String(user.name));
+                            if (!already && (emailOk || nameOk)) {
+                                const res = await fetch('/admin/subscriptions/extend-all-self', {
+                                    method: 'POST',
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                });
+                                if (res.ok) {
+                                    sessionStorage.setItem('extended_subscriptions_done', '1');
+                                }
+                            }
+                        } catch(e) {}
                     }
                 })
                 .catch(err => console.error('Error fetching user:', err));

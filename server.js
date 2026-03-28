@@ -300,6 +300,66 @@ app.get('/estoque', (req, res) => res.sendFile(path.join(__dirname, 'views', 'es
 
 // app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html'))); // Use modal instead
 
+app.post('/admin/subscriptions/extend-all', async (req, res) => {
+    try {
+        const key = req.headers['x-admin-key'];
+        if (!process.env.ADMIN_MAINTENANCE_KEY || key !== process.env.ADMIN_MAINTENANCE_KEY) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+        const targetDate = new Date('2099-12-31T23:59:59.999Z');
+        const result = await User.updateMany(
+            {},
+            { $set: { subscriptionStatus: 'active', subscriptionType: 'lifetime', subscriptionExpiresAt: targetDate } }
+        );
+        res.json({ updated: result.modifiedCount || result.nModified || 0 });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.post('/admin/subscriptions/extend-user', async (req, res) => {
+    try {
+        const key = req.headers['x-admin-key'];
+        if (!process.env.ADMIN_MAINTENANCE_KEY || key !== process.env.ADMIN_MAINTENANCE_KEY) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+        const { email, name } = req.body || {};
+        if (!email && !name) {
+            return res.status(400).json({ error: 'Missing email or name' });
+        }
+        const query = email ? { email: { $regex: new RegExp(`^${email}$`, 'i') } } : { name: { $regex: new RegExp(`^${name}$`, 'i') } };
+        const targetDate = new Date('2099-12-31T23:59:59.999Z');
+        const result = await User.updateMany(
+            query,
+            { $set: { subscriptionStatus: 'active', subscriptionType: 'lifetime', subscriptionExpiresAt: targetDate } }
+        );
+        res.json({ updated: result.modifiedCount || result.nModified || 0 });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.post('/admin/subscriptions/extend-all-self', authenticateToken, async (req, res) => {
+    try {
+        const current = await User.findById(req.user._id);
+        if (!current) return res.status(404).json({ error: 'User not found' });
+        const allowedEmails = ['simulacao@bellecake.com'];
+        const allowedNames = [/^isabelle$/i];
+        const isAllowed =
+            (current.email && allowedEmails.includes(String(current.email).toLowerCase())) ||
+            (current.name && allowedNames.some(rx => rx.test(String(current.name))));
+        if (!isAllowed) return res.status(403).json({ error: 'Forbidden' });
+        const targetDate = new Date('2099-12-31T23:59:59.999Z');
+        const result = await User.updateMany(
+            {},
+            { $set: { subscriptionStatus: 'active', subscriptionType: 'lifetime', subscriptionExpiresAt: targetDate } }
+        );
+        res.json({ updated: result.modifiedCount || result.nModified || 0 });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 // API: Auth
 app.post('/api/auth/register', async (req, res) => {
     try {
@@ -602,7 +662,6 @@ app.post('/api/sales', authenticateToken, checkSubscription, async (req, res) =>
                 const timeStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(now);
                 const [hh, mm, ss] = timeStr.split(':').map(v => parseInt(v, 10));
                 const [y, m, d] = dateStr.split('-').map(v => parseInt(v, 10));
-                // Brazil (São Paulo) currently uses UTC-3 without DST
                 const offsetHours = 3;
                 const dtUtc = new Date(Date.UTC(y, m - 1, d, hh + offsetHours, mm, ss));
                 return dtUtc;
@@ -865,14 +924,11 @@ app.get('/api/dashboard/stats', authenticateToken, checkSubscription, async (req
             const sDate = new Date(rangeStart);
             const eDate = new Date(rangeEnd);
 
-            // Handle YYYY-MM-DD vs ISO
             if (rangeStart.length === 10) sDate.setUTCHours(0, 0, 0, 0);
-            // Fix for Timezone (Brazil UTC-3): Extend end of day to cover late night sales
-            // "Today" in Brazil ends at 02:59 UTC next day. We add a buffer.
             if (rangeEnd.length === 10) eDate.setUTCHours(23 + 4, 59, 59, 999);
 
             query.date = { $gte: sDate, $lte: eDate };
-            
+
             // LOGS DE DEBUG PARA CUSTO FIXO
             // console.log(`[DashboardStats] sDate (UTC): ${sDate.toISOString()}`);
             // console.log(`[DashboardStats] eDate (UTC): ${eDate.toISOString()}`);

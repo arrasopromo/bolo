@@ -826,6 +826,8 @@
                     </div>
                 </div>
 
+                
+
                 <!-- Top Products Section -->
                 <div class="chart-section">
                     <h3 style="margin-top:0; margin-bottom: 1.5rem; font-size: 1.2rem;">Produtos Mais Vendidos</h3>
@@ -1165,6 +1167,8 @@
                          <button class="period-preset sales-preset" type="button" data-period="all" onclick="setSalesPeriod('all')">Todo o período</button>
                     </div>
                 </div>
+
+                
 
                 <div style="margin-top: 1rem;">
                     <div class="table-responsive" style="background: white; padding: 1rem; border-radius: 16px; border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
@@ -2039,6 +2043,8 @@
 
                 const sales = await res.json();
                 window.recentSalesData = sales; // Store globally for edit functionality
+
+                
                 
                 tbody.innerHTML = '';
                 
@@ -2092,6 +2098,8 @@
                 }
             }
         }
+
+        
 
         // Modal Logic
         // saleDatePicker is defined globally
@@ -3993,6 +4001,8 @@
                 }
             });
         }
+
+        
 
         // Init
         loadDashboard();
